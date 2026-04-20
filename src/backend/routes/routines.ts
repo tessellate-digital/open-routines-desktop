@@ -1,7 +1,6 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { randomUUID } from 'crypto';
-import * as fs from 'fs';
 import { executor } from '../services/executor';
 import { eventBus } from '../services/eventBus';
 import * as runStreamStore from '../services/runStreamStore';
@@ -14,15 +13,6 @@ import { RoutineCreateSchema, RoutineUpdateSchema, RunTriggerSchema } from '../t
 const router = new Hono();
 
 function routineToResponse(r: RoutineRow) {
-  let workspaceOk = true;
-  if (r.workspace_path) {
-    try {
-      workspaceOk = fs.statSync(r.workspace_path).isDirectory();
-    } catch {
-      workspaceOk = false;
-    }
-  }
-
   return {
     id: r.id,
     name: r.name,
@@ -35,8 +25,6 @@ function routineToResponse(r: RoutineRow) {
     env_vars: JSON.parse(r.env_vars) as Record<string, string>,
     enabled: r.enabled === 1,
     run_mode: r.run_mode as 'background' | 'foreground',
-    workspace_path: r.workspace_path,
-    workspace_accessible: workspaceOk,
     created_at: r.created_at,
     updated_at: r.updated_at,
     triggers_count: r.triggers_count,
@@ -107,22 +95,6 @@ router.post('/:id/run', zValidator('json', RunTriggerSchema.partial()), async (c
   const row = routinesRepository.findById(id);
   if (!row) {
     return c.json({ detail: 'Routine not found' }, 404);
-  }
-
-  if (row.workspace_path) {
-    try {
-      const stat = fs.statSync(row.workspace_path);
-      if (!stat.isDirectory()) {
-        throw new Error('not a directory');
-      }
-    } catch {
-      return c.json(
-        {
-          detail: `Workspace folder is no longer accessible: ${row.workspace_path}. The folder may have been moved or deleted.`,
-        },
-        409
-      );
-    }
   }
 
   const body = c.req.valid('json');

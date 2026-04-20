@@ -35,6 +35,15 @@ app.route('/hooks', webhooksRouter);
 app.route('/api/settings', settingsRouter);
 app.route('/api/auth/github-copilot', copilotAuthRouter);
 
+// Reset all data
+app.post('/api/reset', (c) => {
+  db.exec('DELETE FROM runs');
+  db.exec('DELETE FROM triggers');
+  db.exec('DELETE FROM routines');
+  db.exec('DELETE FROM settings');
+  return c.json({ ok: true });
+});
+
 // Global SSE events endpoint
 app.get('/api/events', async (c) => {
   const { clientId, next } = eventBus.subscribe();
@@ -56,7 +65,9 @@ app.get('/api/events', async (c) => {
     try {
       while (true) {
         const event = await next();
-        if (event === null) break;
+        if (event === null) {
+          break;
+        }
         await stream.writeSSE({ event: event.event, data: event.data });
       }
     } finally {
@@ -148,16 +159,12 @@ app.get('/api/fs', async (c) => {
   }
 
   const mounts = await getUserMounts();
-  const insideMount = mounts.some(
-    (m) => resolved === m || resolved.startsWith(m + path.sep)
-  );
+  const insideMount = mounts.some((m) => resolved === m || resolved.startsWith(m + path.sep));
   if (!insideMount) {
     return c.json({ detail: 'Path is not inside a mounted workspace' }, 400);
   }
 
-  const mountRoot = mounts.find(
-    (m) => resolved === m || resolved.startsWith(m + path.sep)
-  )!;
+  const mountRoot = mounts.find((m) => resolved === m || resolved.startsWith(m + path.sep))!;
 
   try {
     const entries = await fs.promises.readdir(resolved, { withFileTypes: true });
@@ -184,17 +191,14 @@ export async function startServer(): Promise<number> {
   schedulerService.start();
 
   return new Promise((resolve) => {
-    const server = serve(
-      { fetch: app.fetch, port: config.port },
-      (info) => {
-        const port =
-          typeof info.port === 'number'
-            ? info.port
-            : (info as unknown as { address: { port: number } }).address?.port ?? 0;
-        logger.info(`Server running on http://localhost:${port}`);
-        resolve(port);
-      }
-    );
+    const server = serve({ fetch: app.fetch, port: config.port }, (info) => {
+      const port =
+        typeof info.port === 'number'
+          ? info.port
+          : ((info as unknown as { address: { port: number } }).address?.port ?? 0);
+      logger.info(`Server running on http://localhost:${port}`);
+      resolve(port);
+    });
 
     // Cleanup on app quit
     process.on('SIGTERM', async () => {

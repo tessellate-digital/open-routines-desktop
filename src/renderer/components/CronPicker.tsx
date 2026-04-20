@@ -25,7 +25,9 @@ type Mode = 'hourly' | 'daily' | 'weekdays' | 'weekly' | 'custom';
 function normalizeCron(expr: string): string {
   const trimmed = expr.trim();
   const parts = trimmed.split(/\s+/);
-  if (parts.length === 5) return trimmed;
+  if (parts.length === 5) {
+    return trimmed;
+  }
 
   // Match cron fields: *, */N, N, N-M, N,M,...
   const fieldPattern = /(\*(?:\/\d+)?|\d+(?:-\d+)?(?:,\d+(?:-\d+)?)*)/g;
@@ -46,50 +48,88 @@ const MODES: { id: Mode; label: string }[] = [
 ];
 
 function toMode(expr: string): Mode {
-  if (!expr || expr === '0 * * * *') return 'hourly';
+  if (!expr || expr === '0 * * * *') {
+    return 'hourly';
+  }
   const normalized = normalizeCron(expr);
   const parts = normalized.split(/\s+/);
-  if (parts.length !== 5) return 'custom';
+  if (parts.length !== 5) {
+    return 'custom';
+  }
   const [min, hour, dom, month, dow] = parts;
-  if (dom !== '*' || month !== '*') return 'custom';
-  if (!/^\d+$/.test(min) || !/^\d+$/.test(hour)) return 'custom';
-  if (dow === '1-5') return 'weekdays';
-  if (dow === '0') return 'weekly';
-  if (dow === '*') return 'daily';
+  if (dom !== '*' || month !== '*') {
+    return 'custom';
+  }
+  if (!/^\d+$/.test(min) || !/^\d+$/.test(hour)) {
+    return 'custom';
+  }
+  if (dow === '1-5') {
+    return 'weekdays';
+  }
+  if (dow === '0') {
+    return 'weekly';
+  }
+  if (dow === '*') {
+    return 'daily';
+  }
   return 'custom';
 }
 
 function toTime(expr: string): string {
   const normalized = normalizeCron(expr);
   const parts = normalized.split(/\s+/);
-  if (parts.length !== 5) return '09:00';
+  if (parts.length !== 5) {
+    return '09:00';
+  }
   const [min, hour] = parts;
-  if (min === '*' || hour === '*') return '09:00';
+  if (min === '*' || hour === '*') {
+    return '09:00';
+  }
   const h = parseInt(hour, 10);
   const m = parseInt(min, 10);
-  if (isNaN(h) || isNaN(m)) return '09:00';
+  if (isNaN(h) || isNaN(m)) {
+    return '09:00';
+  }
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
 function buildExpression(mode: Mode, time: string, custom: string): string {
-  if (mode === 'custom') return custom;
-  if (mode === 'hourly') return '0 * * * *';
+  if (mode === 'custom') {
+    return custom;
+  }
+  if (mode === 'hourly') {
+    return '0 * * * *';
+  }
   const [hStr, mStr] = time.split(':');
   const h = parseInt(hStr ?? '9', 10);
   const m = parseInt(mStr ?? '0', 10);
   const hh = isNaN(h) ? 9 : h;
   const mm = isNaN(m) ? 0 : m;
-  if (mode === 'daily') return `${mm} ${hh} * * *`;
-  if (mode === 'weekdays') return `${mm} ${hh} * * 1-5`;
-  if (mode === 'weekly') return `${mm} ${hh} * * 0`;
+  if (mode === 'daily') {
+    return `${mm} ${hh} * * *`;
+  }
+  if (mode === 'weekdays') {
+    return `${mm} ${hh} * * 1-5`;
+  }
+  if (mode === 'weekly') {
+    return `${mm} ${hh} * * 0`;
+  }
   return '0 * * * *';
 }
 
 function humanLabel(mode: Mode, time: string): string {
-  if (mode === 'hourly') return 'Runs every hour';
-  if (mode === 'daily') return `Runs daily at ${time}`;
-  if (mode === 'weekdays') return `Runs weekdays (Mon–Fri) at ${time}`;
-  if (mode === 'weekly') return `Runs every Sunday at ${time}`;
+  if (mode === 'hourly') {
+    return 'Runs every hour';
+  }
+  if (mode === 'daily') {
+    return `Runs daily at ${time}`;
+  }
+  if (mode === 'weekdays') {
+    return `Runs weekdays (Mon–Fri) at ${time}`;
+  }
+  if (mode === 'weekly') {
+    return `Runs every Sunday at ${time}`;
+  }
   return '';
 }
 
@@ -117,7 +157,9 @@ const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 
 function describeCustomCron(expr: string): string {
   const normalized = normalizeCron(expr);
   const parts = normalized.split(/\s+/);
-  if (parts.length !== 5) return '';
+  if (parts.length !== 5) {
+    return '';
+  }
   const [min, hour, dom, month, dow] = parts;
 
   // Helpers
@@ -127,7 +169,9 @@ function describeCustomCron(expr: string): string {
 
   // Time description
   function timeDesc(): string {
-    if (isAll(min) && isAll(hour)) return 'every minute';
+    if (isAll(min) && isAll(hour)) {
+      return 'every minute';
+    }
     if (isStep(min) && isAll(hour)) {
       const n = parseInt(min.split('/')[1], 10);
       return `every ${n} minute${n !== 1 ? 's' : ''}`;
@@ -155,19 +199,27 @@ function describeCustomCron(expr: string): string {
 
   // Day-of-week description
   function dowDesc(): string {
-    if (isAll(dow)) return '';
+    if (isAll(dow)) {
+      return '';
+    }
     if (isNum(dow)) {
       const d = parseInt(dow, 10);
       return d >= 0 && d <= 6 ? `on ${DAYS[d]}s` : '';
     }
-    if (dow === '1-5') return 'on weekdays (Mon–Fri)';
-    if (dow === '0,6' || dow === '6,0') return 'on weekends';
+    if (dow === '1-5') {
+      return 'on weekdays (Mon–Fri)';
+    }
+    if (dow === '0,6' || dow === '6,0') {
+      return 'on weekends';
+    }
     return `on days ${dow}`;
   }
 
   // Day-of-month description
   function domDesc(): string {
-    if (isAll(dom)) return '';
+    if (isAll(dom)) {
+      return '';
+    }
     if (isNum(dom)) {
       const d = parseInt(dom, 10);
       const suffix =
@@ -185,7 +237,9 @@ function describeCustomCron(expr: string): string {
 
   // Month description
   function monthDesc(): string {
-    if (isAll(month)) return '';
+    if (isAll(month)) {
+      return '';
+    }
     if (isNum(month)) {
       const m = parseInt(month, 10);
       return m >= 1 && m <= 12 ? `in ${MONTHS[m - 1]}` : '';
@@ -194,7 +248,9 @@ function describeCustomCron(expr: string): string {
   }
 
   const time = timeDesc();
-  if (!time) return '';
+  if (!time) {
+    return '';
+  }
 
   const parts2 = [time, dowDesc(), domDesc(), monthDesc()].filter(Boolean);
   return parts2.join(' ').replace(/\s+/g, ' ').trim();
@@ -221,11 +277,15 @@ export function CronPicker({ value, onChange }: CronPickerProps) {
   // Sync inward only when the parent resets value from outside (e.g. edit-mode
   // pre-population).  Once the user has interacted we stop following the parent.
   useEffect(() => {
-    if (userSelectedRef.current) return;
+    if (userSelectedRef.current) {
+      return;
+    }
     const newMode = toMode(value);
     setMode(newMode);
     setTime(toTime(value));
-    if (newMode === 'custom') setCustom(value);
+    if (newMode === 'custom') {
+      setCustom(value);
+    }
   }, [value]);
 
   function handleModeChange(m: Mode) {

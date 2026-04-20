@@ -47,7 +47,9 @@ interface TodoItem {
 function extractTodos(segments: Segment[]): TodoItem[] {
   let latest: TodoItem[] = [];
   for (const seg of segments) {
-    if (seg.kind !== 'tool' || seg.name !== 'todowrite') continue;
+    if (seg.kind !== 'tool' || seg.name !== 'todowrite') {
+      continue;
+    }
     try {
       const parsed = JSON.parse(seg.args);
       const items = Array.isArray(parsed.todos)

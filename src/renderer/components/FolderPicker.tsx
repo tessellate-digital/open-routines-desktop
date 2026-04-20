@@ -18,18 +18,26 @@ export function FolderPicker({
   onClose: () => void;
 }) {
   const openedRef = useRef(false);
+  const onChangeRef = useRef(onChange);
+  const onCloseRef = useRef(onClose);
+  onChangeRef.current = onChange;
+  onCloseRef.current = onClose;
 
   useEffect(() => {
-    if (openedRef.current) return;
+    if (openedRef.current) {
+      return;
+    }
     openedRef.current = true;
 
     if (window.electronAPI) {
       window.electronAPI.selectDirectory().then((selected) => {
-        if (selected) onChange(selected);
-        onClose();
+        if (selected) {
+          onChangeRef.current(selected);
+        }
+        onCloseRef.current();
       });
     } else {
-      onClose();
+      onCloseRef.current();
     }
   }, []);
 

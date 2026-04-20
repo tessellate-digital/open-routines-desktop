@@ -112,12 +112,7 @@ function spawnAndWaitForServer(
     const opencodeBinDir = path.dirname(appConfig.opencodePath);
     const enrichedEnv = {
       ...env,
-      PATH: [
-        env.PATH ?? '',
-        opencodeBinDir,
-        '/usr/local/bin',
-        '/opt/homebrew/bin',
-      ]
+      PATH: [env.PATH ?? '', opencodeBinDir, '/usr/local/bin', '/opt/homebrew/bin']
         .filter(Boolean)
         .join(':'),
     };

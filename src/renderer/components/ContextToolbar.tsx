@@ -50,11 +50,7 @@ export default function ContextToolbar() {
   return (
     <div className="ctxbar">
       <div className="nav-arrows">
-        <button
-          className="arrow-btn"
-          onClick={() => navigate(-1)}
-          aria-label="Back"
-        >
+        <button className="arrow-btn" onClick={() => navigate(-1)} aria-label="Back">
           <svg
             viewBox="0 0 16 16"
             width="14"
@@ -68,11 +64,7 @@ export default function ContextToolbar() {
             <path d="m10 3-5 5 5 5" />
           </svg>
         </button>
-        <button
-          className="arrow-btn"
-          onClick={() => navigate(1)}
-          aria-label="Forward"
-        >
+        <button className="arrow-btn" onClick={() => navigate(1)} aria-label="Forward">
           <svg
             viewBox="0 0 16 16"
             width="14"

@@ -92,7 +92,9 @@ export function openRun(runId: string): void {
  * text event.  Called automatically before non-text events and on close().
  */
 function flushPendingText(store: RunStore, runId: string): void {
-  if (!store.pendingText) return;
+  if (!store.pendingText) {
+    return;
+  }
   const event: StreamEvent = { type: 'text', data: store.pendingText };
   store.history.push(event);
   store.stdoutLines.push(JSON.stringify(event));
@@ -108,7 +110,9 @@ function flushPendingText(store: RunStore, runId: string): void {
  */
 export function streamText(runId: string, delta: string): void {
   const store = stores.get(runId);
-  if (!store) return;
+  if (!store) {
+    return;
+  }
   store.queue.push({ type: 'text', data: delta });
   store.pendingText += delta;
 }
@@ -230,7 +234,9 @@ export function connectStream(runId: string): AsyncQueue<StreamEvent | null> | n
  */
 export function getHistory(runId: string): StreamEvent[] {
   const store = stores.get(runId);
-  if (!store) return [];
+  if (!store) {
+    return [];
+  }
   if (store.pendingText) {
     return [...store.history, { type: 'text', data: store.pendingText }];
   }

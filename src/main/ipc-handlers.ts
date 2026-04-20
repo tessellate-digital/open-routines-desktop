@@ -18,7 +18,9 @@ export function registerIpcHandlers(): void {
     const result = await dialog.showOpenDialog(win!, {
       properties: ['openDirectory'],
     });
-    if (result.canceled || result.filePaths.length === 0) return null;
+    if (result.canceled || result.filePaths.length === 0) {
+      return null;
+    }
     return result.filePaths[0];
   });
 }

@@ -29,7 +29,9 @@ export function SelectDropdown({
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      return;
+    }
     const handler = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setOpen(false);
@@ -41,7 +43,9 @@ export function SelectDropdown({
   }, [open]);
 
   useEffect(() => {
-    if (open && filterable) inputRef.current?.focus();
+    if (open && filterable) {
+      inputRef.current?.focus();
+    }
   }, [open, filterable]);
 
   const q = query.toLowerCase();
@@ -51,7 +55,9 @@ export function SelectDropdown({
   const ungrouped: SelectOption[] = [];
   for (const o of filtered) {
     if (o.group) {
-      if (!groups.has(o.group)) groups.set(o.group, []);
+      if (!groups.has(o.group)) {
+        groups.set(o.group, []);
+      }
       groups.get(o.group)!.push(o);
     } else {
       ungrouped.push(o);
@@ -156,7 +162,7 @@ export function SelectDropdown({
               ))}
             {filtered.length === 0 && (
               <p className="py-2 px-3 text-[13px] text-[color:var(--fg-muted)]">
-                No matches for "{query}"
+                No matches for &quot;{query}&quot;
               </p>
             )}
           </div>

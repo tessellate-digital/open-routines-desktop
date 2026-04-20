@@ -14,7 +14,6 @@ export interface RoutineRow {
   env_vars: string;
   enabled: number;
   run_mode: string;
-  workspace_path: string;
   last_run_status: string | null;
   triggers_count: number;
   created_at: string;
@@ -70,7 +69,6 @@ export const RoutineCreateSchema = z.object({
   env_vars: z.record(z.string()).default({}),
   enabled: z.boolean().default(true),
   run_mode: z.enum(['background', 'foreground']).default('background'),
-  workspace_path: z.string().default(''),
 });
 
 export const RoutineUpdateSchema = z.object({
@@ -84,7 +82,6 @@ export const RoutineUpdateSchema = z.object({
   env_vars: z.record(z.string()).optional(),
   enabled: z.boolean().optional(),
   run_mode: z.enum(['background', 'foreground']).optional(),
-  workspace_path: z.string().optional(),
 });
 
 export const TriggerCreateSchema = z.object({

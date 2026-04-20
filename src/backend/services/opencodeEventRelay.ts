@@ -112,7 +112,9 @@ function translatePart(
   switch (part?.type) {
     case 'text': {
       // Skip if already streamed token-by-token via message.part.delta
-      if (deltaPartIds.has(part.id as string)) return null;
+      if (deltaPartIds.has(part.id as string)) {
+        return null;
+      }
       if (part.text) {
         return { type: 'text', data: part.text as string };
       }
@@ -264,13 +266,19 @@ async function runRelayLoop(client: unknown, relay: ServerRelay): Promise<void> 
           const partId = props?.partID as string | undefined;
           const messageID = props?.messageID as string | undefined;
 
-          if (!sid || !delta || !partId) break;
+          if (!sid || !delta || !partId) {
+            break;
+          }
 
           const subscriber = relay.subscribers.get(sid);
-          if (!subscriber) break;
+          if (!subscriber) {
+            break;
+          }
 
           // Skip user message deltas
-          if (messageID === subscriber.userMessageId) break;
+          if (messageID === subscriber.userMessageId) {
+            break;
+          }
 
           if (field === 'text') {
             subscriber.deltaPartIds.add(partId);
@@ -339,10 +347,14 @@ async function runRelayLoop(client: unknown, relay: ServerRelay): Promise<void> 
           const props = payload.properties as any;
           const questionId = props?.id as string | undefined;
           const sid = props?.sessionID as string | undefined;
-          if (!questionId || !sid) break;
+          if (!questionId || !sid) {
+            break;
+          }
 
           const subscriber = relay.subscribers.get(sid);
-          if (!subscriber) break;
+          if (!subscriber) {
+            break;
+          }
 
           // Store the baseUrl so answerQuestion() can route to the right server
           questionToBaseUrl.set(questionId, subscriber.baseUrl);
@@ -400,7 +412,12 @@ async function runRelayLoop(client: unknown, relay: ServerRelay): Promise<void> 
  * @param sessionId The SDK session ID whose events should be relayed to `runId`.
  * @param runId     The run ID in the stream store to push translated events to.
  */
-export function subscribeRun(client: unknown, sessionId: string, runId: string, baseUrl: string): void {
+export function subscribeRun(
+  client: unknown,
+  sessionId: string,
+  runId: string,
+  baseUrl: string
+): void {
   let relay = serverRelays.get(client);
 
   if (!relay) {
@@ -540,7 +557,9 @@ export function waitForDrain(sessionId: string): Promise<void> {
 export async function answerQuestion(questionId: string, answers: string[][]): Promise<void> {
   const baseUrl = questionToBaseUrl.get(questionId);
   if (!baseUrl) {
-    throw new Error(`No server found for question ${questionId} — it may have already been answered`);
+    throw new Error(
+      `No server found for question ${questionId} — it may have already been answered`
+    );
   }
 
   const res = await fetch(`${baseUrl}/question/${questionId}/reply`, {

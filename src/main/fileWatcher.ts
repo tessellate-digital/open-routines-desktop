@@ -29,11 +29,19 @@ function matchesFileFilter(
   filter: WatcherTrigger['fileFilter'],
   evtType: string
 ): boolean {
-  if (FOLDER_EVENTS.has(evtType)) return true;
-  if (!filter || filter.mode === 'none' || filter.patterns.length === 0) return true;
+  if (FOLDER_EVENTS.has(evtType)) {
+    return true;
+  }
+  if (!filter || filter.mode === 'none' || filter.patterns.length === 0) {
+    return true;
+  }
   const ext = extname(filePath).toLowerCase();
-  if (!ext) return filter.mode === 'exclude';
-  if (filter.mode === 'include') return filter.patterns.includes(ext);
+  if (!ext) {
+    return filter.mode === 'exclude';
+  }
+  if (filter.mode === 'include') {
+    return filter.patterns.includes(ext);
+  }
   return !filter.patterns.includes(ext);
 }
 
@@ -77,7 +85,9 @@ function reconcileWatchers(triggers: WatcherTrigger[]): void {
   }
 
   for (const p of neededPaths) {
-    if (watchers.has(p)) continue;
+    if (watchers.has(p)) {
+      continue;
+    }
 
     const w = chokidar.watch(p, {
       persistent: true,
@@ -124,7 +134,9 @@ interface TriggerResponse {
 async function fetchAndReconcile(): Promise<void> {
   try {
     const res = await fetch(`http://localhost:${serverPort}/api/triggers?type=watcher`);
-    if (!res.ok) return;
+    if (!res.ok) {
+      return;
+    }
     const triggers = (await res.json()) as TriggerResponse[];
 
     const parsed: WatcherTrigger[] = triggers
@@ -133,9 +145,7 @@ async function fetchAndReconcile(): Promise<void> {
         const rawPaths = (t.config.paths as string[]) ?? [];
         const paths = rawPaths.filter(Boolean);
 
-        const rawFilter = t.config.fileFilter as
-          | { mode?: string; patterns?: string[] }
-          | undefined;
+        const rawFilter = t.config.fileFilter as { mode?: string; patterns?: string[] } | undefined;
         const fileFilter =
           rawFilter && Array.isArray(rawFilter.patterns) && rawFilter.patterns.length > 0
             ? {

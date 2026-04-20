@@ -33,11 +33,13 @@ interface WatcherDraft {
 }
 type TriggerDraft = CronDraft | WatcherDraft;
 
-function defaultDraft(type: TriggerType, workspacePath: string): TriggerDraft {
-  if (type === 'cron') return { type: 'cron', expression: '0 9 * * *' };
+function defaultDraft(type: TriggerType): TriggerDraft {
+  if (type === 'cron') {
+    return { type: 'cron', expression: '0 9 * * *' };
+  }
   return {
     type: 'watcher',
-    paths: workspacePath ? [workspacePath] : [],
+    paths: [],
     events: ['add', 'change', 'addDir'],
     fileFilter: { mode: 'none', patterns: [] },
     recursive: true,
@@ -45,21 +47,22 @@ function defaultDraft(type: TriggerType, workspacePath: string): TriggerDraft {
 }
 
 function triggerSummary(d: TriggerDraft, resolve: (p: string) => string): string {
-  if (d.type === 'cron') return d.expression;
+  if (d.type === 'cron') {
+    return d.expression;
+  }
   const paths = d.paths.map((p) => resolve(p).split('/').pop() || p).join(', ');
   return paths || 'No paths';
 }
 
-function triggerToDraft(t: Trigger, routine: { workspace_path: string }): TriggerDraft {
-  if (t.type === 'cron')
+function triggerToDraft(t: Trigger): TriggerDraft {
+  if (t.type === 'cron') {
     return { type: 'cron', expression: String(t.config.expression || '0 9 * * *') };
+  }
   const paths: string[] = Array.isArray(t.config.paths)
     ? (t.config.paths as string[])
     : typeof t.config.path === 'string' && t.config.path
       ? [t.config.path as string]
-      : routine.workspace_path
-        ? [routine.workspace_path]
-        : [];
+      : [];
   const rawFilter = t.config.fileFilter as { mode?: string; patterns?: string[] } | undefined;
   const fileFilter: FileFilterValue =
     rawFilter && Array.isArray(rawFilter.patterns)
@@ -89,7 +92,6 @@ function TriggerCard({
   index,
   onChange,
   onRemove,
-  workspacePath,
   hasMounts,
   resolveHostPath,
   onPickFolder,
@@ -100,7 +102,6 @@ function TriggerCard({
   index: number;
   onChange: (d: TriggerDraft) => void;
   onRemove: () => void;
-  workspacePath: string;
   hasMounts: boolean | null;
   resolveHostPath: (p: string) => string;
   onPickFolder: (index: number) => void;
@@ -176,9 +177,6 @@ function TriggerCard({
                     Add path
                   </button>
                 )}
-                {draft.paths.length === 0 && !workspacePath && (
-                  <p className="hint">No workspace folder selected.</p>
-                )}
               </div>
               <label className="flex items-center gap-2 cursor-pointer text-[13px]">
                 <input
@@ -245,7 +243,6 @@ export default function RoutineForm() {
     env_vars: '{}',
     enabled: true,
     run_mode: 'foreground' as 'background' | 'foreground',
-    workspace_path: '',
   });
   const [triggerDrafts, setTriggerDrafts] = useState<TriggerDraft[]>([]);
   const [collapsedTriggers, setCollapsedTriggers] = useState<Set<number>>(new Set());
@@ -292,16 +289,15 @@ export default function RoutineForm() {
             env_vars: JSON.stringify(routine.env_vars, null, 2),
             enabled: routine.enabled,
             run_mode: routine.run_mode,
-            workspace_path: routine.workspace_path ?? '',
           });
         }
         if (triggers && triggers.length > 0) {
           setExistingTriggers(triggers);
-          const drafts = triggers.map((t) =>
-            triggerToDraft(t, { workspace_path: routine?.workspace_path || '' })
-          );
+          const drafts = triggers.map((t) => triggerToDraft(t));
           setTriggerDrafts(drafts);
-          if (drafts.length >= 3) setCollapsedTriggers(new Set(drafts.map((_, i) => i)));
+          if (drafts.length >= 3) {
+            setCollapsedTriggers(new Set(drafts.map((_, i) => i)));
+          }
         }
       } catch {
         /* non-critical */
@@ -310,7 +306,7 @@ export default function RoutineForm() {
       }
     }
     init();
-  }, [id, isEdit]);
+  }, [id, isEdit, setPageTitle]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -334,12 +330,13 @@ export default function RoutineForm() {
       env_vars: envVars,
       enabled: form.enabled,
       run_mode: form.run_mode,
-      workspace_path: form.workspace_path,
     };
     try {
       const res = isEdit ? await api.updateRoutine(id!, data) : await api.createRoutine(data);
       const routineId = res.id;
-      if (isEdit) await Promise.all(existingTriggers.map((t) => api.deleteTrigger(t.id)));
+      if (isEdit) {
+        await Promise.all(existingTriggers.map((t) => api.deleteTrigger(t.id)));
+      }
       for (const draft of triggerDrafts) {
         if (draft.type === 'cron' && draft.expression) {
           await api.createTrigger(routineId, {
@@ -352,8 +349,9 @@ export default function RoutineForm() {
             events: draft.events,
             recursive: draft.recursive,
           };
-          if (draft.fileFilter.mode !== 'none' && draft.fileFilter.patterns.length > 0)
+          if (draft.fileFilter.mode !== 'none' && draft.fileFilter.patterns.length > 0) {
             config.fileFilter = draft.fileFilter;
+          }
           await api.createTrigger(routineId, { type: 'watcher', config });
         }
       }
@@ -366,11 +364,13 @@ export default function RoutineForm() {
   };
 
   const addTrigger = (type: TriggerType) => {
-    const draft = defaultDraft(type, form.workspace_path);
+    const draft = defaultDraft(type);
     setTriggerDrafts((prev) => [...prev, draft]);
     setAddingTriggerType(null);
     setCollapsedTriggers((prev) => {
-      if (triggerDrafts.length + 1 >= 3) return new Set(triggerDrafts.map((_, i) => i));
+      if (triggerDrafts.length + 1 >= 3) {
+        return new Set(triggerDrafts.map((_, i) => i));
+      }
       return prev;
     });
   };
@@ -381,8 +381,11 @@ export default function RoutineForm() {
     setCollapsedTriggers((prev) => {
       const next = new Set<number>();
       for (const i of prev) {
-        if (i < index) next.add(i);
-        else if (i > index) next.add(i - 1);
+        if (i < index) {
+          next.add(i);
+        } else if (i > index) {
+          next.add(i - 1);
+        }
       }
       return next;
     });
@@ -390,8 +393,11 @@ export default function RoutineForm() {
   const toggleCollapse = (index: number) => {
     setCollapsedTriggers((prev) => {
       const next = new Set(prev);
-      if (next.has(index)) next.delete(index);
-      else next.add(index);
+      if (next.has(index)) {
+        next.delete(index);
+      } else {
+        next.add(index);
+      }
       return next;
     });
   };
@@ -402,10 +408,9 @@ export default function RoutineForm() {
   const handleFolderPicked = (path: string) => {
     if (folderPickerTarget !== null) {
       const draft = triggerDrafts[folderPickerTarget];
-      if (draft?.type === 'watcher' && !draft.paths.includes(path))
+      if (draft?.type === 'watcher' && !draft.paths.includes(path)) {
         updateDraft(folderPickerTarget, { ...draft, paths: [...draft.paths, path] });
-    } else {
-      setForm((f) => ({ ...f, workspace_path: path }));
+      }
     }
     setShowFolderPicker(false);
     setFolderPickerTarget(null);
@@ -421,7 +426,9 @@ export default function RoutineForm() {
       .map((m) => ({ value: m, label: m, group: m.split('/', 1)[0] })),
   ];
 
-  if (loading) return <p className="hint">Loading…</p>;
+  if (loading) {
+    return <p className="hint">Loading…</p>;
+  }
 
   return (
     <div className="route-fade max-w-[820px]">
@@ -477,40 +484,6 @@ export default function RoutineForm() {
           />
         </div>
 
-        {/* Workspace */}
-        <div className="form-row">
-          <label>Workspace folder</label>
-              <p className="hint mb-2">
-                Select a local folder for the agent to work in.
-              </p>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  className="btn"
-                  onClick={() => {
-                    setFolderPickerTarget(null);
-                    setShowFolderPicker(true);
-                  }}
-                >
-                  📁 {form.workspace_path ? 'Change folder' : 'Select folder'}
-                </button>
-                {form.workspace_path && (
-                  <button
-                    type="button"
-                    className="text-xs text-[color:var(--status-failed)] bg-none border-0 cursor-pointer"
-                    onClick={() => setForm((f) => ({ ...f, workspace_path: '' }))}
-                  >
-                    Clear
-                  </button>
-                )}
-              </div>
-              {form.workspace_path && (
-                <p className="mt-1.5 font-mono text-xs text-[color:var(--fg)]">
-                  {form.workspace_path}
-                </p>
-              )}
-        </div>
-
         <div className="grid grid-cols-2 gap-2.5">
           <div className="form-row !mb-0">
             <label>Model</label>
@@ -546,7 +519,6 @@ export default function RoutineForm() {
               index={i}
               onChange={(d) => updateDraft(i, d)}
               onRemove={() => removeDraft(i)}
-              workspacePath={form.workspace_path}
               hasMounts={hasMounts}
               resolveHostPath={resolveHostPath}
               onPickFolder={openFolderPickerForTrigger}
@@ -570,11 +542,7 @@ export default function RoutineForm() {
                 onChange={(v) => setAddingTriggerType(v as 'cron' | 'watcher')}
                 options={[
                   { value: 'cron', label: 'Cron (scheduled)' },
-                  {
-                    value: 'watcher',
-                    label: 'Filesystem (watch for changes)',
-                    disabled: !form.workspace_path,
-                  },
+                  { value: 'watcher', label: 'Filesystem (watch for changes)' },
                 ]}
                 placeholder="Trigger type"
               />
@@ -638,7 +606,7 @@ export default function RoutineForm() {
 
       {showFolderPicker && (
         <FolderPicker
-          value={form.workspace_path}
+          value=""
           onChange={handleFolderPicked}
           onClose={() => {
             setShowFolderPicker(false);

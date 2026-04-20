@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import classNames from 'classnames';
 import { api } from '../lib/api';
 import { PROVIDERS } from '../lib/providers';
@@ -9,7 +10,9 @@ const FAVOURITE_MODELS_KEY = 'FAVOURITE_MODELS';
 
 function splitModel(id: string): { provider: string; model: string } {
   const slash = id.indexOf('/');
-  if (slash === -1) return { provider: '', model: id };
+  if (slash === -1) {
+    return { provider: '', model: id };
+  }
   return { provider: id.slice(0, slash), model: id.slice(slash + 1) };
 }
 
@@ -209,7 +212,9 @@ function CopilotDeviceFlow({
           setErrorMsg(result.error || 'Authorization failed');
         }
       } catch (err) {
-        if (abortRef.current?.signal.aborted) return;
+        if (abortRef.current?.signal.aborted) {
+          return;
+        }
         setPhase('error');
         setErrorMsg(err instanceof Error ? err.message : 'Authorization failed');
       }
@@ -270,7 +275,10 @@ function CopilotDeviceFlow({
             Go to{' '}
             <a
               href="#"
-              onClick={(e) => { e.preventDefault(); window.electronAPI?.openExternal(verificationUri); }}
+              onClick={(e) => {
+                e.preventDefault();
+                window.electronAPI?.openExternal(verificationUri);
+              }}
               className="text-[color:var(--accent)] underline"
             >
               {verificationUri}
@@ -358,7 +366,9 @@ function ProviderPicker({
         value={query}
         onChange={(e) => {
           setQuery(e.target.value);
-          if (e.target.value) setShowAll(false);
+          if (e.target.value) {
+            setShowAll(false);
+          }
         }}
         placeholder="Search all providers…"
         className="input mb-3 max-w-[360px]"
@@ -435,6 +445,7 @@ function ThemeToggle({
 }
 
 export default function Settings() {
+  const navigate = useNavigate();
   const [settings, setSettings] = useState<Setting[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -444,6 +455,9 @@ export default function Settings() {
   const [favourites, setFavourites] = useState<string[]>([]);
   const [modelQuery, setModelQuery] = useState('');
   const [modelsLoading, setModelsLoading] = useState(true);
+
+  const [confirmReset, setConfirmReset] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   const [theme, setThemeState] = useState(
     () => document.documentElement.getAttribute('data-theme') || 'gradient'
@@ -513,10 +527,16 @@ export default function Settings() {
   const hasProviders = configuredProviders.length > 0;
 
   // Only show models from opencode (bundled) + connected providers
-  const allowedPrefixes = new Set(['opencode', 'opencode-go', ...configuredProviders.map((p) => p.id)]);
+  const allowedPrefixes = new Set([
+    'opencode',
+    'opencode-go',
+    ...configuredProviders.map((p) => p.id),
+  ]);
   const availableModels = allModels.filter((m) => {
     const slash = m.indexOf('/');
-    if (slash === -1) return true; // no prefix — always show
+    if (slash === -1) {
+      return true;
+    } // no prefix — always show
     const prefix = m.slice(0, slash);
     return allowedPrefixes.has(prefix);
   });
@@ -532,7 +552,9 @@ export default function Settings() {
   };
 
   const handleProviderRemove = async (keys: string[]) => {
-    if (!confirm(`Remove ${keys.join(', ')}?`)) return;
+    if (!confirm(`Remove ${keys.join(', ')}?`)) {
+      return;
+    }
     await Promise.all(keys.map((k) => api.deleteSetting(k)));
     load();
     setModelsLoading(true);
@@ -551,15 +573,37 @@ export default function Settings() {
     });
   };
 
-  if (loading) return <p className="hint">Loading…</p>;
-  if (error) return <p className="text-[color:var(--status-failed)] text-[13px]">Error: {error}</p>;
+  if (loading) {
+    return <p className="hint">Loading…</p>;
+  }
+  if (error) {
+    return <p className="text-[color:var(--status-failed)] text-[13px]">Error: {error}</p>;
+  }
+
+  const handleReset = async () => {
+    setResetting(true);
+    try {
+      await api.resetData();
+      navigate('/');
+    } finally {
+      setResetting(false);
+      setConfirmReset(false);
+    }
+  };
 
   return (
     <div className="route-fade max-w-[820px]">
       <div className="page-head mb-7">
         <div>
           <h1>Settings</h1>
-          <div className="sub">Configure AI providers and favourite models for your routines.</div>
+          <div className="sub">Manage providers, appearance and app configuration.</div>
+        </div>
+      </div>
+
+      {/* ── Models ── */}
+      <div className="mb-2">
+        <div className="text-[11px] font-semibold uppercase tracking-[.08em] text-[color:var(--fg-dim)] mb-4">
+          Models
         </div>
       </div>
 
@@ -702,7 +746,9 @@ export default function Settings() {
                             'border-b border-[var(--border)]': i < filtered.length - 1,
                           })}
                         >
-                          <span className="flex-1"><ModelLabel id={m} /></span>
+                          <span className="flex-1">
+                            <ModelLabel id={m} />
+                          </span>
                           <button onClick={() => toggleFavourite(m)} className="btn sm run">
                             Add
                           </button>
@@ -712,7 +758,7 @@ export default function Settings() {
                   </div>
                 ) : (
                   <p className="text-[13px] text-[color:var(--fg-muted)]">
-                    No models matching "{modelQuery}".
+                    No models matching &quot;{modelQuery}&quot;.
                   </p>
                 );
               })()}
@@ -726,8 +772,13 @@ export default function Settings() {
         )}
       </div>
 
-      {/* Appearance */}
-      <div>
+      {/* ── Display ── */}
+      <div className="mb-2 mt-4">
+        <div className="text-[11px] font-semibold uppercase tracking-[.08em] text-[color:var(--fg-dim)] mb-4">
+          Display
+        </div>
+      </div>
+      <div className="mb-9">
         <div className="mb-4">
           <div className="text-[16px] font-semibold mb-[3px]">Appearance</div>
           <div className="hint">Customise the look and feel of the interface.</div>
@@ -763,6 +814,40 @@ export default function Settings() {
             value={statusStyle}
             onChange={setStatusStyle}
           />
+        </div>
+      </div>
+
+      {/* ── Configuration ── */}
+      <div className="mb-2 mt-4">
+        <div className="text-[11px] font-semibold uppercase tracking-[.08em] text-[color:var(--fg-dim)] mb-4">
+          Configuration
+        </div>
+      </div>
+      <div>
+        <div className="mb-4">
+          <div className="text-[16px] font-semibold mb-[3px]">Reset data</div>
+          <div className="hint">
+            Permanently delete all routines, runs and settings. The app will quit.
+          </div>
+        </div>
+        <div className="card py-4 px-5">
+          {!confirmReset ? (
+            <button onClick={() => setConfirmReset(true)} className="btn delete-rt">
+              Reset all data…
+            </button>
+          ) : (
+            <div className="flex items-center gap-3">
+              <span className="text-[13px] text-[color:var(--status-failed)]">
+                This cannot be undone.
+              </span>
+              <button onClick={handleReset} disabled={resetting} className="btn delete-rt">
+                {resetting ? 'Deleting…' : 'Confirm reset'}
+              </button>
+              <button onClick={() => setConfirmReset(false)} className="btn">
+                Cancel
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -101,18 +101,6 @@ export class Executor {
   private activeSessions = new Map<string, { client: unknown; sessionId: string }>();
 
   private async prepareWorkspace(routine: RoutineRow): Promise<string> {
-    // If the routine has an explicit local folder, use it directly.
-    if (routine.workspace_path) {
-      const stat = await fs.promises.stat(routine.workspace_path).catch(() => null);
-      if (!stat || !stat.isDirectory()) {
-        throw new Error(
-          `Workspace folder is no longer accessible: ${routine.workspace_path}\n` +
-            `The folder may have been moved or deleted.`
-        );
-      }
-      return routine.workspace_path;
-    }
-
     const workspace = path.join(appConfig.workspacesDir, '_internal', routine.id);
     await fs.promises.mkdir(workspace, { recursive: true });
 
@@ -202,9 +190,6 @@ export class Executor {
       `Current time: ${now.toISOString()}`,
     ];
 
-    if (routine.workspace_path) {
-      lines.push(`Workspace: ${routine.workspace_path}`);
-    }
     if (routine.repository) {
       lines.push(`Repository: ${routine.repository} (branch: ${routine.branch})`);
     }

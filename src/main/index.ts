@@ -28,7 +28,7 @@ function createWindow(serverPort: number): void {
   // Set dock icon (ensures it shows in dev mode on macOS)
   const iconPath = path.join(app.getAppPath(), 'resources', 'icon.png');
   if (process.platform === 'darwin') {
-    app.dock.setIcon(nativeImage.createFromPath(iconPath));
+    app.dock?.setIcon(nativeImage.createFromPath(iconPath));
   }
 
   // Open DevTools only when DEBUG env var is set
@@ -42,9 +42,7 @@ function createWindow(serverPort: number): void {
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
   } else {
-    mainWindow.loadFile(
-      path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`)
-    );
+    mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
   }
 }
 

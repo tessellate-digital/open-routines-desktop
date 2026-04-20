@@ -1,8 +1,12 @@
 import { app } from 'electron';
 import * as path from 'path';
+import * as fs from 'fs';
 import { getOpencodePath } from './opencode-installer';
 
-const userData = app.getPath('userData');
+const userData = app.isPackaged
+  ? app.getPath('userData')
+  : path.join(app.getPath('appData'), 'open-routines-desktop-dev');
+fs.mkdirSync(userData, { recursive: true });
 const home = app.getPath('home');
 
 export const config = {
