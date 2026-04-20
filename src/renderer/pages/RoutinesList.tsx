@@ -69,11 +69,17 @@ export default function RoutinesList() {
     }, [load])
   );
 
-  if (loading) return <p className="hint">Loading…</p>;
-  if (error) return <p className="text-[color:var(--status-failed)] text-[13px]">Error: {error}</p>;
+  if (loading) {
+    return <p className="hint">Loading…</p>;
+  }
+  if (error) {
+    return <p className="text-[color:var(--status-failed)] text-[13px]">Error: {error}</p>;
+  }
 
   const filtered = routines.filter((r) => {
-    if (!search) return true;
+    if (!search) {
+      return true;
+    }
     const q = search.toLowerCase();
     return r.name.toLowerCase().includes(q) || (r.description || '').toLowerCase().includes(q);
   });
@@ -130,20 +136,13 @@ export default function RoutinesList() {
               {filtered.map((r) => (
                 <tr key={r.id} onClick={() => navigate(`/routines/${r.id}`)}>
                   <td>
-                    <div className="primary-cell">
-                      {r.name}
-                      {r.workspace_path && !r.workspace_accessible && (
-                        <span className="ml-2 text-[10px] text-[color:var(--status-warning)] font-mono">
-                          folder missing
-                        </span>
-                      )}
-                    </div>
-                    <div className="sub">
-                      {r.model || 'default'}
-                    </div>
+                    <div className="primary-cell">{r.name}</div>
+                    <div className="sub">{r.model || 'default'}</div>
                   </td>
                   <td>
-                    <span className="mono">{r.triggers_count} trigger{r.triggers_count !== 1 ? 's' : ''}</span>
+                    <span className="mono">
+                      {r.triggers_count} trigger{r.triggers_count !== 1 ? 's' : ''}
+                    </span>
                   </td>
                   <td>
                     {r.last_run_status ? (
@@ -196,12 +195,14 @@ export default function RoutinesList() {
       ) : routines.length === 0 && filter !== 'all' ? (
         <div className="card">
           <div className="p-12 text-center text-[color:var(--fg-muted)]">
-            No routines with status "{filter}".
+            No routines with status &quot;{filter}&quot;.
           </div>
         </div>
       ) : (
         <div className="card">
-          <div className="p-12 text-center text-[color:var(--fg-muted)]">No routines match your search.</div>
+          <div className="p-12 text-center text-[color:var(--fg-muted)]">
+            No routines match your search.
+          </div>
         </div>
       )}
     </div>

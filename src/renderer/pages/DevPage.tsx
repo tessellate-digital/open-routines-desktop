@@ -45,7 +45,9 @@ export default function DevPage() {
   const load = useCallback(async () => {
     try {
       const res = await fetch(AGENT_URL);
-      if (!res.ok) throw new Error(`Agent returned ${res.status}`);
+      if (!res.ok) {
+        throw new Error(`Agent returned ${res.status}`);
+      }
       setAgentData(await res.json());
       setAgentError(null);
     } catch (e) {
@@ -80,8 +82,11 @@ export default function DevPage() {
   }, [load]);
 
   const handleDelete = async (triggerId: string, routineId: string) => {
-    if (!confirm('Delete this trigger? If no other triggers remain, the routine will be disabled.'))
+    if (
+      !confirm('Delete this trigger? If no other triggers remain, the routine will be disabled.')
+    ) {
       return;
+    }
     setDeleting((s) => new Set(s).add(triggerId));
     try {
       await api.deleteTrigger(triggerId);

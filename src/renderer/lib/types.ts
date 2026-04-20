@@ -12,8 +12,6 @@ export interface Routine {
   env_vars: Record<string, string>;
   enabled: boolean;
   run_mode: 'background' | 'foreground';
-  workspace_path: string;
-  workspace_accessible: boolean;
   created_at: string;
   updated_at: string;
   triggers_count: number;

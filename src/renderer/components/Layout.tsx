@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Outlet } from 'react-router-dom';
-import classNames from 'classnames';
 import { api } from '../lib/api';
 import { useGlobalSSE } from '../hooks/useSSE';
 import Sidebar from './Sidebar';
@@ -38,11 +37,7 @@ export default function Layout() {
   return (
     <div className="app-shell">
       <div className="chrome">
-        <Sidebar
-          collapsed={collapsed}
-          onToggle={toggle}
-          routineCount={routineCount}
-        />
+        <Sidebar collapsed={collapsed} onToggle={toggle} routineCount={routineCount} />
         <div className="chrome-right">
           <ContextToolbar />
           <div className="content-card">

@@ -50,7 +50,9 @@ function StatusIcon({ status }: { status: TodoItem['status'] }) {
 export function TodoBox({ items }: TodoBoxProps) {
   const [open, setOpen] = useState(() => items.some((i) => i.status === 'in_progress'));
 
-  if (items.length === 0) return null;
+  if (items.length === 0) {
+    return null;
+  }
 
   const done = items.filter((i) => i.status === 'completed').length;
   const pct = Math.round((done / items.length) * 100);

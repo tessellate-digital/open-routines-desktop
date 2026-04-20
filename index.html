@@ -5,14 +5,142 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Opencode Routines</title>
+    <!-- Sync persisted theme/density before first paint to avoid flash -->
+    <script>
+      (function () {
+        var h = document.documentElement;
+        var pairs = [['oc-theme', 'data-theme'], ['oc-density', 'data-density'], ['oc-status-style', 'data-status-style']];
+        pairs.forEach(function (p) { var v = localStorage.getItem(p[0]); if (v) h.setAttribute(p[1], v); });
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
+    <style>
+      @property --splash-angle {
+        syntax: '<angle>';
+        inherits: false;
+        initial-value: 0deg;
+      }
+
+      #splash {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 18px;
+        background: #ffffff;
+        z-index: 9999;
+        opacity: 1;
+        overflow: hidden;
+        transition: opacity 250ms cubic-bezier(0.22, 0.61, 0.36, 1);
+      }
+      [data-theme='dark'] #splash { background: #0c0d10; }
+
+      #splash.fade-out { opacity: 0; pointer-events: none; }
+
+      /* Ambient background orbs */
+      #splash-orbs {
+        position: absolute;
+        inset: 0;
+      }
+
+      .splash-bg-orb {
+        position: absolute;
+        border-radius: 50%;
+        pointer-events: none;
+        mix-blend-mode: multiply;
+        filter: blur(130px);
+      }
+      [data-theme='dark'] .splash-bg-orb { mix-blend-mode: screen; }
+
+      .splash-bg-orb--blue {
+        width: 60vw; height: 60vw;
+        top: -15%; left: -12%;
+        background: rgba(79, 70, 229, 0.32);
+      }
+      .splash-bg-orb--pink {
+        width: 50vw; height: 50vw;
+        bottom: -15%; right: -10%;
+        background: rgba(219, 39, 119, 0.26);
+      }
+      [data-theme='dark'] .splash-bg-orb--blue { background: rgba(139, 130, 255, 0.28); }
+      [data-theme='dark'] .splash-bg-orb--pink { background: rgba(255, 100, 150, 0.22); }
+
+      @keyframes splash-orbit {
+        from { transform: rotate(0deg); }
+        to   { transform: rotate(360deg); }
+      }
+
+      #splash-orb {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        overflow: hidden;
+        display: grid;
+        grid-template-areas: 'stack';
+        flex-shrink: 0;
+      }
+      #splash-orb::before,
+      #splash-orb::after {
+        content: '';
+        display: block;
+        grid-area: stack;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+      }
+      #splash-orb::before {
+        background:
+          conic-gradient(from calc(var(--splash-angle) * 2) at 25% 70%, oklch(78% 0.14 280), transparent 20% 80%, oklch(78% 0.14 280)),
+          conic-gradient(from calc(var(--splash-angle) * 2) at 45% 75%, oklch(80% 0.12 200), transparent 30% 60%, oklch(80% 0.12 200)),
+          conic-gradient(from calc(var(--splash-angle) * -3) at 80% 20%, oklch(75% 0.15 350), transparent 40% 60%, oklch(75% 0.15 350)),
+          conic-gradient(from calc(var(--splash-angle) * 2) at 15% 5%, oklch(80% 0.12 200), transparent 10% 90%, oklch(80% 0.12 200)),
+          conic-gradient(from calc(var(--splash-angle) * 1) at 20% 80%, oklch(75% 0.15 350), transparent 10% 90%, oklch(75% 0.15 350)),
+          conic-gradient(from calc(var(--splash-angle) * -2) at 85% 10%, oklch(78% 0.14 280), transparent 20% 80%, oklch(78% 0.14 280));
+        box-shadow: inset oklch(95% 0.02 264.695) 0 0 2px 0.5px;
+        filter: blur(1.2px) contrast(1.5);
+        animation: splash-spin 20s linear infinite;
+      }
+      #splash-orb::after {
+        backdrop-filter: blur(2.4px) contrast(3);
+        mix-blend-mode: overlay;
+        mask-image: radial-gradient(black 15%, transparent 75%);
+      }
+      @keyframes splash-spin {
+        to { --splash-angle: 360deg; }
+      }
+
+      #splash-label {
+        font-family: 'Inter Tight', system-ui, -apple-system, sans-serif;
+        font-size: 42px;
+        font-weight: 600;
+        letter-spacing: -0.03em;
+        white-space: nowrap;
+        color: #15151a;
+      }
+      #splash-label .tag {
+        color: #f472b6;
+        font-weight: 400;
+      }
+      [data-theme='dark'] #splash-label { color: #e8e8ed; }
+      [data-theme='dark'] #splash-label .tag { color: hsl(331, 90.7%, 72%); }
+    </style>
   </head>
   <body>
+    <div id="splash">
+      <div id="splash-orbs">
+        <div class="splash-bg-orb splash-bg-orb--blue"></div>
+        <div class="splash-bg-orb splash-bg-orb--pink"></div>
+      </div>
+      <div id="splash-orb"></div>
+      <span id="splash-label">open<span class="tag"> / routines</span></span>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/renderer/main.tsx"></script>
   </body>

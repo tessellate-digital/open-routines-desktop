@@ -8,10 +8,14 @@ const IS_SEARCH_ENABLED = false;
 import type { Run } from '../lib/types';
 
 function formatElapsed(startedAt: string | null): string {
-  if (!startedAt) return '0s';
+  if (!startedAt) {
+    return '0s';
+  }
   const ms = Date.now() - new Date(startedAt).getTime();
   const s = Math.floor(ms / 1000);
-  if (s < 60) return `${s}s`;
+  if (s < 60) {
+    return `${s}s`;
+  }
   const m = Math.floor(s / 60);
   const rs = s % 60;
   return `${m}m ${rs.toString().padStart(2, '0')}s`;
@@ -23,7 +27,7 @@ interface SidebarProps {
   routineCount: number;
 }
 
-export default function Sidebar({ collapsed, onToggle, routineCount }: SidebarProps) {
+export default function Sidebar({ collapsed, routineCount }: SidebarProps) {
   const navigate = useNavigate();
   const [activeRuns, setActiveRuns] = useState<Run[]>([]);
   const [, setTick] = useState(0);
@@ -45,7 +49,9 @@ export default function Sidebar({ collapsed, onToggle, routineCount }: SidebarPr
 
   // Tick every second to update elapsed timers
   useEffect(() => {
-    if (activeRuns.length === 0) return;
+    if (activeRuns.length === 0) {
+      return;
+    }
     const id = setInterval(() => setTick((t) => t + 1), 1000);
     return () => clearInterval(id);
   }, [activeRuns.length]);
@@ -184,11 +190,7 @@ export default function Sidebar({ collapsed, onToggle, routineCount }: SidebarPr
             <span className="count">{activeRuns.length}</span>
           </div>
           {activeRuns.map((run) => (
-            <div
-              key={run.id}
-              className="side-active"
-              onClick={() => navigate(`/runs/${run.id}`)}
-            >
+            <div key={run.id} className="side-active" onClick={() => navigate(`/runs/${run.id}`)}>
               <div className="top">
                 <span className="d" />
                 <span className="name">{run.routine_name}</span>

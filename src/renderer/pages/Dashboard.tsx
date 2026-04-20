@@ -34,8 +34,12 @@ export default function Dashboard() {
     }, [load])
   );
 
-  if (loading) return <p className="hint">Loading…</p>;
-  if (error) return <p className="text-[color:var(--status-failed)] text-[13px]">Error: {error}</p>;
+  if (loading) {
+    return <p className="hint">Loading…</p>;
+  }
+  if (error) {
+    return <p className="text-[color:var(--status-failed)] text-[13px]">Error: {error}</p>;
+  }
 
   const running = runs.filter((r) => r.status === 'running').length;
   const failed = runs.filter((r) => r.status === 'failed').length;

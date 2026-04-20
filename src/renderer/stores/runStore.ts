@@ -94,7 +94,9 @@ export const useRunStore = create<RunStore>((set, get) => ({
 
   appendStep: () =>
     set((state) => {
-      if (state.liveSegments.length === 0) return state;
+      if (state.liveSegments.length === 0) {
+        return state;
+      }
       return { liveSegments: [...state.liveSegments, { kind: 'step', label: '' }] };
     }),
 
@@ -107,16 +109,22 @@ export const useRunStore = create<RunStore>((set, get) => ({
 
   finalizeStream: () => {
     const { thread, liveSegments } = get();
-    if (thread.length === 0) return;
+    if (thread.length === 0) {
+      return;
+    }
 
     const lastRun = thread[thread.length - 1];
     const stdout: Array<{ type: string; data: string }> = [];
     for (const seg of liveSegments) {
-      if (seg.kind === 'text') stdout.push({ type: 'text', data: seg.content });
-      else if (seg.kind === 'tool')
+      if (seg.kind === 'text') {
+        stdout.push({ type: 'text', data: seg.content });
+      } else if (seg.kind === 'tool') {
         stdout.push({ type: 'tool', data: `[tool: ${seg.name}]\n${seg.args}` });
-      else if (seg.kind === 'error') stdout.push({ type: 'error', data: seg.content });
-      else if (seg.kind === 'step') stdout.push({ type: 'status', data: '--- step ---' });
+      } else if (seg.kind === 'error') {
+        stdout.push({ type: 'error', data: seg.content });
+      } else if (seg.kind === 'step') {
+        stdout.push({ type: 'status', data: '--- step ---' });
+      }
     }
 
     set({
@@ -129,8 +137,11 @@ export const useRunStore = create<RunStore>((set, get) => ({
   toggleTool: (runId, idx) =>
     set((state) => {
       const runSet = new Set(state.toggledTools[runId] ?? []);
-      if (runSet.has(idx)) runSet.delete(idx);
-      else runSet.add(idx);
+      if (runSet.has(idx)) {
+        runSet.delete(idx);
+      } else {
+        runSet.add(idx);
+      }
       return { toggledTools: { ...state.toggledTools, [runId]: runSet } };
     }),
 

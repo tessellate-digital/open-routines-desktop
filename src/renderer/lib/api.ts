@@ -14,7 +14,9 @@ import type {
 let _baseUrl: string | null = null;
 
 async function getBaseUrl(): Promise<string> {
-  if (_baseUrl) return _baseUrl;
+  if (_baseUrl) {
+    return _baseUrl;
+  }
   console.log('[api] window.electronAPI:', window.electronAPI);
   if (window.electronAPI) {
     const port = await window.electronAPI.getServerPort();
@@ -46,7 +48,9 @@ async function request<T>(path: string, opts?: RequestInit): Promise<T> {
     const text = await res.text();
     throw new Error(text || `HTTP ${res.status}`);
   }
-  if (res.status === 204) return undefined as T;
+  if (res.status === 204) {
+    return undefined as T;
+  }
   return res.json();
 }
 
@@ -54,7 +58,9 @@ export const api = {
   // Routines
   getRoutines: (params?: { status?: string }) => {
     const sp = new URLSearchParams();
-    if (params?.status) sp.set('status', params.status);
+    if (params?.status) {
+      sp.set('status', params.status);
+    }
     const qs = sp.toString();
     return request<Routine[]>(`/routines${qs ? `?${qs}` : ''}`);
   },
@@ -94,10 +100,18 @@ export const api = {
   // Runs
   getRuns: (params?: { routine_id?: string; status?: string; limit?: number; offset?: number }) => {
     const sp = new URLSearchParams();
-    if (params?.routine_id) sp.set('routine_id', params.routine_id);
-    if (params?.status) sp.set('status', params.status);
-    if (params?.limit) sp.set('limit', String(params.limit));
-    if (params?.offset) sp.set('offset', String(params.offset));
+    if (params?.routine_id) {
+      sp.set('routine_id', params.routine_id);
+    }
+    if (params?.status) {
+      sp.set('status', params.status);
+    }
+    if (params?.limit) {
+      sp.set('limit', String(params.limit));
+    }
+    if (params?.offset) {
+      sp.set('offset', String(params.offset));
+    }
     const qs = sp.toString();
     return request<Run[]>(`/runs${qs ? `?${qs}` : ''}`);
   },
@@ -129,6 +143,9 @@ export const api = {
     }),
   deleteSetting: (key: string) =>
     request<void>(`/settings/${encodeURIComponent(key)}`, { method: 'DELETE' }),
+
+  // Data
+  resetData: () => request<{ ok: boolean }>('/reset', { method: 'POST', body: '{}' }),
 
   // Models
   getModels: () => request<ModelsResponse>('/models'),

@@ -119,7 +119,6 @@ function TriggerSummary({ trigger }: { trigger: Trigger }) {
 export default function RoutineDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { resolveHostPath, resolveHostName } = useHostMounts();
   const { setPageTitle } = usePageContext();
   const [routine, setRoutine] = useState<Routine | null>(null);
   const [triggers, setTriggers] = useState<Trigger[]>([]);
@@ -130,7 +129,9 @@ export default function RoutineDetail() {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const load = useCallback(async () => {
-    if (!id) return;
+    if (!id) {
+      return;
+    }
     try {
       const [r, t, ru] = await Promise.all([
         api.getRoutine(id),
@@ -147,7 +148,7 @@ export default function RoutineDetail() {
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, setPageTitle]);
 
   useEffect(() => {
     load();
@@ -159,7 +160,9 @@ export default function RoutineDetail() {
   );
 
   const handleRun = async () => {
-    if (!id) return;
+    if (!id) {
+      return;
+    }
     try {
       navigate(`/runs/${(await api.runRoutine(id)).run_id}`);
     } catch (e) {
@@ -168,7 +171,9 @@ export default function RoutineDetail() {
   };
 
   const handleToggle = async () => {
-    if (!id || !routine) return;
+    if (!id || !routine) {
+      return;
+    }
     setToggling(true);
     try {
       const updated = await api.toggleRoutine(id, !routine.enabled);
@@ -181,7 +186,9 @@ export default function RoutineDetail() {
   };
 
   const handleDelete = async () => {
-    if (!id) return;
+    if (!id) {
+      return;
+    }
     try {
       await api.deleteRoutine(id);
       navigate('/routines');
@@ -190,32 +197,21 @@ export default function RoutineDetail() {
     }
   };
 
-  if (loading) return <p className="hint">Loading…</p>;
-  if (error) return <p className="text-[color:var(--status-failed)] text-[13px]">Error: {error}</p>;
-  if (!routine)
+  if (loading) {
+    return <p className="hint">Loading…</p>;
+  }
+  if (error) {
+    return <p className="text-[color:var(--status-failed)] text-[13px]">Error: {error}</p>;
+  }
+  if (!routine) {
     return <p className="text-[color:var(--status-failed)] text-[13px]">Routine not found</p>;
+  }
 
   return (
     <div className="route-fade">
       <Link to="/routines" className="back">
         <ChevronLeftIcon /> Routines
       </Link>
-
-      {routine.workspace_path && !routine.workspace_accessible && (
-        <div
-          className="delete-confirm mb-4"
-          style={{
-            background: 'color-mix(in srgb, var(--status-warning) 10%, transparent)',
-            borderColor: 'color-mix(in srgb, var(--status-warning) 25%, transparent)',
-          }}
-        >
-          <span className="font-semibold">!</span>
-          <span>
-            Workspace folder <code className="code-chip">{routine.workspace_path}</code> is
-            inaccessible. Runs will fail.
-          </span>
-        </div>
-      )}
 
       <div className="page-head">
         <div>
@@ -248,17 +244,18 @@ export default function RoutineDetail() {
             </div>
           ) : (
             <>
-              <button
-                className="btn run"
-                onClick={handleRun}
-                disabled={routine.workspace_path !== '' && !routine.workspace_accessible}
-              >
+              <button className="btn run" onClick={handleRun}>
                 ▶ Run now
               </button>
               <Link to={`/routines/${id}/edit`} className="btn">
                 Edit
               </Link>
-              <button className="btn" onClick={handleToggle} disabled={toggling}>
+              <button
+                className="btn"
+                onClick={handleToggle}
+                disabled={toggling}
+                style={{ minWidth: '5rem', display: 'flex', justifyContent: 'center' }}
+              >
                 {toggling ? '…' : routine.enabled ? 'Pause' : 'Enable'}
               </button>
               <button className="btn delete-rt" onClick={() => setConfirmDelete(true)}>
@@ -306,21 +303,6 @@ export default function RoutineDetail() {
               {routine.run_mode === 'foreground' ? 'Foreground only' : 'Background'}
             </div>
           </div>
-          {routine.workspace_path && (
-            <div className="py-4 px-[18px] bg-[var(--surface-2)] border border-[var(--border)] rounded-[var(--r-md)]">
-              <div className="font-mono text-[10.5px] uppercase tracking-[.08em] text-[color:var(--fg-dim)] mb-1.5">
-                Workspace
-              </div>
-              <div className="font-mono text-[13px] font-medium text-[color:var(--fg)] flex items-center gap-1.5">
-                {resolveHostName(routine.workspace_path)}
-                {!routine.workspace_accessible && (
-                  <span className="text-[10px] text-[color:var(--status-failed)]">
-                    inaccessible
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
           {routine.repository && (
             <div className="py-4 px-[18px] bg-[var(--surface-2)] border border-[var(--border)] rounded-[var(--r-md)]">
               <div className="font-mono text-[10.5px] uppercase tracking-[.08em] text-[color:var(--fg-dim)] mb-1.5">

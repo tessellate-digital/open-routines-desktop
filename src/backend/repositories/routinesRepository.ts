@@ -25,8 +25,8 @@ export const routinesRepository = {
     const now = new Date().toISOString();
     db.prepare(
       `
-      INSERT INTO routines (id, name, description, prompt, model, repository, branch, agent, env_vars, enabled, run_mode, workspace_path, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO routines (id, name, description, prompt, model, repository, branch, agent, env_vars, enabled, run_mode, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `
     ).run(
       id,
@@ -40,7 +40,6 @@ export const routinesRepository = {
       JSON.stringify(data.env_vars),
       data.enabled ? 1 : 0,
       data.run_mode,
-      data.workspace_path,
       now,
       now
     );
@@ -90,10 +89,6 @@ export const routinesRepository = {
     if (data.run_mode !== undefined) {
       updates.push('run_mode = ?');
       values.push(data.run_mode);
-    }
-    if (data.workspace_path !== undefined) {
-      updates.push('workspace_path = ?');
-      values.push(data.workspace_path);
     }
 
     if (updates.length > 0) {

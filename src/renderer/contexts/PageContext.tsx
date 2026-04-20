@@ -20,9 +20,7 @@ export function PageProvider({ children }: { children: ReactNode }) {
   }, [location.pathname]);
 
   return (
-    <PageContext.Provider value={{ pageTitle, setPageTitle }}>
-      {children}
-    </PageContext.Provider>
+    <PageContext.Provider value={{ pageTitle, setPageTitle }}>{children}</PageContext.Provider>
   );
 }
 

@@ -6,26 +6,44 @@ import { describe, it, expect } from 'vitest';
 function normalizeCron(expr: string): string {
   const trimmed = expr.trim();
   const parts = trimmed.split(/\s+/);
-  if (parts.length === 5) return trimmed;
+  if (parts.length === 5) {
+    return trimmed;
+  }
   const fieldPattern = /(\*(?:\/\d+)?|\d+(?:-\d+)?(?:,\d+(?:-\d+)?)*)/g;
   const matches = trimmed.match(fieldPattern);
-  if (matches && matches.length === 5) return matches.join(' ');
+  if (matches && matches.length === 5) {
+    return matches.join(' ');
+  }
   return trimmed;
 }
 
 type Mode = 'hourly' | 'daily' | 'weekdays' | 'weekly' | 'custom';
 
 function toMode(expr: string): Mode {
-  if (!expr || expr === '0 * * * *') return 'hourly';
+  if (!expr || expr === '0 * * * *') {
+    return 'hourly';
+  }
   const normalized = normalizeCron(expr);
   const parts = normalized.split(/\s+/);
-  if (parts.length !== 5) return 'custom';
+  if (parts.length !== 5) {
+    return 'custom';
+  }
   const [min, hour, dom, month, dow] = parts;
-  if (dom !== '*' || month !== '*') return 'custom';
-  if (!/^\d+$/.test(min) || !/^\d+$/.test(hour)) return 'custom';
-  if (dow === '1-5') return 'weekdays';
-  if (dow === '0') return 'weekly';
-  if (dow === '*') return 'daily';
+  if (dom !== '*' || month !== '*') {
+    return 'custom';
+  }
+  if (!/^\d+$/.test(min) || !/^\d+$/.test(hour)) {
+    return 'custom';
+  }
+  if (dow === '1-5') {
+    return 'weekdays';
+  }
+  if (dow === '0') {
+    return 'weekly';
+  }
+  if (dow === '*') {
+    return 'daily';
+  }
   return 'custom';
 }
 

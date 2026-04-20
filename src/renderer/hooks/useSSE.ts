@@ -5,7 +5,9 @@ type SSEHandler = (event: MessageEvent) => void;
 // Resolve the server base URL (e.g. "http://localhost:12345") once.
 let _serverBase: string | null = null;
 async function getServerBase(): Promise<string> {
-  if (_serverBase) return _serverBase;
+  if (_serverBase) {
+    return _serverBase;
+  }
   if (window.electronAPI) {
     const port = await window.electronAPI.getServerPort();
     _serverBase = `http://localhost:${port}`;
@@ -36,7 +38,9 @@ export function useGlobalSSE(onEvent: SSEHandler) {
   const serverBase = useServerBase();
 
   useEffect(() => {
-    if (serverBase === null) return;
+    if (serverBase === null) {
+      return;
+    }
 
     let es: EventSource | null = null;
     let retryTimeout: ReturnType<typeof setTimeout>;
@@ -107,7 +111,9 @@ export function useRunStream(
   const serverBase = useServerBase();
 
   useEffect(() => {
-    if (!runId || serverBase === null) return;
+    if (!runId || serverBase === null) {
+      return;
+    }
 
     let es: EventSource | null = null;
     let retryTimeout: ReturnType<typeof setTimeout>;
@@ -116,7 +122,9 @@ export function useRunStream(
     const MAX_RETRIES = 8;
 
     function connect() {
-      if (stopped) return;
+      if (stopped) {
+        return;
+      }
 
       // On reconnect, signal the frontend to clear live state so the replayed
       // history from the backend rebuilds it cleanly (no duplicates).
@@ -180,7 +188,9 @@ export function useRunStream(
 
       es.onerror = () => {
         es?.close();
-        if (stopped) return;
+        if (stopped) {
+          return;
+        }
 
         // Check the run's actual status before retrying.  The EventSource
         // API doesn't distinguish network errors from server-initiated

@@ -779,21 +779,34 @@ body {
     line-height: 1.75;
     color: var(--fg);
   }
-  .md > * + * { margin-top: 0.85em; }
-  .md > *:first-child { margin-top: 0; }
-  .md > *:last-child { margin-bottom: 0; }
+  .md > * + * {
+    margin-top: 0.85em;
+  }
+  .md > *:first-child {
+    margin-top: 0;
+  }
+  .md > *:last-child {
+    margin-bottom: 0;
+  }
 
-  .md p { margin: 0; }
+  .md p {
+    margin: 0;
+  }
 
-  .md ul, .md ol {
+  .md ul,
+  .md ol {
     padding-left: 1.25em;
     margin: 1em 0;
     display: flex;
     flex-direction: column;
     gap: 0.3em;
   }
-  .md ul { list-style: none; }
-  .md ol { list-style-type: decimal; }
+  .md ul {
+    list-style: none;
+  }
+  .md ol {
+    list-style-type: decimal;
+  }
   .md ul > li {
     position: relative;
     padding-left: 1em;
@@ -809,26 +822,50 @@ body {
     background: linear-gradient(135deg, var(--accent), #ec4899);
     flex-shrink: 0;
   }
-  .md li { margin: 0; line-height: 1.65; font-family: var(--font-mono); font-size: 0.87em; }
-  .md li > p { margin: 0; }
-  .md li + li { margin-top: 0; }
+  .md li {
+    margin: 0;
+    line-height: 1.65;
+    font-family: var(--font-mono);
+    font-size: 0.87em;
+  }
+  .md li > p {
+    margin: 0;
+  }
+  .md li + li {
+    margin-top: 0;
+  }
 
   /* Nested lists */
-  .md ul ul, .md ol ol, .md ul ol, .md ol ul {
+  .md ul ul,
+  .md ol ol,
+  .md ul ol,
+  .md ol ul {
     margin: 0.25em 0 0;
   }
 
-  .md h1, .md h2, .md h3, .md h4 {
+  .md h1,
+  .md h2,
+  .md h3,
+  .md h4 {
     font-weight: 600;
     letter-spacing: -0.015em;
     margin: 1.1em 0 0.35em;
     line-height: 1.3;
     color: var(--fg);
   }
-  .md h1 { font-size: 1.3em; }
-  .md h2 { font-size: 1.15em; }
-  .md h3 { font-size: 1.05em; }
-  .md h4 { font-size: 1em; color: var(--fg-muted); }
+  .md h1 {
+    font-size: 1.3em;
+  }
+  .md h2 {
+    font-size: 1.15em;
+  }
+  .md h3 {
+    font-size: 1.05em;
+  }
+  .md h4 {
+    font-size: 1em;
+    color: var(--fg-muted);
+  }
 
   .md code {
     font-family: var(--font-mono);
@@ -872,7 +909,9 @@ body {
     text-decoration: underline;
     text-underline-offset: 2px;
   }
-  .md a:hover { opacity: 0.8; }
+  .md a:hover {
+    opacity: 0.8;
+  }
 
   .md hr {
     border: none;
@@ -886,7 +925,8 @@ body {
     font-size: 0.9em;
     margin: 0.75em 0;
   }
-  .md th, .md td {
+  .md th,
+  .md td {
     padding: 7px 12px;
     border: 1px solid var(--border);
     text-align: left;
@@ -900,8 +940,14 @@ body {
     color: var(--fg-muted);
   }
 
-  .md strong { font-weight: 600; color: var(--fg); }
-  .md em { font-style: italic; color: var(--fg-muted); }
+  .md strong {
+    font-weight: 600;
+    color: var(--fg);
+  }
+  .md em {
+    font-style: italic;
+    color: var(--fg-muted);
+  }
 
   /* ─── Route transition ─── */
   .route-fade {
@@ -993,7 +1039,9 @@ body {
     background: linear-gradient(135deg, #4f46e5, #ec4899);
     display: grid;
     place-items: center;
-    box-shadow: 0 2px 6px rgba(79, 70, 229, 0.3), 0 1px 0 rgba(255, 255, 255, 0.2) inset;
+    box-shadow:
+      0 2px 6px rgba(79, 70, 229, 0.3),
+      0 1px 0 rgba(255, 255, 255, 0.2) inset;
     flex-shrink: 0;
   }
   .side-brand .brand-name {
@@ -1022,7 +1070,9 @@ body {
     cursor: pointer;
     text-decoration: none;
     border: none;
-    box-shadow: 0 1px 2px rgba(79, 70, 229, 0.3), 0 4px 10px rgba(79, 70, 229, 0.2);
+    box-shadow:
+      0 1px 2px rgba(79, 70, 229, 0.3),
+      0 4px 10px rgba(79, 70, 229, 0.2);
     transition: filter var(--dur) var(--ease);
     white-space: nowrap;
   }

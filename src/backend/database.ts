@@ -19,7 +19,6 @@ export function initDb(): void {
       env_vars TEXT NOT NULL DEFAULT '{}',
       enabled INTEGER NOT NULL DEFAULT 1,
       run_mode TEXT NOT NULL DEFAULT 'background',
-      workspace_path TEXT NOT NULL DEFAULT '',
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
@@ -63,10 +62,6 @@ export function initDb(): void {
   ).map((c) => c.name);
   if (!routineColumns.includes('run_mode')) {
     db.exec("ALTER TABLE routines ADD COLUMN run_mode TEXT NOT NULL DEFAULT 'background'");
-  }
-  // Migration: add workspace_path column (local folder to run against)
-  if (!routineColumns.includes('workspace_path')) {
-    db.exec("ALTER TABLE routines ADD COLUMN workspace_path TEXT NOT NULL DEFAULT ''");
   }
   // Migration: denormalize stats onto routines table
   if (!routineColumns.includes('last_run_status')) {

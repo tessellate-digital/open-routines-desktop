@@ -84,11 +84,17 @@ export default function RunsList() {
     }, [page, load])
   );
 
-  if (loading) return <p className="hint">Loading…</p>;
-  if (error) return <p className="text-[color:var(--status-failed)] text-[13px]">Error: {error}</p>;
+  if (loading) {
+    return <p className="hint">Loading…</p>;
+  }
+  if (error) {
+    return <p className="text-[color:var(--status-failed)] text-[13px]">Error: {error}</p>;
+  }
 
   const filtered = runs.filter((r) => {
-    if (!search) return true;
+    if (!search) {
+      return true;
+    }
     const q = search.toLowerCase();
     return r.routine_name.toLowerCase().includes(q) || r.id.includes(q);
   });

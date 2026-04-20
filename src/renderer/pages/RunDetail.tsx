@@ -49,7 +49,9 @@ function parseSegments(events: Array<{ type: string; data: string }>): Segment[]
 function extractTodos(segments: Segment[]): TodoItem[] {
   let latest: TodoItem[] = [];
   for (const seg of segments) {
-    if (seg.kind !== 'tool' || seg.name !== 'todowrite') continue;
+    if (seg.kind !== 'tool' || seg.name !== 'todowrite') {
+      continue;
+    }
     try {
       const parsed = JSON.parse(seg.args);
       const items = Array.isArray(parsed.todos)
@@ -93,7 +95,15 @@ function UserBubble({ text }: { text: string }) {
   );
 }
 
-function ToolRow({ seg, onToggle, onReply }: { seg: Segment & { kind: 'tool' }; onToggle: () => void; onReply?: (text: string) => void }) {
+function ToolRow({
+  seg,
+  onToggle,
+  onReply,
+}: {
+  seg: Segment & { kind: 'tool' };
+  onToggle: () => void;
+  onReply?: (text: string) => void;
+}) {
   // Render the `question` tool as an interactive (or read-only) card
   if (seg.name === 'question') {
     try {
@@ -101,7 +111,9 @@ function ToolRow({ seg, onToggle, onReply }: { seg: Segment & { kind: 'tool' }; 
       if (Array.isArray(parsed?.questions)) {
         return <QuestionsCard questions={parsed.questions} onReply={onReply} />;
       }
-    } catch { /* fall through to default */ }
+    } catch {
+      /* fall through to default */
+    }
   }
 
   return (
@@ -123,8 +135,15 @@ function ToolRow({ seg, onToggle, onReply }: { seg: Segment & { kind: 'tool' }; 
   );
 }
 
-interface QuestionOption { label: string; description: string; }
-interface Question { header: string; question: string; options: QuestionOption[]; }
+interface QuestionOption {
+  label: string;
+  description: string;
+}
+interface Question {
+  header: string;
+  question: string;
+  options: QuestionOption[];
+}
 
 function tryParseQuestions(content: string): Question[] | null {
   const trimmed = content.trim();
@@ -135,16 +154,26 @@ function tryParseQuestions(content: string): Question[] | null {
     if (Array.isArray(parsed?.questions) && parsed.questions.length > 0) {
       return parsed.questions;
     }
-  } catch { /* not JSON */ }
+  } catch {
+    /* not JSON */
+  }
   return null;
 }
 
-function QuestionsCard({ questions, onReply }: { questions: Question[]; onReply?: (text: string) => void }) {
+function QuestionsCard({
+  questions,
+  onReply,
+}: {
+  questions: Question[];
+  onReply?: (text: string) => void;
+}) {
   const [selected, setSelected] = useState<string | null>(null);
   const interactive = !!onReply && !selected;
 
   const handleClick = (label: string) => {
-    if (!interactive) return;
+    if (!interactive) {
+      return;
+    }
     setSelected(label);
     onReply!(label);
   };
@@ -169,16 +198,19 @@ function QuestionsCard({ questions, onReply }: { questions: Question[]; onReply?
                   onClick={() => handleClick(opt.label)}
                   disabled={!interactive}
                   className={`cursor-pointer text-left px-3 py-2.5 rounded-[10px] border transition-all duration-[160ms] group
-                    ${isSelected
-                      ? 'border-[var(--accent)] bg-[var(--accent-soft)]'
-                      : isOther
-                        ? 'border-[var(--border)] bg-[var(--surface)] opacity-40'
-                        : interactive
-                          ? 'border-[var(--border)] bg-[var(--surface)] hover:border-[var(--accent)] hover:bg-[var(--accent-soft)]'
-                          : 'border-[var(--border)] bg-[var(--surface)] opacity-60 cursor-default'
+                    ${
+                      isSelected
+                        ? 'border-[var(--accent)] bg-[var(--accent-soft)]'
+                        : isOther
+                          ? 'border-[var(--border)] bg-[var(--surface)] opacity-40'
+                          : interactive
+                            ? 'border-[var(--border)] bg-[var(--surface)] hover:border-[var(--accent)] hover:bg-[var(--accent-soft)]'
+                            : 'border-[var(--border)] bg-[var(--surface)] opacity-60 cursor-default'
                     }`}
                 >
-                  <span className={`font-mono text-[12px] font-semibold ${isSelected ? 'text-[color:var(--accent)]' : 'text-[color:var(--accent)]'}`}>
+                  <span
+                    className={`font-mono text-[12px] font-semibold ${isSelected ? 'text-[color:var(--accent)]' : 'text-[color:var(--accent)]'}`}
+                  >
                     {opt.label}
                     {isSelected && <span className="ml-1.5 opacity-70">✓</span>}
                   </span>
@@ -198,7 +230,9 @@ function QuestionsCard({ questions, onReply }: { questions: Question[]; onReply?
 }
 
 function AgentText({ content, onReply }: { content: string; onReply?: (text: string) => void }) {
-  if (!content.trim()) return null;
+  if (!content.trim()) {
+    return null;
+  }
   const questions = onReply ? tryParseQuestions(content) : null;
   if (questions) {
     return <QuestionsCard questions={questions} onReply={onReply!} />;
@@ -256,12 +290,25 @@ const SegmentList = memo(function SegmentList({
   return (
     <>
       {segments.map((seg, idx) => {
-        if (seg.kind === 'text') return <AgentText key={idx} content={seg.content} onReply={onReply} />;
-        if (seg.kind === 'error') return <ErrorBubble key={idx} content={seg.content} />;
-        if (seg.kind === 'step') return <StepDivider key={idx} />;
+        if (seg.kind === 'text') {
+          return <AgentText key={idx} content={seg.content} onReply={onReply} />;
+        }
+        if (seg.kind === 'error') {
+          return <ErrorBubble key={idx} content={seg.content} />;
+        }
+        if (seg.kind === 'step') {
+          return <StepDivider key={idx} />;
+        }
         if (seg.kind === 'tool') {
           const open = seg.open || toggledTools.has(idx);
-          return <ToolRow key={idx} seg={{ ...seg, open }} onToggle={() => onToggleTool(idx)} onReply={onReply} />;
+          return (
+            <ToolRow
+              key={idx}
+              seg={{ ...seg, open }}
+              onToggle={() => onToggleTool(idx)}
+              onReply={onReply}
+            />
+          );
         }
         return null;
       })}
@@ -283,17 +330,29 @@ const AssistantCard = memo(function AssistantCard({
   onReply?: (text: string) => void;
 }) {
   const hasContent = segments.length > 0;
-  if (!hasContent && !isStreaming) return null;
+  if (!hasContent && !isStreaming) {
+    return null;
+  }
   return (
     <div className="flex justify-start mb-[14px]">
       <div
         className={`border border-[var(--border)] py-3 px-4 rounded-2xl shadow-[var(--shadow-sm)] max-w-[640px] w-full${isStreaming ? ' streaming-border' : ''}`}
-        style={{ background: 'radial-gradient(60% 60% at 0% 100%, rgba(79, 70, 229, 0.05) 0%, transparent 100%), radial-gradient(60% 60% at 100% 0%, rgba(236, 72, 153, 0.04) 0%, transparent 100%), var(--surface-hi)' }}
+        style={{
+          background:
+            'radial-gradient(60% 60% at 0% 100%, rgba(79, 70, 229, 0.05) 0%, transparent 100%), radial-gradient(60% 60% at 100% 0%, rgba(236, 72, 153, 0.04) 0%, transparent 100%), var(--surface-hi)',
+        }}
       >
         {segments.length === 0 && isStreaming ? (
-          <span className="font-mono text-[13px] text-[color:var(--fg-dim)] animate-pulse">Thinking…</span>
+          <span className="font-mono text-[13px] text-[color:var(--fg-dim)] animate-pulse">
+            Thinking…
+          </span>
         ) : (
-          <SegmentList segments={segments} toggledTools={toggledTools} onToggleTool={onToggleTool} onReply={onReply} />
+          <SegmentList
+            segments={segments}
+            toggledTools={toggledTools}
+            onToggleTool={onToggleTool}
+            onReply={onReply}
+          />
         )}
       </div>
     </div>
@@ -382,14 +441,18 @@ export default function RunDetail() {
 
   const isNearBottom = useCallback(() => {
     const scroller = document.querySelector('.scroller');
-    if (!scroller) return true;
+    if (!scroller) {
+      return true;
+    }
     const { scrollTop, scrollHeight, clientHeight } = scroller;
     return scrollHeight - scrollTop - clientHeight < 300;
   }, []);
 
   const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
     const scroller = document.querySelector('.scroller');
-    if (!scroller) return;
+    if (!scroller) {
+      return;
+    }
     if (behavior === 'instant') {
       scroller.scrollTop = scroller.scrollHeight;
     } else {
@@ -398,11 +461,15 @@ export default function RunDetail() {
   }, []);
 
   const load = useCallback(async () => {
-    if (!id) return;
+    if (!id) {
+      return;
+    }
     try {
       const runs = await api.getThread(id);
       setThread(runs);
-      if (runs.length > 0) setPageTitle(runs[0].routine_name || id!);
+      if (runs.length > 0) {
+        setPageTitle(runs[0].routine_name || id!);
+      }
       setError(null);
       const latest = runs[runs.length - 1];
       if (latest?.status === 'running') {
@@ -416,12 +483,12 @@ export default function RunDetail() {
     } finally {
       setLoading(false);
     }
-  }, [id, setThread, setStreaming, clearLiveSegments]);
+  }, [id, setThread, setStreaming, clearLiveSegments, setPageTitle]);
 
   useEffect(() => {
     reset();
     load();
-  }, [id]);
+  }, [id, load, reset]);
 
   // Scroll after reply is sent (always — user initiated)
   useEffect(() => {
@@ -461,12 +528,17 @@ export default function RunDetail() {
       },
       [appendToolResult]
     ),
-    onError: useCallback((data: string) => {
-      appendError(data);
-    }, [appendError]),
+    onError: useCallback(
+      (data: string) => {
+        appendError(data);
+      },
+      [appendError]
+    ),
     onStatus: useCallback(
       (data: string) => {
-        if (data.startsWith('--- step')) appendStep();
+        if (data.startsWith('--- step')) {
+          appendStep();
+        }
       },
       [appendStep]
     ),
@@ -488,7 +560,9 @@ export default function RunDetail() {
               new Date().toISOString()
             );
           }
-        } catch { /* ignore */ }
+        } catch {
+          /* ignore */
+        }
         setOrbExiting(true);
         setTimeout(() => setOrbExiting(false), 300);
         finalizeStream();
@@ -501,7 +575,9 @@ export default function RunDetail() {
   });
 
   const handleCancel = async () => {
-    if (!latestRunId) return;
+    if (!latestRunId) {
+      return;
+    }
     try {
       await api.cancelRun(latestRunId);
       updateRunStatus(latestRunId, 'cancelled', null, new Date().toISOString());
@@ -517,11 +593,15 @@ export default function RunDetail() {
 
   const handleReply = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!latestRunId || !replyText.trim() || !currentRun) return;
+    if (!latestRunId || !replyText.trim() || !currentRun) {
+      return;
+    }
     const prompt = replyText.trim();
     setReplying(true);
     setReplyText('');
-    if (taRef.current) taRef.current.style.height = 'auto';
+    if (taRef.current) {
+      taRef.current.style.height = 'auto';
+    }
     try {
       const { run_id } = await api.replyToRun(latestRunId, prompt);
       scrollAfterReply.current = true;
@@ -533,24 +613,32 @@ export default function RunDetail() {
     }
   };
 
-  const handleQuestionReply = useCallback(async (text: string) => {
-    const run = thread[thread.length - 1];
-    if (!run?.id || !pendingQuestionId) return;
-    setReplying(true);
-    try {
-      await api.answerQuestion(run.id, pendingQuestionId, text);
-      setPendingQuestionId(null);
-    } catch (err) {
-      alert('Error: ' + (err instanceof Error ? err.message : 'Unknown'));
-    } finally {
-      setReplying(false);
-    }
-  }, [thread, pendingQuestionId]);
+  const handleQuestionReply = useCallback(
+    async (text: string) => {
+      const run = thread[thread.length - 1];
+      if (!run?.id || !pendingQuestionId) {
+        return;
+      }
+      setReplying(true);
+      try {
+        await api.answerQuestion(run.id, pendingQuestionId, text);
+        setPendingQuestionId(null);
+      } catch (err) {
+        alert('Error: ' + (err instanceof Error ? err.message : 'Unknown'));
+      } finally {
+        setReplying(false);
+      }
+    },
+    [thread, pendingQuestionId]
+  );
 
   const handleToggleTool = useCallback(
     (runId: string, idx: number, isLive: boolean) => {
-      if (isLive) toggleLiveTool(idx);
-      else toggleTool(runId, idx);
+      if (isLive) {
+        toggleLiveTool(idx);
+      } else {
+        toggleTool(runId, idx);
+      }
     },
     [toggleTool, toggleLiveTool]
   );
@@ -573,10 +661,15 @@ export default function RunDetail() {
     return extractTodos(allSegments);
   }, [thread, liveSegments]);
 
-  if (loading) return <p className="hint">Loading...</p>;
-  if (error) return <p className="text-[color:var(--status-failed)] text-[13px]">Error: {error}</p>;
-  if (!thread.length)
+  if (loading) {
+    return <p className="hint">Loading...</p>;
+  }
+  if (error) {
+    return <p className="text-[color:var(--status-failed)] text-[13px]">Error: {error}</p>;
+  }
+  if (!thread.length) {
     return <p className="text-[color:var(--status-failed)] text-[13px]">Run not found</p>;
+  }
 
   const currentRun = thread[thread.length - 1];
   const isFinished = ['success', 'failed', 'cancelled', 'lost'].includes(currentRun.status);
@@ -683,7 +776,12 @@ export default function RunDetail() {
         >
           {showThinking ? (
             <>
-              <div className={classNames('flex items-center justify-center w-[42px] h-[42px] rounded-full bg-[rgba(200,59,59,0.12)] shrink-0', { 'orb-exit': orbExiting })}>
+              <div
+                className={classNames(
+                  'flex items-center justify-center w-[42px] h-[42px] rounded-full bg-[rgba(200,59,59,0.12)] shrink-0',
+                  { 'orb-exit': orbExiting }
+                )}
+              >
                 <svg viewBox="0 0 16 16" width="14" height="14" fill="var(--status-failed)">
                   <rect x="3" y="3" width="10" height="10" rx="2" />
                 </svg>
