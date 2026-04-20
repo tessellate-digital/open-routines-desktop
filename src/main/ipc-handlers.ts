@@ -1,4 +1,4 @@
-import { ipcMain, dialog, BrowserWindow } from 'electron';
+import { ipcMain, dialog, shell, BrowserWindow } from 'electron';
 
 let serverPort = 0;
 
@@ -8,6 +8,10 @@ export function setServerPort(port: number): void {
 
 export function registerIpcHandlers(): void {
   ipcMain.handle('get-server-port', () => serverPort);
+
+  ipcMain.handle('shell:openExternal', (_event, url: string) => {
+    shell.openExternal(url);
+  });
 
   ipcMain.handle('dialog:openDirectory', async () => {
     const win = BrowserWindow.getFocusedWindow();

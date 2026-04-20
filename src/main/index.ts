@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, nativeImage } from 'electron';
 import * as path from 'path';
 import { startServer } from './server';
 import { registerIpcHandlers, setServerPort } from './ipc-handlers';
@@ -15,6 +15,9 @@ function createWindow(serverPort: number): void {
     minWidth: 800,
     minHeight: 600,
     title: 'Open Routines',
+    icon: nativeImage.createFromPath(path.join(app.getAppPath(), 'resources', 'icon.png')),
+    titleBarStyle: 'hiddenInset',
+    trafficLightPosition: { x: 12, y: 14 },
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -22,8 +25,16 @@ function createWindow(serverPort: number): void {
     },
   });
 
-  // Open DevTools in development
-  mainWindow.webContents.openDevTools();
+  // Set dock icon (ensures it shows in dev mode on macOS)
+  const iconPath = path.join(app.getAppPath(), 'resources', 'icon.png');
+  if (process.platform === 'darwin') {
+    app.dock.setIcon(nativeImage.createFromPath(iconPath));
+  }
+
+  // Open DevTools only when DEBUG env var is set
+  if (process.env.DEBUG) {
+    mainWindow.webContents.openDevTools();
+  }
 
   console.log('[main] preload path:', path.join(__dirname, 'preload.js'));
   console.log('[main] server port:', serverPort);

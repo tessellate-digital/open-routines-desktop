@@ -195,7 +195,7 @@ function CopilotDeviceFlow({
       setUserCode(code);
       setVerificationUri(data.url);
       setPhase('waiting');
-      window.open(data.url, '_blank');
+      window.electronAPI?.openExternal(data.url);
 
       // For 'auto' method, the callback polls internally until auth completes
       abortRef.current = new AbortController();
@@ -269,9 +269,8 @@ function CopilotDeviceFlow({
           <p className="text-[13px] mb-3">
             Go to{' '}
             <a
-              href={verificationUri}
-              target="_blank"
-              rel="noopener noreferrer"
+              href="#"
+              onClick={(e) => { e.preventDefault(); window.electronAPI?.openExternal(verificationUri); }}
               className="text-[color:var(--accent)] underline"
             >
               {verificationUri}
@@ -511,6 +510,16 @@ export default function Settings() {
 
   const settingKeys = new Set(settings.map((s) => s.key));
   const configuredProviders = PROVIDERS.filter((p) => p.fields.some((f) => settingKeys.has(f.key)));
+  const hasProviders = configuredProviders.length > 0;
+
+  // Only show models from opencode (bundled) + connected providers
+  const allowedPrefixes = new Set(['opencode', 'opencode-go', ...configuredProviders.map((p) => p.id)]);
+  const availableModels = allModels.filter((m) => {
+    const slash = m.indexOf('/');
+    if (slash === -1) return true; // no prefix — always show
+    const prefix = m.slice(0, slash);
+    return allowedPrefixes.has(prefix);
+  });
 
   const handleProviderSave = async (fields: { key: string; value: string; secret: boolean }[]) => {
     await Promise.all(
@@ -562,9 +571,11 @@ export default function Settings() {
             <div className="hint">API keys stored here are injected into every routine run.</div>
           </div>
           {addState.step === 'idle' ? (
-            <button onClick={() => setAddState({ step: 'pick' })} className="btn primary">
-              Add provider
-            </button>
+            hasProviders && (
+              <button onClick={() => setAddState({ step: 'pick' })} className="btn primary">
+                Add provider
+              </button>
+            )
           ) : (
             <button onClick={() => setAddState({ step: 'idle' })} className="btn">
               Cancel
@@ -638,12 +649,6 @@ export default function Settings() {
 
         {modelsLoading ? (
           <p className="hint">Loading models…</p>
-        ) : allModels.length === 0 ? (
-          <div className="card py-12 px-6 text-center border border-dashed border-[var(--border-hi)]">
-            <div className="text-[color:var(--fg-muted)]">
-              No models available. Connect a provider first.
-            </div>
-          </div>
         ) : (
           <>
             <input
@@ -681,7 +686,7 @@ export default function Settings() {
               (() => {
                 const q = modelQuery.toLowerCase();
                 const favSet = new Set(favourites);
-                const filtered = allModels.filter(
+                const filtered = availableModels.filter(
                   (m) => m.toLowerCase().includes(q) && !favSet.has(m)
                 );
                 return filtered.length > 0 ? (
@@ -697,7 +702,7 @@ export default function Settings() {
                             'border-b border-[var(--border)]': i < filtered.length - 1,
                           })}
                         >
-                          <ModelLabel id={m} />
+                          <span className="flex-1"><ModelLabel id={m} /></span>
                           <button onClick={() => toggleFavourite(m)} className="btn sm run">
                             Add
                           </button>

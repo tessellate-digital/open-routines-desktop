@@ -7,6 +7,7 @@ const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
     name: 'Open Routines',
+    icon: './resources/icon',
   },
   makers: [new MakerZIP({}, ['darwin', 'linux']), new MakerDMG({})],
   plugins: [

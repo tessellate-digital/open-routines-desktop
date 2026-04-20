@@ -11,14 +11,20 @@ const statusClassMap: Record<string, string> = {
   cancelled: 'cancelled',
   lost: 'lost',
   warning: 'warning',
+  answered: 'success',
+};
+
+const statusLabelMap: Record<string, string> = {
+  answered: 'answered',
 };
 
 export function StatusBadge({ status }: { status: string }) {
   const cls = statusClassMap[status] ?? 'pending';
+  const label = statusLabelMap[status] ?? status;
   return (
     <span className={classNames('status', cls)}>
       <span className="dot" />
-      <span>{status}</span>
+      <span>{label}</span>
     </span>
   );
 }

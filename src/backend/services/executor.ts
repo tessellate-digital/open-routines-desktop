@@ -397,7 +397,7 @@ export class Executor {
       db.prepare('UPDATE runs SET session_id = ? WHERE id = ?').run(sessionId, runId);
 
       // Register with event relay BEFORE sending the prompt so no events are missed
-      relay.subscribeRun(serverCtx.client, sessionId, runId);
+      relay.subscribeRun(serverCtx.client, sessionId, runId, serverCtx.baseUrl);
 
       // Track active session for cancellation
       this.activeSessions.set(runId, { client: serverCtx.client, sessionId });
@@ -464,7 +464,7 @@ export class Executor {
         sessionId = newSessionId;
         db.prepare('UPDATE runs SET session_id = ? WHERE id = ?').run(sessionId, runId);
         this.activeSessions.set(runId, { client: serverCtx.client, sessionId });
-        relay.subscribeRun(serverCtx.client, sessionId, runId);
+        relay.subscribeRun(serverCtx.client, sessionId, runId, serverCtx.baseUrl);
 
         // Build conversation context from thread history
         const threadRuns = runsRepository.findParentChain(runId);

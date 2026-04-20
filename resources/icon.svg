@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#4f46e5"/>
+      <stop offset="100%" stop-color="#ec4899"/>
+    </linearGradient>
+  </defs>
+  <!-- macOS icon sizing: ~824x824 artwork centered in 1024x1024 canvas -->
+  <rect x="100" y="100" width="824" height="824" rx="188" fill="url(#bg)"/>
+  <g transform="translate(512 512)" stroke="white" stroke-width="56" stroke-linecap="round" fill="none">
+    <line x1="0" y1="-230" x2="0" y2="-115"/>
+    <line x1="0" y1="115" x2="0" y2="230"/>
+    <line x1="-230" y1="0" x2="-115" y2="0"/>
+    <line x1="115" y1="0" x2="230" y2="0"/>
+    <line x1="-163" y1="-163" x2="-81" y2="-81"/>
+    <line x1="81" y1="81" x2="163" y2="163"/>
+    <line x1="-163" y1="163" x2="-81" y2="81"/>
+    <line x1="81" y1="-81" x2="163" y2="-163"/>
+  </g>
+</svg>

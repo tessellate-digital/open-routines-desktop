@@ -41,8 +41,12 @@ import { logger } from '../util/logger';
 
 interface RunSubscriber {
   runId: string;
+  /** Base URL of the opencode server this session belongs to. */
+  baseUrl: string;
   /** Per-ToolPart last-emitted state, to deduplicate tool call / result events. */
   toolStates: Map<string, string>;
+  /** Part IDs already streamed via message.part.delta — skip in message.part.updated. */
+  deltaPartIds: Set<string>;
   /** messageID → role, populated from message.updated events. */
   messageRoles: Map<string, string>;
   /** The user message ID for the current prompt — parts for other messages are assistant. */
@@ -76,6 +80,12 @@ const serverRelays = new Map<unknown, ServerRelay>();
 const sessionToClient = new Map<string, unknown>();
 
 /**
+ * Maps opencode question request IDs to the base URL of the server that issued them.
+ * Used by answerQuestion() to route the reply to the correct server.
+ */
+const questionToBaseUrl = new Map<string, string>();
+
+/**
  * Tracks whether a session.error event was seen for a given sessionId.
  * Outlives the subscriber (which is removed on session.idle) so it can be
  * read in the executor's finally block after waitForDrain resolves.
@@ -96,10 +106,13 @@ const sessionErrorFlags = new Map<string, boolean>();
 function translatePart(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   part: any,
-  toolStates: Map<string, string>
+  toolStates: Map<string, string>,
+  deltaPartIds: Set<string>
 ): StreamEvent | null {
   switch (part?.type) {
     case 'text': {
+      // Skip if already streamed token-by-token via message.part.delta
+      if (deltaPartIds.has(part.id as string)) return null;
       if (part.text) {
         return { type: 'text', data: part.text as string };
       }
@@ -242,6 +255,30 @@ async function runRelayLoop(client: unknown, relay: ServerRelay): Promise<void> 
           break;
         }
 
+        case 'message.part.delta': {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const props = payload.properties as any;
+          const sid = props?.sessionID as string | undefined;
+          const delta = props?.delta as string | undefined;
+          const field = props?.field as string | undefined;
+          const partId = props?.partID as string | undefined;
+          const messageID = props?.messageID as string | undefined;
+
+          if (!sid || !delta || !partId) break;
+
+          const subscriber = relay.subscribers.get(sid);
+          if (!subscriber) break;
+
+          // Skip user message deltas
+          if (messageID === subscriber.userMessageId) break;
+
+          if (field === 'text') {
+            subscriber.deltaPartIds.add(partId);
+            runStreamStore.streamText(subscriber.runId, delta);
+          }
+          break;
+        }
+
         case 'message.part.updated': {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const part = (payload.properties as any)?.part;
@@ -262,7 +299,7 @@ async function runRelayLoop(client: unknown, relay: ServerRelay): Promise<void> 
             break;
           }
 
-          const translated = translatePart(part, subscriber.toolStates);
+          const translated = translatePart(part, subscriber.toolStates, subscriber.deltaPartIds);
           if (translated) {
             runStreamStore.push(subscriber.runId, translated);
           }
@@ -294,6 +331,27 @@ async function runRelayLoop(client: unknown, relay: ServerRelay): Promise<void> 
           db.prepare(
             `UPDATE runs SET status = 'failed', finished_at = COALESCE(finished_at, ?) WHERE id = ? AND status = 'running'`
           ).run(new Date().toISOString(), subscriber.runId);
+          break;
+        }
+
+        case 'question.asked': {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const props = payload.properties as any;
+          const questionId = props?.id as string | undefined;
+          const sid = props?.sessionID as string | undefined;
+          if (!questionId || !sid) break;
+
+          const subscriber = relay.subscribers.get(sid);
+          if (!subscriber) break;
+
+          // Store the baseUrl so answerQuestion() can route to the right server
+          questionToBaseUrl.set(questionId, subscriber.baseUrl);
+
+          // Push the question ID to the run stream so the frontend can answer it
+          runStreamStore.push(subscriber.runId, {
+            type: 'question',
+            data: questionId,
+          });
           break;
         }
 
@@ -342,7 +400,7 @@ async function runRelayLoop(client: unknown, relay: ServerRelay): Promise<void> 
  * @param sessionId The SDK session ID whose events should be relayed to `runId`.
  * @param runId     The run ID in the stream store to push translated events to.
  */
-export function subscribeRun(client: unknown, sessionId: string, runId: string): void {
+export function subscribeRun(client: unknown, sessionId: string, runId: string, baseUrl: string): void {
   let relay = serverRelays.get(client);
 
   if (!relay) {
@@ -374,7 +432,9 @@ export function subscribeRun(client: unknown, sessionId: string, runId: string):
 
   relay.subscribers.set(sessionId, {
     runId,
+    baseUrl,
     toolStates: new Map(),
+    deltaPartIds: new Set(),
     messageRoles: new Map(),
     userMessageId: null,
     errorSeen: false,
@@ -467,6 +527,34 @@ export function waitForDrain(sessionId: string): Promise<void> {
   }
 
   return subscriber.drained;
+}
+
+/**
+ * Send a reply to an opencode question request.
+ * `answers` is an array of per-question answers; each answer is an array of
+ * selected option labels (matching the QuestionAnswer SDK type).
+ *
+ * @param questionId  The question request ID from the `question.asked` event.
+ * @param answers     E.g. `[["Run"]]` — one entry per question, each being the selected labels.
+ */
+export async function answerQuestion(questionId: string, answers: string[][]): Promise<void> {
+  const baseUrl = questionToBaseUrl.get(questionId);
+  if (!baseUrl) {
+    throw new Error(`No server found for question ${questionId} — it may have already been answered`);
+  }
+
+  const res = await fetch(`${baseUrl}/question/${questionId}/reply`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ answers }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`Question reply failed (${res.status}): ${text}`);
+  }
+
+  questionToBaseUrl.delete(questionId);
 }
 
 /**
