@@ -602,7 +602,9 @@ export default function Settings() {
 
       {/* ── Models ── */}
       <div className="mb-2">
-        <div className="text-[11px] font-semibold uppercase tracking-[.08em] text-[color:var(--fg-dim)] mb-4">Models</div>
+        <div className="text-[11px] font-semibold uppercase tracking-[.08em] text-[color:var(--fg-dim)] mb-4">
+          Models
+        </div>
       </div>
 
       {/* Providers */}
@@ -772,7 +774,9 @@ export default function Settings() {
 
       {/* ── Display ── */}
       <div className="mb-2 mt-4">
-        <div className="text-[11px] font-semibold uppercase tracking-[.08em] text-[color:var(--fg-dim)] mb-4">Display</div>
+        <div className="text-[11px] font-semibold uppercase tracking-[.08em] text-[color:var(--fg-dim)] mb-4">
+          Display
+        </div>
       </div>
       <div className="mb-9">
         <div className="mb-4">
@@ -815,12 +819,16 @@ export default function Settings() {
 
       {/* ── Configuration ── */}
       <div className="mb-2 mt-4">
-        <div className="text-[11px] font-semibold uppercase tracking-[.08em] text-[color:var(--fg-dim)] mb-4">Configuration</div>
+        <div className="text-[11px] font-semibold uppercase tracking-[.08em] text-[color:var(--fg-dim)] mb-4">
+          Configuration
+        </div>
       </div>
       <div>
         <div className="mb-4">
           <div className="text-[16px] font-semibold mb-[3px]">Reset data</div>
-          <div className="hint">Permanently delete all routines, runs and settings. The app will quit.</div>
+          <div className="hint">
+            Permanently delete all routines, runs and settings. The app will quit.
+          </div>
         </div>
         <div className="card py-4 px-5">
           {!confirmReset ? (

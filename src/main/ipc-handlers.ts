@@ -23,5 +23,4 @@ export function registerIpcHandlers(): void {
     }
     return result.filePaths[0];
   });
-
 }
