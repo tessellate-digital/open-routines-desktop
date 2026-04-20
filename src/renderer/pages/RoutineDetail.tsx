@@ -6,6 +6,7 @@ import { useGlobalSSE } from '../hooks/useSSE';
 import { RunsTable } from '../components/RunsTable';
 import type { Routine, Trigger, Run } from '../lib/types';
 import { useHostMounts } from '../contexts/HostMountsContext';
+import { usePageContext } from '../contexts/PageContext';
 
 function ChevronLeftIcon() {
   return (
@@ -119,6 +120,7 @@ export default function RoutineDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { resolveHostPath, resolveHostName } = useHostMounts();
+  const { setPageTitle } = usePageContext();
   const [routine, setRoutine] = useState<Routine | null>(null);
   const [triggers, setTriggers] = useState<Trigger[]>([]);
   const [runs, setRuns] = useState<Run[]>([]);
@@ -136,6 +138,7 @@ export default function RoutineDetail() {
         api.getRuns({ routine_id: id, limit: 20 }),
       ]);
       setRoutine(r);
+      setPageTitle(r.name);
       setTriggers(t);
       setRuns(ru);
       setError(null);

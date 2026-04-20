@@ -9,8 +9,8 @@ import { StatusBadge } from '../components/RunsTable';
 import { duration } from '../lib/utils';
 import { useRunStore, type Segment } from '../stores/runStore';
 import type { Run } from '../lib/types';
-import { SiriOrb } from '../components/SiriOrb';
 import { TodoBox, type TodoItem } from '../components/TodoBox';
+import { usePageContext } from '../contexts/PageContext';
 import './RunDetail.style.css';
 
 function parseSegments(events: Array<{ type: string; data: string }>): Segment[] {
@@ -93,9 +93,19 @@ function UserBubble({ text }: { text: string }) {
   );
 }
 
-function ToolRow({ seg, onToggle }: { seg: Segment & { kind: 'tool' }; onToggle: () => void }) {
+function ToolRow({ seg, onToggle, onReply }: { seg: Segment & { kind: 'tool' }; onToggle: () => void; onReply?: (text: string) => void }) {
+  // Render the `question` tool as an interactive (or read-only) card
+  if (seg.name === 'question') {
+    try {
+      const parsed = JSON.parse(seg.args);
+      if (Array.isArray(parsed?.questions)) {
+        return <QuestionsCard questions={parsed.questions} onReply={onReply} />;
+      }
+    } catch { /* fall through to default */ }
+  }
+
   return (
-    <div className="mb-2">
+    <div className="mb-3">
       <button
         onClick={onToggle}
         className="inline-flex items-center gap-[5px] bg-transparent border-none py-0.5 px-0 font-mono text-[12.5px] text-[color:var(--fg-muted)] cursor-pointer"
@@ -113,10 +123,88 @@ function ToolRow({ seg, onToggle }: { seg: Segment & { kind: 'tool' }; onToggle:
   );
 }
 
-function AgentText({ content }: { content: string }) {
-  if (!content.trim()) return null;
+interface QuestionOption { label: string; description: string; }
+interface Question { header: string; question: string; options: QuestionOption[]; }
+
+function tryParseQuestions(content: string): Question[] | null {
+  const trimmed = content.trim();
+  // Try to find a JSON block (possibly wrapped in ```json ... ```)
+  const jsonMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/) || [null, trimmed];
+  try {
+    const parsed = JSON.parse(jsonMatch[1] ?? trimmed);
+    if (Array.isArray(parsed?.questions) && parsed.questions.length > 0) {
+      return parsed.questions;
+    }
+  } catch { /* not JSON */ }
+  return null;
+}
+
+function QuestionsCard({ questions, onReply }: { questions: Question[]; onReply?: (text: string) => void }) {
+  const [selected, setSelected] = useState<string | null>(null);
+  const interactive = !!onReply && !selected;
+
+  const handleClick = (label: string) => {
+    if (!interactive) return;
+    setSelected(label);
+    onReply!(label);
+  };
+
   return (
-    <div className="md text-sm leading-relaxed">
+    <div className="flex flex-col gap-4">
+      {questions.map((q, qi) => (
+        <div key={qi}>
+          {q.header && (
+            <div className="font-mono text-[10.5px] uppercase tracking-[.08em] text-[color:var(--fg-dim)] mb-[6px]">
+              {q.header}
+            </div>
+          )}
+          <p className="text-[13.5px] font-medium mb-3">{q.question}</p>
+          <div className="flex flex-col gap-[6px]">
+            {q.options.map((opt, oi) => {
+              const isSelected = selected === opt.label;
+              const isOther = selected !== null && !isSelected;
+              return (
+                <button
+                  key={oi}
+                  onClick={() => handleClick(opt.label)}
+                  disabled={!interactive}
+                  className={`cursor-pointer text-left px-3 py-2.5 rounded-[10px] border transition-all duration-[160ms] group
+                    ${isSelected
+                      ? 'border-[var(--accent)] bg-[var(--accent-soft)]'
+                      : isOther
+                        ? 'border-[var(--border)] bg-[var(--surface)] opacity-40'
+                        : interactive
+                          ? 'border-[var(--border)] bg-[var(--surface)] hover:border-[var(--accent)] hover:bg-[var(--accent-soft)]'
+                          : 'border-[var(--border)] bg-[var(--surface)] opacity-60 cursor-default'
+                    }`}
+                >
+                  <span className={`font-mono text-[12px] font-semibold ${isSelected ? 'text-[color:var(--accent)]' : 'text-[color:var(--accent)]'}`}>
+                    {opt.label}
+                    {isSelected && <span className="ml-1.5 opacity-70">✓</span>}
+                  </span>
+                  {opt.description && (
+                    <span className="text-[12.5px] text-[color:var(--fg-muted)] ml-2">
+                      — {opt.description}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function AgentText({ content, onReply }: { content: string; onReply?: (text: string) => void }) {
+  if (!content.trim()) return null;
+  const questions = onReply ? tryParseQuestions(content) : null;
+  if (questions) {
+    return <QuestionsCard questions={questions} onReply={onReply!} />;
+  }
+  return (
+    <div className="md">
       <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
     </div>
   );
@@ -158,20 +246,22 @@ const SegmentList = memo(function SegmentList({
   segments,
   toggledTools,
   onToggleTool,
+  onReply,
 }: {
   segments: Segment[];
   toggledTools: Set<number>;
   onToggleTool: (idx: number) => void;
+  onReply?: (text: string) => void;
 }) {
   return (
     <>
       {segments.map((seg, idx) => {
-        if (seg.kind === 'text') return <AgentText key={idx} content={seg.content} />;
+        if (seg.kind === 'text') return <AgentText key={idx} content={seg.content} onReply={onReply} />;
         if (seg.kind === 'error') return <ErrorBubble key={idx} content={seg.content} />;
         if (seg.kind === 'step') return <StepDivider key={idx} />;
         if (seg.kind === 'tool') {
           const open = seg.open || toggledTools.has(idx);
-          return <ToolRow key={idx} seg={{ ...seg, open }} onToggle={() => onToggleTool(idx)} />;
+          return <ToolRow key={idx} seg={{ ...seg, open }} onToggle={() => onToggleTool(idx)} onReply={onReply} />;
         }
         return null;
       })}
@@ -184,23 +274,26 @@ const AssistantCard = memo(function AssistantCard({
   toggledTools,
   onToggleTool,
   isStreaming,
+  onReply,
 }: {
   segments: Segment[];
   toggledTools: Set<number>;
   onToggleTool: (idx: number) => void;
   isStreaming?: boolean;
+  onReply?: (text: string) => void;
 }) {
   const hasContent = segments.length > 0;
   if (!hasContent && !isStreaming) return null;
   return (
     <div className="flex justify-start mb-[14px]">
-      <div className="bg-[var(--surface-hi)] border border-[var(--border)] py-3 px-4 rounded-2xl shadow-[var(--shadow-sm)] max-w-[640px] w-full">
-        <SegmentList segments={segments} toggledTools={toggledTools} onToggleTool={onToggleTool} />
-        {isStreaming && (
-          <span className="status running text-[11px] mt-1.5 inline-flex">
-            <span className="dot" />
-            streaming
-          </span>
+      <div
+        className={`border border-[var(--border)] py-3 px-4 rounded-2xl shadow-[var(--shadow-sm)] max-w-[640px] w-full${isStreaming ? ' streaming-border' : ''}`}
+        style={{ background: 'radial-gradient(60% 60% at 0% 100%, rgba(79, 70, 229, 0.05) 0%, transparent 100%), radial-gradient(60% 60% at 100% 0%, rgba(236, 72, 153, 0.04) 0%, transparent 100%), var(--surface-hi)' }}
+      >
+        {segments.length === 0 && isStreaming ? (
+          <span className="font-mono text-[13px] text-[color:var(--fg-dim)] animate-pulse">Thinking…</span>
+        ) : (
+          <SegmentList segments={segments} toggledTools={toggledTools} onToggleTool={onToggleTool} onReply={onReply} />
         )}
       </div>
     </div>
@@ -215,6 +308,7 @@ const ThreadItem = memo(function ThreadItem({
   liveSegments,
   toggledTools,
   onToggleTool,
+  onReply,
 }: {
   run: Run;
   isFirst: boolean;
@@ -223,6 +317,7 @@ const ThreadItem = memo(function ThreadItem({
   liveSegments: Segment[];
   toggledTools: Set<number>;
   onToggleTool: (idx: number) => void;
+  onReply?: (text: string) => void;
 }) {
   const segments = useMemo(
     () => (isLast && isStreaming ? liveSegments : parseSegments(run.stdout || [])),
@@ -242,6 +337,7 @@ const ThreadItem = memo(function ThreadItem({
         toggledTools={toggledTools}
         onToggleTool={onToggleTool}
         isStreaming={isLast && isStreaming}
+        onReply={isLast ? onReply : undefined}
       />
       {!isLast && <div className="divider" />}
     </div>
@@ -272,20 +368,41 @@ export default function RunDetail() {
     reset,
   } = useRunStore();
 
+  const { setPageTitle } = usePageContext();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
   const [replying, setReplying] = useState(false);
   const [orbExiting, setOrbExiting] = useState(false);
+  const [pendingQuestionId, setPendingQuestionId] = useState<string | null>(null);
 
   const taRef = useRef<HTMLTextAreaElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
   const scrollAfterReply = useRef(false);
+
+  const isNearBottom = useCallback(() => {
+    const scroller = document.querySelector('.scroller');
+    if (!scroller) return true;
+    const { scrollTop, scrollHeight, clientHeight } = scroller;
+    return scrollHeight - scrollTop - clientHeight < 300;
+  }, []);
+
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
+    const scroller = document.querySelector('.scroller');
+    if (!scroller) return;
+    if (behavior === 'instant') {
+      scroller.scrollTop = scroller.scrollHeight;
+    } else {
+      scroller.scrollTo({ top: scroller.scrollHeight, behavior });
+    }
+  }, []);
 
   const load = useCallback(async () => {
     if (!id) return;
     try {
       const runs = await api.getThread(id);
       setThread(runs);
+      if (runs.length > 0) setPageTitle(runs[0].routine_name || id!);
       setError(null);
       const latest = runs[runs.length - 1];
       if (latest?.status === 'running') {
@@ -306,12 +423,20 @@ export default function RunDetail() {
     load();
   }, [id]);
 
+  // Scroll after reply is sent (always — user initiated)
   useEffect(() => {
     if (scrollAfterReply.current) {
       scrollAfterReply.current = false;
-      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+      scrollToBottom();
     }
-  }, [thread.length]);
+  }, [thread.length, scrollToBottom]);
+
+  // Scroll during streaming — only if user is near the bottom
+  useEffect(() => {
+    if (isStreaming && isNearBottom()) {
+      scrollToBottom('instant');
+    }
+  }, [liveSegments, isStreaming, isNearBottom, scrollToBottom]);
 
   const latestRunId = thread[thread.length - 1]?.id;
 
@@ -336,7 +461,9 @@ export default function RunDetail() {
       },
       [appendToolResult]
     ),
-    onError: useCallback((data: string) => appendError(data), [appendError]),
+    onError: useCallback((data: string) => {
+      appendError(data);
+    }, [appendError]),
     onStatus: useCallback(
       (data: string) => {
         if (data.startsWith('--- step')) appendStep();
@@ -345,6 +472,9 @@ export default function RunDetail() {
     ),
     onStderr: useCallback(() => {}, []),
     onStdout: useCallback(() => {}, []),
+    onQuestion: useCallback((questionId: string) => {
+      setPendingQuestionId(questionId);
+    }, []),
     onReconnect: useCallback(() => clearLiveSegments(), [clearLiveSegments]),
     onDone: useCallback(
       (data: string) => {
@@ -358,14 +488,10 @@ export default function RunDetail() {
               new Date().toISOString()
             );
           }
-        } catch {
-          /* ignore */
-        }
-        finalizeStream();
+        } catch { /* ignore */ }
         setOrbExiting(true);
-        setTimeout(() => {
-          setOrbExiting(false);
-        }, 300);
+        setTimeout(() => setOrbExiting(false), 300);
+        finalizeStream();
       },
       [latestRunId, updateRunStatus, finalizeStream]
     ),
@@ -406,6 +532,20 @@ export default function RunDetail() {
       setReplying(false);
     }
   };
+
+  const handleQuestionReply = useCallback(async (text: string) => {
+    const run = thread[thread.length - 1];
+    if (!run?.id || !pendingQuestionId) return;
+    setReplying(true);
+    try {
+      await api.answerQuestion(run.id, pendingQuestionId, text);
+      setPendingQuestionId(null);
+    } catch (err) {
+      alert('Error: ' + (err instanceof Error ? err.message : 'Unknown'));
+    } finally {
+      setReplying(false);
+    }
+  }, [thread, pendingQuestionId]);
 
   const handleToggleTool = useCallback(
     (runId: string, idx: number, isLive: boolean) => {
@@ -517,6 +657,7 @@ export default function RunDetail() {
               liveSegments={liveSegments}
               toggledTools={runToggled}
               onToggleTool={(idx) => handleToggleTool(run.id, idx, isLast && isStreaming)}
+              onReply={handleQuestionReply}
             />
           );
         })}
@@ -541,9 +682,13 @@ export default function RunDetail() {
           onClick={showThinking ? handleCancel : undefined}
         >
           {showThinking ? (
-            <div className={classNames({ 'orb-exit': orbExiting })}>
-              <SiriOrb size="42px" animationDuration={12} />
-            </div>
+            <>
+              <div className={classNames('flex items-center justify-center w-[42px] h-[42px] rounded-full bg-[rgba(200,59,59,0.12)] shrink-0', { 'orb-exit': orbExiting })}>
+                <svg viewBox="0 0 16 16" width="14" height="14" fill="var(--status-failed)">
+                  <rect x="3" y="3" width="10" height="10" rx="2" />
+                </svg>
+              </div>
+            </>
           ) : (
             <div className={classNames('composer-input', { 'fade-in': !showThinking })}>
               <textarea
@@ -578,6 +723,7 @@ export default function RunDetail() {
           )}
         </div>
       </div>
+      <div ref={bottomRef} />
     </div>
   );
 }

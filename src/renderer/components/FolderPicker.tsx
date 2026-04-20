@@ -1,3 +1,5 @@
+import { useEffect, useRef } from 'react';
+
 /**
  * FolderPicker – uses the native OS directory picker dialog.
  *
@@ -15,18 +17,21 @@ export function FolderPicker({
   onChange: (path: string) => void;
   onClose: () => void;
 }) {
-  // Immediately open native dialog
-  if (window.electronAPI) {
-    window.electronAPI.selectDirectory().then((selected) => {
-      if (selected) {
-        onChange(selected);
-      }
-      onClose();
-    });
-  } else {
-    onClose();
-  }
+  const openedRef = useRef(false);
 
-  // Render nothing — the native dialog is the UI
+  useEffect(() => {
+    if (openedRef.current) return;
+    openedRef.current = true;
+
+    if (window.electronAPI) {
+      window.electronAPI.selectDirectory().then((selected) => {
+        if (selected) onChange(selected);
+        onClose();
+      });
+    } else {
+      onClose();
+    }
+  }, []);
+
   return null;
 }

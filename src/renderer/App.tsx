@@ -9,11 +9,13 @@ import RunDetail from './pages/RunDetail';
 import Settings from './pages/Settings';
 import DevPage from './pages/DevPage';
 import { HostMountsProvider } from './contexts/HostMountsContext';
+import { PageProvider } from './contexts/PageContext';
 
 export default function App() {
   return (
     <HostMountsProvider>
       <BrowserRouter>
+        <PageProvider>
         <Routes>
           <Route element={<Layout />}>
             <Route path="/" element={<Dashboard />} />
@@ -27,6 +29,7 @@ export default function App() {
             {import.meta.env.VITE_DEV === 'true' && <Route path="/dev" element={<DevPage />} />}
           </Route>
         </Routes>
+        </PageProvider>
       </BrowserRouter>
     </HostMountsProvider>
   );

@@ -64,6 +64,8 @@ interface RunStore {
   history: StreamEvent[];
   /** All JSONL lines already persisted to stdout (for incremental writes). */
   stdoutLines: string[];
+  /** Accumulated text from live deltas, flushed to history/DB on non-text events or close. */
+  pendingText: string;
 }
 
 const stores = new Map<string, RunStore>();
@@ -81,7 +83,34 @@ export function openRun(runId: string): void {
     queue: new AsyncQueue<StreamEvent | null>(),
     history: [],
     stdoutLines: [],
+    pendingText: '',
   });
+}
+
+/**
+ * Flush any accumulated pending text into history + DB as a single consolidated
+ * text event.  Called automatically before non-text events and on close().
+ */
+function flushPendingText(store: RunStore, runId: string): void {
+  if (!store.pendingText) return;
+  const event: StreamEvent = { type: 'text', data: store.pendingText };
+  store.history.push(event);
+  store.stdoutLines.push(JSON.stringify(event));
+  store.pendingText = '';
+  db.prepare('UPDATE runs SET stdout = ? WHERE id = ?').run(store.stdoutLines.join('\n'), runId);
+}
+
+/**
+ * Stream a text delta to live SSE consumers and accumulate it for later
+ * persistence.  Does NOT write to the DB on every call — the accumulated
+ * text is flushed as a single event when a non-text event arrives or when
+ * the run closes.
+ */
+export function streamText(runId: string, delta: string): void {
+  const store = stores.get(runId);
+  if (!store) return;
+  store.queue.push({ type: 'text', data: delta });
+  store.pendingText += delta;
 }
 
 /**
@@ -92,6 +121,7 @@ export function openRun(runId: string): void {
  * Special handling:
  * - 'thinking' events: streamed to frontend but NOT persisted (ephemeral)
  * - 'stats' events: persisted to metadata.stats, not stdout
+ * - Non-text events flush any pending text first (from streamText deltas)
  *
  * Full transcripts are stored without truncation.
  */
@@ -128,6 +158,9 @@ export function push(runId: string, event: StreamEvent): void {
     return;
   }
 
+  // Flush any pending text before persisting a non-text event
+  flushPendingText(store, runId);
+
   // Regular events: add to history and persist to stdout
   store.history.push(event);
   store.stdoutLines.push(JSON.stringify(event));
@@ -149,6 +182,8 @@ export function close(runId: string, done?: DonePayload): void {
   if (!store) {
     return;
   }
+  // Flush any remaining pending text to history + DB
+  flushPendingText(store, runId);
   stores.delete(runId);
   if (done) {
     store.queue.push({ type: 'done', data: JSON.stringify(done) });
@@ -194,5 +229,10 @@ export function connectStream(runId: string): AsyncQueue<StreamEvent | null> | n
  * SSE clients before they start receiving live events).
  */
 export function getHistory(runId: string): StreamEvent[] {
-  return stores.get(runId)?.history ?? [];
+  const store = stores.get(runId);
+  if (!store) return [];
+  if (store.pendingText) {
+    return [...store.history, { type: 'text', data: store.pendingText }];
+  }
+  return store.history;
 }

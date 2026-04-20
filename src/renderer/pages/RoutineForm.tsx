@@ -8,6 +8,7 @@ import { FolderPicker } from '../components/FolderPicker';
 import { FileTypeFilter, type FileFilterValue } from '../components/FileTypeFilter';
 import { SelectDropdown, type SelectOption } from '../components/SelectDropdown';
 import { useHostMounts } from '../contexts/HostMountsContext';
+import { usePageContext } from '../contexts/PageContext';
 
 const FS_EVENTS = [
   { value: 'add', label: 'File created' },
@@ -231,6 +232,7 @@ export default function RoutineForm() {
   const navigate = useNavigate();
   const isEdit = !!id;
   const { resolveHostPath } = useHostMounts();
+  const { setPageTitle } = usePageContext();
 
   const [form, setForm] = useState({
     name: '',
@@ -277,6 +279,7 @@ export default function RoutineForm() {
             /* ignore */
           }
         }
+        setPageTitle(routine ? routine.name : 'New routine');
         if (routine) {
           setForm({
             name: routine.name,

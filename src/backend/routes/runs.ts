@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { streamSSE } from 'hono/streaming';
 import { randomUUID } from 'crypto';
 import { executor } from '../services/executor';
+import * as relay from '../services/opencodeEventRelay';
 import { eventBus } from '../services/eventBus';
 import * as runStreamStore from '../services/runStreamStore';
 import { runsRepository } from '../repositories/runsRepository';
@@ -262,5 +263,23 @@ router.post('/:id/reply', zValidator('json', z.object({ text: z.string().min(1) 
 
   return c.json({ run_id: newRunId }, 202);
 });
+
+// Answer a pending question raised by the LLM's `question` tool.
+// The run must be currently streaming; the answer is routed directly to the
+// opencode server via the relay's answerQuestion() helper.
+router.post(
+  '/:id/answer-question',
+  zValidator('json', z.object({ questionId: z.string().min(1), answer: z.string().min(1) })),
+  async (c) => {
+    const { questionId, answer } = c.req.valid('json');
+    try {
+      await relay.answerQuestion(questionId, [[answer]]);
+      return c.json({ ok: true }, 200);
+    } catch (err) {
+      logger.error(`answer-question error for question ${questionId}:`, err);
+      return c.json({ detail: err instanceof Error ? err.message : 'Unknown error' }, 500);
+    }
+  }
+);
 
 export default router;

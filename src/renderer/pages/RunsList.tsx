@@ -76,8 +76,12 @@ export default function RunsList() {
   }, [load]);
   useGlobalSSE(
     useCallback(() => {
-      setPage(0);
-    }, [])
+      if (page !== 0) {
+        setPage(0); // load() will fire via useEffect
+      } else {
+        load(); // already on page 0 — call directly
+      }
+    }, [page, load])
   );
 
   if (loading) return <p className="hint">Loading…</p>;

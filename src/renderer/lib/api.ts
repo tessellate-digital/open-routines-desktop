@@ -114,6 +114,11 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ text }),
     }),
+  answerQuestion: (runId: string, questionId: string, answer: string) =>
+    request<{ ok: boolean }>(`/runs/${runId}/answer-question`, {
+      method: 'POST',
+      body: JSON.stringify({ questionId, answer }),
+    }),
 
   // Settings
   getSettings: () => request<Setting[]>('/settings'),
