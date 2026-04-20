@@ -386,10 +386,8 @@ const ThreadItem = memo(function ThreadItem({
   return (
     <div>
       {isFirst &&
-        run.metadata?.prompt_context &&
-        typeof run.metadata.prompt_context === 'string' && (
-          <PromptContext context={run.metadata.prompt_context} />
-        )}
+        typeof run.metadata?.prompt_context === 'string' &&
+        run.metadata.prompt_context && <PromptContext context={run.metadata.prompt_context} />}
       {run.prompt && <UserBubble text={run.prompt} />}
       <AssistantCard
         segments={segments}

@@ -8,6 +8,8 @@
     "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "rm -rf out && electron-forge make",
+    "pipeline-checks": "npm run typecheck && npm run lint && npm run format:check && npm run test",
+    "typecheck": "npx tsc --noEmit",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
     "format": "prettier --write src/",
@@ -15,7 +17,8 @@
     "test:frontend": "vitest run --config vitest.frontend.config.ts",
     "test:backend": "vitest run --config vitest.backend.config.ts",
     "test": "npm run test:frontend && npm run test:backend",
-    "postinstall": "electron-rebuild"
+    "postinstall": "electron-rebuild",
+    "prepare": "husky"
   },
   "dependencies": {
     "@hono/node-server": "^1.13.0",
@@ -54,6 +57,7 @@
     "eslint": "^9.39.4",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
+    "husky": "^9.1.7",
     "jsdom": "^29.0.2",
     "prettier": "^3.8.3",
     "tailwindcss": "^4.2.2",

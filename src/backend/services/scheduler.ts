@@ -91,15 +91,15 @@ class SchedulerService {
     }
 
     // Pre-flight: skip if the workspace folder is no longer accessible
-    if (routine.workspace_path) {
+    if (routine.repository) {
       try {
-        const stat = fs.statSync(routine.workspace_path);
+        const stat = fs.statSync(routine.repository);
         if (!stat.isDirectory()) {
           throw new Error('not a directory');
         }
       } catch {
         logger.warn(
-          `Skipping cron run for routine ${routineId}: workspace folder is no longer accessible: ${routine.workspace_path}`
+          `Skipping cron run for routine ${routineId}: workspace folder is no longer accessible: ${routine.repository}`
         );
         return;
       }
