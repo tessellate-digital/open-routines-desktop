@@ -486,7 +486,9 @@ export default function RoutineForm() {
   const allowedPrefixes = new Set(['opencode', 'opencode-go', ...configuredProviderIds]);
   const availableModels = models.filter((m) => {
     const slash = m.indexOf('/');
-    if (slash === -1) return true;
+    if (slash === -1) {
+      return true;
+    }
     return allowedPrefixes.has(m.slice(0, slash));
   });
   const favouriteSet = new Set(favourites.filter((m) => availableModels.includes(m)));
