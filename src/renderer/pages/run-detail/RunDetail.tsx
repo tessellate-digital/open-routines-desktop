@@ -213,13 +213,14 @@ export default function RunDetail() {
     if (!prompt) {
       return;
     }
+    const displayPrompt = composerRef.current?.getDisplayText().trim() ?? prompt;
     setReplying(true);
     setReplyText('');
     composerRef.current?.clear();
     try {
-      const { run_id } = await api.replyToRun(latestRunId, prompt);
+      const { run_id } = await api.replyToRun(latestRunId, prompt, displayPrompt);
       scrollAfterReply.current = true;
-      addReplyRun(run_id, prompt, currentRun.routine_name, currentRun.routine_id);
+      addReplyRun(run_id, prompt, displayPrompt, currentRun.routine_name, currentRun.routine_id);
     } catch (err) {
       alert('Error: ' + (err instanceof Error ? err.message : 'Unknown'));
     } finally {

@@ -27,7 +27,9 @@ export function registerIpcHandlers(): void {
   ipcMain.handle('dialog:openFile', async () => {
     const win = BrowserWindow.getFocusedWindow();
     const result = await dialog.showOpenDialog(win!, { properties: ['openFile'] });
-    if (result.canceled || result.filePaths.length === 0) {return null;}
+    if (result.canceled || result.filePaths.length === 0) {
+      return null;
+    }
     return result.filePaths[0];
   });
 }

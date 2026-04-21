@@ -37,7 +37,7 @@ export const ThreadItem = memo(function ThreadItem({
       {isFirst &&
         typeof run.metadata?.prompt_context === 'string' &&
         run.metadata.prompt_context && <PromptContext context={run.metadata.prompt_context} />}
-      {run.prompt && <UserBubble text={run.prompt} />}
+      {run.display_prompt && <UserBubble text={run.display_prompt} />}
       <AssistantCard
         segments={segments}
         toggledTools={toggledTools}

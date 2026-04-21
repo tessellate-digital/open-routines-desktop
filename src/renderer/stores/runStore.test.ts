@@ -9,6 +9,7 @@ const mockRun = (overrides: Partial<Run> = {}): Run => ({
   trigger_id: null,
   trigger_type: 'manual',
   prompt: 'Test prompt',
+  display_prompt: 'Test prompt',
   parent_run_id: null,
   status: 'success',
   started_at: '2026-01-01T00:00:00Z',
@@ -153,13 +154,14 @@ describe('runStore', () => {
       const parentRun = mockRun({ id: 'parent-1', status: 'success' });
       useRunStore.getState().setThread([parentRun]);
 
-      useRunStore.getState().addReplyRun('new-1', 'Hello', 'Test Routine', 'routine-1');
+      useRunStore.getState().addReplyRun('new-1', 'Hello', 'Hello', 'Test Routine', 'routine-1');
 
       const thread = useRunStore.getState().thread;
       expect(thread).toHaveLength(2);
       expect(thread[1]).toMatchObject({
         id: 'new-1',
         prompt: 'Hello',
+        display_prompt: 'Hello',
         routine_name: 'Test Routine',
         routine_id: 'routine-1',
         parent_run_id: 'parent-1',
@@ -168,11 +170,29 @@ describe('runStore', () => {
       });
     });
 
+    it('stores display_prompt separately from prompt', () => {
+      useRunStore.getState().setThread([mockRun({ id: 'parent-1' })]);
+
+      useRunStore
+        .getState()
+        .addReplyRun(
+          'new-1',
+          '/Users/loic/image.png',
+          '@customTag:file-browse(/Users/loic/image.png)',
+          'Test Routine',
+          'routine-1'
+        );
+
+      const run = useRunStore.getState().thread[1];
+      expect(run.prompt).toBe('/Users/loic/image.png');
+      expect(run.display_prompt).toBe('@customTag:file-browse(/Users/loic/image.png)');
+    });
+
     it('sets streaming to true and clears live segments', () => {
       useRunStore.getState().appendText('old content');
       useRunStore.getState().setThread([mockRun({ id: '1' })]);
 
-      useRunStore.getState().addReplyRun('2', 'prompt', 'name', 'rid');
+      useRunStore.getState().addReplyRun('2', 'prompt', 'prompt', 'name', 'rid');
 
       expect(useRunStore.getState().isStreaming).toBe(true);
       expect(useRunStore.getState().liveSegments).toHaveLength(0);

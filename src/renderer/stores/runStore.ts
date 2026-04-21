@@ -41,7 +41,13 @@ interface RunStore {
   toggleTool: (runId: string, idx: number) => void;
   toggleLiveTool: (idx: number) => void;
 
-  addReplyRun: (runId: string, prompt: string, routineName: string, routineId: string) => void;
+  addReplyRun: (
+    runId: string,
+    prompt: string,
+    displayPrompt: string,
+    routineName: string,
+    routineId: string
+  ) => void;
 
   reset: () => void;
 }
@@ -155,7 +161,7 @@ export const useRunStore = create<RunStore>((set, get) => ({
       return { liveSegments: segments };
     }),
 
-  addReplyRun: (runId, prompt, routineName, routineId) => {
+  addReplyRun: (runId, prompt, displayPrompt, routineName, routineId) => {
     const { thread } = get();
     const parentRun = thread[thread.length - 1];
     const newRun: Run = {
@@ -165,6 +171,7 @@ export const useRunStore = create<RunStore>((set, get) => ({
       trigger_id: null,
       trigger_type: 'reply',
       prompt,
+      display_prompt: displayPrompt,
       parent_run_id: parentRun?.id ?? null,
       status: 'running',
       started_at: new Date().toISOString(),

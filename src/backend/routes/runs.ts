@@ -44,6 +44,7 @@ function runToResponse(r: RunRow) {
     trigger_id: r.trigger_id,
     trigger_type: r.trigger_type,
     prompt: r.prompt,
+    display_prompt: r.display_prompt,
     parent_run_id: r.parent_run_id ?? null,
     status: r.status,
     started_at: r.started_at,
@@ -217,52 +218,57 @@ router.get('/:id/thread', (c) => {
 // Reply to a finished run — creates a new follow-up run linked via parent_run_id.
 // The existing session_id is passed to executor.startRun() so the SDK resumes
 // the conversation natively.
-router.post('/:id/reply', zValidator('json', z.object({ text: z.string().min(1) })), async (c) => {
-  const runId = c.req.param('id');
-  const row = runsRepository.findById(runId);
-  if (!row) {
-    return c.json({ detail: 'Run not found' }, 404);
+router.post(
+  '/:id/reply',
+  zValidator('json', z.object({ text: z.string().min(1), display_text: z.string().optional() })),
+  async (c) => {
+    const runId = c.req.param('id');
+    const row = runsRepository.findById(runId);
+    if (!row) {
+      return c.json({ detail: 'Run not found' }, 404);
+    }
+
+    if (!['success', 'failed', 'cancelled'].includes(row.status)) {
+      return c.json({ detail: 'Can only reply to finished runs' }, 409);
+    }
+
+    if (!row.session_id) {
+      return c.json({ detail: 'Run has no session to reply to' }, 400);
+    }
+
+    const routine = row.routine_id ? routinesRepository.findById(row.routine_id) : undefined;
+    if (!routine) {
+      return c.json({ detail: 'Routine not found' }, 404);
+    }
+
+    const { text, display_text } = c.req.valid('json');
+    const newRunId = randomUUID();
+
+    runsRepository.create({
+      id: newRunId,
+      routineId: routine.id,
+      routineName: routine.name,
+      triggerType: 'manual',
+      prompt: text,
+      displayPrompt: display_text,
+      parentRunId: runId,
+      metadata: { reply_to: runId },
+    });
+
+    runStreamStore.openRun(newRunId);
+
+    eventBus.broadcast('run_created', {
+      run_id: newRunId,
+      routine_id: routine.id,
+      status: 'pending',
+    });
+    executor
+      .startRun(newRunId, routine, text, row.session_id)
+      .catch((err) => logger.error(`Reply run ${newRunId} error:`, err));
+
+    return c.json({ run_id: newRunId }, 202);
   }
-
-  if (!['success', 'failed', 'cancelled'].includes(row.status)) {
-    return c.json({ detail: 'Can only reply to finished runs' }, 409);
-  }
-
-  if (!row.session_id) {
-    return c.json({ detail: 'Run has no session to reply to' }, 400);
-  }
-
-  const routine = row.routine_id ? routinesRepository.findById(row.routine_id) : undefined;
-  if (!routine) {
-    return c.json({ detail: 'Routine not found' }, 404);
-  }
-
-  const { text } = c.req.valid('json');
-  const newRunId = randomUUID();
-
-  runsRepository.create({
-    id: newRunId,
-    routineId: routine.id,
-    routineName: routine.name,
-    triggerType: 'manual',
-    prompt: text,
-    parentRunId: runId,
-    metadata: { reply_to: runId },
-  });
-
-  runStreamStore.openRun(newRunId);
-
-  eventBus.broadcast('run_created', {
-    run_id: newRunId,
-    routine_id: routine.id,
-    status: 'pending',
-  });
-  executor
-    .startRun(newRunId, routine, text, row.session_id)
-    .catch((err) => logger.error(`Reply run ${newRunId} error:`, err));
-
-  return c.json({ run_id: newRunId }, 202);
-});
+);
 
 // Answer a pending question raised by the LLM's `question` tool.
 // The run must be currently streaming; the answer is routed directly to the

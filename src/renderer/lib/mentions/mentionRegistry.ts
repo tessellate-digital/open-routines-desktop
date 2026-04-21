@@ -6,12 +6,15 @@ export interface MentionAction {
   group: string;
   description?: string;
   keywords: string[];
-  onSelect: () => Promise<any>;
-  renderer: (value: any) => string;
+  onSelect: () => Promise<unknown>;
+  renderer: (value: unknown) => string;
+  feedRenderer?: (value: unknown) => string;
 }
 
 export function filterActions(actions: MentionAction[], query: string): MentionAction[] {
-  if (!query) {return actions;}
+  if (!query) {
+    return actions;
+  }
   const q = query.toLowerCase();
   return actions.filter(
     (a) =>
@@ -26,10 +29,16 @@ export function groupActions(
 ): { group: string; items: MentionAction[] }[] {
   const map = new Map<string, MentionAction[]>();
   for (const action of actions) {
-    if (!map.has(action.group)) {map.set(action.group, []);}
+    if (!map.has(action.group)) {
+      map.set(action.group, []);
+    }
     map.get(action.group)!.push(action);
   }
   return Array.from(map.entries()).map(([group, items]) => ({ group, items }));
 }
 
 export const mentionActions: MentionAction[] = [...fileActions];
+
+export function findActionById(id: string): MentionAction | undefined {
+  return mentionActions.find((a) => a.id === id);
+}

@@ -11,6 +11,10 @@ export const fileActions: MentionAction[] = [
       const path = await window.electronAPI?.selectFile();
       return path ?? null;
     },
-    renderer: (value: string) => value.split('/').pop() || value,
+    renderer: (value: unknown) => {
+      const v = value as string;
+      return v.split('/').pop() || v;
+    },
+    feedRenderer: (value: unknown) => value as string,
   },
 ];

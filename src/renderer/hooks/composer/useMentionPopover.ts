@@ -9,19 +9,27 @@ import type { ComposerInputHandle } from '../../components/composer';
 
 function detectMention(): string | null {
   const sel = window.getSelection();
-  if (!sel || sel.rangeCount === 0) {return null;}
+  if (!sel || sel.rangeCount === 0) {
+    return null;
+  }
 
   const range = sel.getRangeAt(0);
-  if (!range.collapsed) {return null;}
+  if (!range.collapsed) {
+    return null;
+  }
 
   const node = range.startContainer;
-  if (node.nodeType !== Node.TEXT_NODE) {return null;}
+  if (node.nodeType !== Node.TEXT_NODE) {
+    return null;
+  }
 
   const offset = range.startOffset;
   const textBefore = (node.textContent ?? '').slice(0, offset);
 
   const match = textBefore.match(/@([^@\s]*)$/);
-  if (!match) {return null;}
+  if (!match) {
+    return null;
+  }
 
   return match[1];
 }
@@ -51,9 +59,11 @@ export function useMentionPopover(inputRef: RefObject<ComposerInputHandle | null
       setOpen(false);
       setQuery('');
       const value = await action.onSelect();
-      if (value === null) {return;}
+      if (value == null) {
+        return;
+      }
       const displayText = action.renderer(value);
-      inputRef.current?.insertChip(displayText, value, action.id);
+      inputRef.current?.insertChip(displayText, String(value), action.id);
     },
     [inputRef]
   );
@@ -65,7 +75,9 @@ export function useMentionPopover(inputRef: RefObject<ComposerInputHandle | null
 
   const onKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (!open) {return;}
+      if (!open) {
+        return;
+      }
 
       if (e.key === 'ArrowDown') {
         e.preventDefault();
@@ -87,5 +99,14 @@ export function useMentionPopover(inputRef: RefObject<ComposerInputHandle | null
     [open, filteredActions, activeIndex, handleSelect, dismiss]
   );
 
-  return { open, filteredGroups, filteredActions, activeIndex, onKeyDown, handleSelect, dismiss, onInput };
+  return {
+    open,
+    filteredGroups,
+    filteredActions,
+    activeIndex,
+    onKeyDown,
+    handleSelect,
+    dismiss,
+    onInput,
+  };
 }
