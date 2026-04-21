@@ -49,7 +49,6 @@ export default function RunsList() {
   const [runs, setRuns] = useState<Run[]>([]);
   const [page, setPage] = useState(0);
   const [hasNext, setHasNext] = useState(false);
-  const [, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
@@ -66,8 +65,6 @@ export default function RunsList() {
       setError(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Unknown error');
-    } finally {
-      setLoading(false);
     }
   }, [page, filter]);
 
