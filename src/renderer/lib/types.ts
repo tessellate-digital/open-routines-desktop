@@ -34,6 +34,7 @@ export interface Run {
   trigger_id: string | null;
   trigger_type: string;
   prompt: string;
+  display_prompt: string;
   parent_run_id: string | null;
   status: 'pending' | 'running' | 'success' | 'failed' | 'cancelled' | 'lost';
   started_at: string | null;

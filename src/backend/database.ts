@@ -152,6 +152,12 @@ export function initDb(): void {
   if (!runColumns.includes('assistant_message_id')) {
     db.exec('ALTER TABLE runs ADD COLUMN assistant_message_id TEXT DEFAULT NULL');
   }
+  // Migration: add display_prompt for rich mention rendering (separate from LLM prompt)
+  if (!runColumns.includes('display_prompt')) {
+    db.exec("ALTER TABLE runs ADD COLUMN display_prompt TEXT NOT NULL DEFAULT ''");
+    // Back-fill: copy prompt so existing rows render as plain text
+    db.exec('UPDATE runs SET display_prompt = prompt');
+  }
 
   // Migration: add routine_name snapshot so the name persists even if routine is deleted
   if (!runColumns.includes('routine_name')) {

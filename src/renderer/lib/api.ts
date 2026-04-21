@@ -123,10 +123,10 @@ export const api = {
       method: 'POST',
       body: '{}',
     }),
-  replyToRun: (id: string, text: string) =>
+  replyToRun: (id: string, text: string, displayText?: string) =>
     request<{ run_id: string }>(`/runs/${id}/reply`, {
       method: 'POST',
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ text, display_text: displayText }),
     }),
   answerQuestion: (runId: string, questionId: string, answer: string) =>
     request<{ ok: boolean }>(`/runs/${runId}/answer-question`, {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { Segment } from '../stores/runStore';
+import type { Segment } from '../../stores/runStore';
 
 // ── parseSegments (mirrors RunDetail.tsx) ────────────────────────────────────
 

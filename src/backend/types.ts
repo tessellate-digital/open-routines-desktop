@@ -36,6 +36,7 @@ export interface RunRow {
   trigger_id: string | null;
   trigger_type: string;
   prompt: string;
+  display_prompt: string;
   parent_run_id: string | null;
   session_id: string | null;
   assistant_message_id: string | null;

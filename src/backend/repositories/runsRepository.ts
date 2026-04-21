@@ -15,6 +15,7 @@ export interface CreateRunParams {
   triggerId?: string | null;
   triggerType: string;
   prompt: string;
+  displayPrompt?: string;
   parentRunId?: string | null;
   metadata: Record<string, unknown>;
 }
@@ -121,8 +122,8 @@ export const runsRepository = {
     const now = new Date().toISOString();
     db.prepare(
       `
-      INSERT INTO runs (id, routine_id, routine_name, trigger_id, trigger_type, prompt, parent_run_id, status, metadata, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)
+      INSERT INTO runs (id, routine_id, routine_name, trigger_id, trigger_type, prompt, display_prompt, parent_run_id, status, metadata, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)
     `
     ).run(
       params.id,
@@ -131,6 +132,7 @@ export const runsRepository = {
       params.triggerId ?? null,
       params.triggerType,
       params.prompt,
+      params.displayPrompt ?? params.prompt,
       params.parentRunId ?? null,
       JSON.stringify(params.metadata),
       now
