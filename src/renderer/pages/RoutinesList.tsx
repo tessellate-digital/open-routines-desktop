@@ -69,9 +69,6 @@ export default function RoutinesList() {
     }, [load])
   );
 
-  if (loading) {
-    return <p className="hint">Loading…</p>;
-  }
   if (error) {
     return <p className="text-[color:var(--status-failed)] text-[13px]">Error: {error}</p>;
   }
@@ -172,7 +169,7 @@ export default function RoutinesList() {
             </tbody>
           </table>
         </div>
-      ) : routines.length === 0 && filter === 'all' ? (
+      ) : routines.length === 0 && filter === 'all' && !loading ? (
         <div className="card">
           <div className="py-20 px-10 text-center grid gap-2.5 justify-items-center">
             <div className="w-[72px] h-[72px] rounded-[22px] bg-gradient-to-br from-[#4f46e5] to-[#c5b8ff] grid place-items-center text-white mb-3 shadow-[0_12px_40px_rgba(79,70,229,0.3)] animate-[float_4s_ease-in-out_infinite]">

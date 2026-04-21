@@ -49,7 +49,7 @@ export default function RunsList() {
   const [runs, setRuns] = useState<Run[]>([]);
   const [page, setPage] = useState(0);
   const [hasNext, setHasNext] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
@@ -84,9 +84,6 @@ export default function RunsList() {
     }, [page, load])
   );
 
-  if (loading) {
-    return <p className="hint">Loading…</p>;
-  }
   if (error) {
     return <p className="text-[color:var(--status-failed)] text-[13px]">Error: {error}</p>;
   }

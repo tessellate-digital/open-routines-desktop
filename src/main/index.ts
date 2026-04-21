@@ -6,6 +6,17 @@ import { startFileWatcher, stopFileWatcher, setFileWatcherPort } from './fileWat
 import { disposeAll as disposeServerPool } from '../backend/services/opencodeServerPool';
 import { isOpencodeInstalled, installOpencode } from './opencode-installer';
 
+// Set the dock icon at module load time — before app.whenReady() — so macOS never
+// gets a chance to show the Electron default icon during launch or quit.
+// In packaged mode we read from process.resourcesPath (extraResource copy outside asar).
+// In dev mode app.getAppPath() is the project root.
+if (process.platform === 'darwin') {
+  const iconPath = app.isPackaged
+    ? path.join(process.resourcesPath, 'icon.icns')
+    : path.join(app.getAppPath(), 'resources', 'icon.png');
+  app.dock?.setIcon(nativeImage.createFromPath(iconPath));
+}
+
 let mainWindow: BrowserWindow | null = null;
 
 function createWindow(serverPort: number): void {
@@ -15,7 +26,13 @@ function createWindow(serverPort: number): void {
     minWidth: 800,
     minHeight: 600,
     title: 'Open Routines',
-    icon: nativeImage.createFromPath(path.join(app.getAppPath(), 'resources', 'icon.png')),
+    show: false,
+    // macOS uses the bundle .icns for the Dock — setting icon here on macOS resolves
+    // to a bad path in the packaged asar and causes a flash when Electron applies the
+    // empty image. Only set it on platforms that actually need it.
+    ...(process.platform !== 'darwin' && {
+      icon: path.join(app.getAppPath(), 'resources', 'icon.png'),
+    }),
     titleBarStyle: 'hiddenInset',
     trafficLightPosition: { x: 12, y: 14 },
     webPreferences: {
@@ -25,11 +42,16 @@ function createWindow(serverPort: number): void {
     },
   });
 
-  // Set dock icon (ensures it shows in dev mode on macOS)
-  const iconPath = path.join(app.getAppPath(), 'resources', 'icon.png');
-  if (process.platform === 'darwin') {
-    app.dock?.setIcon(nativeImage.createFromPath(iconPath));
-  }
+  // In production hold the window hidden for 1 s so the app has time to settle
+  // before appearing — avoids a jarring flash of half-loaded UI on fast machines.
+  // In dev, show immediately so there's no artificial delay while iterating.
+  const MIN_SHOW_DELAY = app.isPackaged ? 1000 : 0;
+  const readyAt = Date.now();
+  mainWindow.once('ready-to-show', () => {
+    const elapsed = Date.now() - readyAt;
+    const remaining = Math.max(0, MIN_SHOW_DELAY - elapsed);
+    setTimeout(() => mainWindow?.show(), remaining);
+  });
 
   // Open DevTools only when DEBUG env var is set
   if (process.env.DEBUG) {
