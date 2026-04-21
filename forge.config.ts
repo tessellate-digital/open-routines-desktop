@@ -9,6 +9,20 @@ const config: ForgeConfig = {
     },
     name: 'Open Routines',
     icon: './resources/icon',
+    osxSign: {
+      optionsForFile: () => ({
+        entitlements: './entitlements.plist',
+      }),
+    },
+    ...(process.env.APPLE_ID &&
+      process.env.APPLE_PASSWORD &&
+      process.env.APPLE_TEAM_ID && {
+        osxNotarize: {
+          appleId: process.env.APPLE_ID,
+          appleIdPassword: process.env.APPLE_PASSWORD,
+          teamId: process.env.APPLE_TEAM_ID,
+        },
+      }),
   },
   makers: [new MakerZIP({}, ['darwin', 'linux']), new MakerDMG({})],
   plugins: [
