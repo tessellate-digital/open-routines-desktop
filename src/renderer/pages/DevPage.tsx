@@ -123,7 +123,7 @@ export default function DevPage() {
           <p className="text-sm font-medium text-[#1d1d1f]">Debug page — not for production use</p>
           <p className="mt-0.5 text-xs text-[#6e6e73]">
             Shows live state from the host agent at{' '}
-            <code className="rounded bg-white/60 px-1 py-0.5 text-[11px]">{AGENT_URL}</code>.
+            <code className="rounded bg-white/60 px-1 py-0.5 text-micro">{AGENT_URL}</code>.
             Deleting a trigger here also disables the routine if no triggers remain.
           </p>
         </div>
@@ -137,7 +137,7 @@ export default function DevPage() {
             Could not reach agent at {AGENT_URL}: {agentError}
           </p>
         ) : agentData ? (
-          <div className="rounded-lg border border-[var(--border)] divide-y divide-[var(--border)] text-sm">
+          <div className="rounded-lg border border-border divide-y divide-border text-sm">
             <Row label="Backend URL" value={agentData.backendUrl} />
             <Row label="Last poll" value={agentData.lastPollAt ?? '—'} />
             {agentData.lastPollError && (
@@ -165,7 +165,7 @@ export default function DevPage() {
             <Row label="Active watchers" value={`${agentData.watchers.length}`} />
           </div>
         ) : (
-          <p className="text-sm text-[color:var(--fg-muted)]">Loading…</p>
+          <p className="text-sm text-muted-foreground">Loading…</p>
         )}
       </div>
 
@@ -179,7 +179,7 @@ export default function DevPage() {
         </div>
 
         {merged.length === 0 && orphanedWatchers.length === 0 ? (
-          <p className="text-sm text-[color:var(--fg-muted)]">No watcher triggers registered.</p>
+          <p className="text-sm text-muted-foreground">No watcher triggers registered.</p>
         ) : (
           <div className="space-y-3">
             {merged.map(({ trigger, agent }) => {
@@ -192,11 +192,8 @@ export default function DevPage() {
                 | undefined;
 
               return (
-                <div
-                  key={trigger.id}
-                  className="rounded-lg border border-[var(--border)] overflow-hidden"
-                >
-                  <div className="flex items-center justify-between bg-[var(--surface)] px-4 py-2">
+                <div key={trigger.id} className="rounded-lg border border-border overflow-hidden">
+                  <div className="flex items-center justify-between bg-surface px-4 py-2">
                     <div className="flex items-center gap-2 text-sm flex-wrap">
                       <span className="font-medium">
                         {routine?.name ?? trigger.routine_id.slice(0, 8)}
@@ -225,7 +222,7 @@ export default function DevPage() {
                       {deleting.has(trigger.id) ? '…' : 'Delete'}
                     </button>
                   </div>
-                  <div className="divide-y divide-[var(--border)] text-sm">
+                  <div className="divide-y divide-border text-sm">
                     <Row
                       label="Trigger ID"
                       value={<code className="text-xs font-mono">{trigger.id}</code>}
@@ -256,7 +253,7 @@ export default function DevPage() {
                         events.length > 0 ? (
                           <span className="flex gap-1 flex-wrap justify-end">
                             {events.map((e) => (
-                              <span key={e} className="trig text-[11px]">
+                              <span key={e} className="code-chip text-micro">
                                 {e}
                               </span>
                             ))}
@@ -276,7 +273,7 @@ export default function DevPage() {
                           value={
                             <span className="flex gap-1 flex-wrap justify-end">
                               {fileFilter.patterns.map((p) => (
-                                <span key={p} className="code-chip text-[11px]">
+                                <span key={p} className="code-chip text-micro">
                                   {p}
                                 </span>
                               ))}
@@ -292,14 +289,14 @@ export default function DevPage() {
             {orphanedWatchers.map((w) => (
               <div
                 key={w.triggerId}
-                className="rounded-lg border border-[var(--border)] overflow-hidden opacity-60"
+                className="rounded-lg border border-border overflow-hidden opacity-60"
               >
-                <div className="flex items-center gap-2 bg-[var(--surface)] px-4 py-2 text-sm">
+                <div className="flex items-center gap-2 bg-surface px-4 py-2 text-sm">
                   <span className="font-medium">{w.triggerId.slice(0, 8)}…</span>
                   <Badge color="yellow">Orphaned (not in DB)</Badge>
                   {w.watching && <Badge color="green">Watching</Badge>}
                 </div>
-                <div className="divide-y divide-[var(--border)] text-sm">
+                <div className="divide-y divide-border text-sm">
                   <Row
                     label="Host paths"
                     value={<code className="text-xs font-mono">{w.hostPaths.join(', ')}</code>}
@@ -318,7 +315,7 @@ export default function DevPage() {
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex items-start justify-between px-4 py-2.5 gap-4">
-      <span className="text-[color:var(--fg-muted)] shrink-0">{label}</span>
+      <span className="text-muted-foreground shrink-0">{label}</span>
       <span className="text-right">{value}</span>
     </div>
   );

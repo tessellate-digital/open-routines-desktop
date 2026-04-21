@@ -80,11 +80,11 @@ export function SelectDropdown({
         className="input flex items-center justify-between gap-2 text-left cursor-pointer"
       >
         <span className="truncate">
-          {selectedLabel || <span className="text-[color:var(--fg-dim)]">{placeholder}</span>}
+          {selectedLabel || <span className="text-fg-dim">{placeholder}</span>}
         </span>
         <svg
           className={classNames(
-            'w-4 h-4 shrink-0 text-[color:var(--fg-dim)] transition-transform duration-[180ms]',
+            'w-4 h-4 shrink-0 text-fg-dim transition-transform duration-[180ms]',
             { 'rotate-180': open }
           )}
           viewBox="0 0 20 20"
@@ -98,16 +98,16 @@ export function SelectDropdown({
         </svg>
       </button>
       {open && (
-        <div className="absolute z-50 mt-1 w-full bg-[var(--surface-2)] border border-[var(--border-hi)] rounded-[var(--r-lg)] shadow-[var(--shadow-lg)] overflow-hidden backdrop-blur-[20px]">
+        <div className="absolute z-50 mt-1 w-full bg-secondary border border-border-strong rounded-lg shadow-lg overflow-hidden backdrop-blur-[20px]">
           {filterable && (
-            <div className="p-2 border-b border-[var(--border)]">
+            <div className="p-2 border-b border-border">
               <input
                 ref={inputRef}
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Filter…"
-                className="input text-[13px]"
+                className="input text-body-sm"
               />
             </div>
           )}
@@ -119,11 +119,11 @@ export function SelectDropdown({
                 disabled={o.disabled}
                 onClick={() => handleSelect(o.value)}
                 className={classNames(
-                  'block w-full text-left py-1.5 px-3 text-[13px] bg-transparent border-0',
+                  'block w-full text-left py-1.5 px-3 text-body-sm bg-transparent border-0',
                   {
-                    'text-[color:var(--accent)] font-medium': o.value === value,
-                    'text-[color:var(--fg)] font-normal': o.value !== value && !o.disabled,
-                    'text-[color:var(--fg-muted)] cursor-not-allowed': o.disabled,
+                    'text-accent font-medium': o.value === value,
+                    'text-foreground font-normal': o.value !== value && !o.disabled,
+                    'text-muted-foreground cursor-not-allowed': o.disabled,
                     'cursor-pointer': !o.disabled,
                   }
                 )}
@@ -131,12 +131,12 @@ export function SelectDropdown({
                 {o.label}
               </button>
             ))}
-            {ungrouped.length > 0 && groups.size > 0 && <div className="divider my-1" />}
+            {ungrouped.length > 0 && groups.size > 0 && <div className="h-px bg-border my-1" />}
             {[...groups.entries()]
               .sort(([a], [b]) => a.localeCompare(b))
               .map(([group, items]) => (
                 <div key={group}>
-                  <div className="py-1 px-3 font-mono text-[10.5px] uppercase tracking-[.08em] text-[color:var(--fg-dim)]">
+                  <div className="py-1 px-3 font-mono text-micro-sm uppercase tracking-caps text-fg-dim">
                     {group}
                   </div>
                   {items.map((o) => (
@@ -146,11 +146,11 @@ export function SelectDropdown({
                       disabled={o.disabled}
                       onClick={() => handleSelect(o.value)}
                       className={classNames(
-                        'block w-full text-left py-1.5 px-3 text-[13px] bg-transparent border-0',
+                        'block w-full text-left py-1.5 px-3 text-body-sm bg-transparent border-0',
                         {
-                          'text-[color:var(--accent)] font-medium': o.value === value,
-                          'text-[color:var(--fg)] font-normal': o.value !== value && !o.disabled,
-                          'text-[color:var(--fg-muted)] cursor-not-allowed': o.disabled,
+                          'text-accent font-medium': o.value === value,
+                          'text-foreground font-normal': o.value !== value && !o.disabled,
+                          'text-muted-foreground cursor-not-allowed': o.disabled,
                           'cursor-pointer': !o.disabled,
                         }
                       )}
@@ -161,7 +161,7 @@ export function SelectDropdown({
                 </div>
               ))}
             {filtered.length === 0 && (
-              <p className="py-2 px-3 text-[13px] text-[color:var(--fg-muted)]">
+              <p className="py-2 px-3 text-body-sm text-muted-foreground">
                 No matches for &quot;{query}&quot;
               </p>
             )}

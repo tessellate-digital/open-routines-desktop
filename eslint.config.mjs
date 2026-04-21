@@ -8,6 +8,18 @@ export default [
     ignores: ['.vite/**', 'out/**', 'dist/**', 'node_modules/**'],
   },
   {
+    files: ['src/renderer/components/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'ExportDefaultDeclaration',
+          message: 'Default exports are not allowed in components. Use named exports instead.',
+        },
+      ],
+    },
+  },
+  {
     files: ['src/**/*.{ts,tsx}'],
     languageOptions: {
       parser: tsparser,

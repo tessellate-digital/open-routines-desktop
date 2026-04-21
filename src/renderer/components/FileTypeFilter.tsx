@@ -91,7 +91,7 @@ export function FileTypeFilter({ value, onChange }: FileTypeFilterProps) {
       </div>
 
       {active && (
-        <div className="flex flex-col gap-2.5 ml-1 pl-[14px] border-l-2 border-[var(--border)]">
+        <div className="flex flex-col gap-2.5 ml-1 pl-[14px] border-l-2 border-border">
           <div className="chip-row">
             {CATEGORIES.map((cat) => {
               const allPresent = cat.extensions.every((ext) => selected.has(ext));
@@ -116,7 +116,7 @@ export function FileTypeFilter({ value, onChange }: FileTypeFilterProps) {
               onChange={(e) => setCustomInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Custom extension, e.g. .csv"
-              className="input flex-1 max-w-[220px] !py-1.5 !px-2 !text-[13px]"
+              className="input flex-1 max-w-[220px] !py-1.5 !px-2 !text-body-sm"
             />
             <button
               type="button"
@@ -134,10 +134,10 @@ export function FileTypeFilter({ value, onChange }: FileTypeFilterProps) {
                 <span
                   key={ext}
                   className={classNames(
-                    'inline-flex items-center gap-1 py-1 px-2 rounded-[var(--r-sm)] text-xs font-mono',
+                    'inline-flex items-center gap-1 py-1 px-2 rounded-sm text-xs font-mono',
                     {
-                      'text-[color:var(--status-success)]': value.mode === 'include',
-                      'text-[color:var(--status-failed)]': value.mode === 'exclude',
+                      'text-success': value.mode === 'include',
+                      'text-destructive': value.mode === 'exclude',
                     }
                   )}
                   style={{

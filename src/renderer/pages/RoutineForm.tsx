@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import classNames from 'classnames';
 import { api } from '../lib/api';
@@ -8,6 +8,8 @@ import { CronPicker } from '../components/CronPicker';
 import { FolderPicker } from '../components/FolderPicker';
 import { FileTypeFilter, type FileFilterValue } from '../components/FileTypeFilter';
 import { SelectDropdown, type SelectOption } from '../components/SelectDropdown';
+import { BackLink } from '../components/BackLink';
+import { PageHeader } from '../components/PageHeader';
 import { useHostMounts } from '../contexts/HostMountsContext';
 import { usePageContext } from '../contexts/PageContext';
 
@@ -76,32 +78,30 @@ function WatcherCollapsedSummary({
     unlinkDir: 'dir deleted',
   };
   return (
-    <span className="summary flex items-center gap-2 flex-wrap min-w-0">
+    <span className="flex items-center gap-2 flex-wrap min-w-0 font-mono text-xs text-fg-dim">
       {pathNames.length > 0 ? (
-        <span className="font-mono text-[11.5px] truncate max-w-[160px]">
-          {pathNames.join(', ')}
-        </span>
+        <span className="font-mono text-code truncate max-w-[160px]">{pathNames.join(', ')}</span>
       ) : (
-        <span className="text-[color:var(--fg-dim)] text-[11.5px]">No paths</span>
+        <span className="text-fg-dim text-code">No paths</span>
       )}
-      <span className="text-[color:var(--fg-dim)] text-[11px]">·</span>
+      <span className="text-fg-dim text-micro">·</span>
       <span className="flex gap-1 flex-wrap">
         {draft.events.map((ev) => (
-          <span key={ev} className="code-chip text-[10.5px] py-0 px-1.5">
+          <span key={ev} className={'code-chip text-micro-sm py-0 px-1.5'}>
             {eventLabels[ev] ?? ev}
           </span>
         ))}
       </span>
       {!draft.recursive && (
         <>
-          <span className="text-[color:var(--fg-dim)] text-[11px]">·</span>
-          <span className="code-chip text-[10.5px] py-0 px-1.5">top-level only</span>
+          <span className="text-fg-dim text-micro">·</span>
+          <span className={'code-chip text-micro-sm py-0 px-1.5'}>top-level only</span>
         </>
       )}
       {draft.fileFilter.mode !== 'none' && draft.fileFilter.patterns.length > 0 && (
         <>
-          <span className="text-[color:var(--fg-dim)] text-[11px]">·</span>
-          <span className="text-[11px] text-[color:var(--fg-dim)]">
+          <span className="text-fg-dim text-micro">·</span>
+          <span className="text-micro text-fg-dim">
             {draft.fileFilter.mode === 'include' ? 'include' : 'exclude'}:{' '}
             {draft.fileFilter.patterns.join(', ')}
           </span>
@@ -169,9 +169,16 @@ function TriggerCard({
   const summary = triggerSummary(draft, resolveHostPath);
 
   return (
-    <div className={classNames('trig-card', { open: !collapsed })}>
-      <div className="trig-head" onClick={onToggleCollapse}>
-        <span className="caret">
+    <div className="border border-border-strong rounded-md bg-surface-hi overflow-hidden mb-2.5">
+      <div
+        className="flex items-center gap-2.5 py-2.5 px-3.5 cursor-pointer select-none"
+        onClick={onToggleCollapse}
+      >
+        <span
+          className={classNames('text-fg-dim transition-transform duration-default ease-default', {
+            'rotate-90': !collapsed,
+          })}
+        >
           <svg
             viewBox="0 0 16 16"
             width="14"
@@ -185,14 +192,14 @@ function TriggerCard({
             <path d="m6 3 5 5-5 5" />
           </svg>
         </span>
-        <span className="label">{typeLabel}</span>
+        <span className="font-medium text-body">{typeLabel}</span>
         {collapsed && draft.type === 'watcher' ? (
           <WatcherCollapsedSummary draft={draft} resolveHostPath={resolveHostPath} />
         ) : (
-          <span className="summary">{summary}</span>
+          <span className="font-mono text-xs text-fg-dim">{summary}</span>
         )}
         <button
-          className="remove"
+          className="ml-auto text-destructive text-caption cursor-pointer py-1 px-2 rounded-[6px] bg-transparent border-none hover:bg-[color-mix(in_srgb,var(--status-failed)_10%,transparent)]"
           onClick={(e) => {
             e.stopPropagation();
             onRemove();
@@ -202,7 +209,7 @@ function TriggerCard({
         </button>
       </div>
       {!collapsed && (
-        <div className="py-[14px] px-4 pb-4 border-t border-[var(--border)] bg-[var(--surface)] grid gap-[14px]">
+        <div className="py-3.5 px-4 pb-4 border-t border-muted bg-surface grid gap-3.5">
           {draft.type === 'cron' && (
             <CronPicker
               value={draft.expression}
@@ -210,22 +217,20 @@ function TriggerCard({
             />
           )}
           {draft.type === 'watcher' && (
-            <div className="grid gap-[14px]">
+            <div className="grid gap-3.5">
               <div>
-                <label className="text-xs text-[color:var(--fg-dim)] block mb-1.5">
-                  Watched paths
-                </label>
+                <label className="text-xs text-fg-dim block mb-1.5">Watched paths</label>
                 {draft.paths.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 mb-2">
                     {draft.paths.map((p) => (
-                      <span key={p} className="code-chip inline-flex items-center gap-1">
+                      <span key={p} className={'code-chip inline-flex items-center gap-1'}>
                         {resolveHostPath(p).split('/').pop() || resolveHostPath(p)}
                         <button
                           type="button"
                           onClick={() =>
                             onChange({ ...draft, paths: draft.paths.filter((x) => x !== p) })
                           }
-                          className="text-[color:var(--status-failed)] cursor-pointer bg-none border-0 p-0"
+                          className="text-destructive cursor-pointer bg-transparent border-0 p-0"
                         >
                           ×
                         </button>
@@ -239,7 +244,7 @@ function TriggerCard({
                   </button>
                 )}
               </div>
-              <label className="flex items-center gap-2 cursor-pointer text-[13px]">
+              <label className="flex items-center gap-2 cursor-pointer text-body-sm">
                 <input
                   type="checkbox"
                   checked={draft.recursive}
@@ -248,13 +253,16 @@ function TriggerCard({
                 <span>Watch subfolders</span>
               </label>
               <div>
-                <label className="text-xs text-[color:var(--fg-dim)] block mb-1.5">Events</label>
-                <div className="chip-row">
+                <label className="text-xs text-fg-dim block mb-1.5">Events</label>
+                <div className="flex flex-wrap gap-2">
                   {FS_EVENTS.map(({ value, label }) => (
                     <button
                       type="button"
                       key={value}
-                      className={classNames('chip', { active: draft.events.includes(value) })}
+                      className={classNames(
+                        'py-1.5 px-3 rounded-md border border-border-strong bg-surface-hi text-caption text-muted-foreground cursor-pointer font-sans inline-flex items-center gap-1.5 transition-all duration-default ease-default hover:text-foreground hover:border-fg-dim',
+                        { 'bg-accent-soft text-accent border-accent': draft.events.includes(value) }
+                      )}
                       onClick={() =>
                         onChange({
                           ...draft,
@@ -270,9 +278,7 @@ function TriggerCard({
                 </div>
               </div>
               <div>
-                <label className="text-xs text-[color:var(--fg-dim)] block mb-1.5">
-                  File type filter
-                </label>
+                <label className="text-xs text-fg-dim block mb-1.5">File type filter</label>
                 <FileTypeFilter
                   value={draft.fileFilter}
                   onChange={(v) => onChange({ ...draft, fileFilter: v })}
@@ -309,13 +315,12 @@ export default function RoutineForm() {
   const [collapsedTriggers, setCollapsedTriggers] = useState<Set<number>>(new Set());
   const [existingTriggers, setExistingTriggers] = useState<Trigger[]>([]);
   const [models, setModels] = useState<string[]>([]);
-  const [favourites, setFavourites] = useState<string[]>([]);
   const [configuredProviderIds, setConfiguredProviderIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [showFolderPicker, setShowFolderPicker] = useState(false);
   const [folderPickerTarget, setFolderPickerTarget] = useState<number | null>(null);
-  const hasMounts = true; // Desktop app always has native filesystem access
+  const hasMounts = true;
   const [addingTriggerType, setAddingTriggerType] = useState<TriggerType | null>(null);
 
   useEffect(() => {
@@ -333,16 +338,6 @@ export default function RoutineForm() {
           p.fields.some((f) => settingKeys.has(f.key))
         ).map((p) => p.id);
         setConfiguredProviderIds(providerIds);
-        const favSetting = settingsRes.find(
-          (s: { key: string; value: string }) => s.key === 'FAVOURITE_MODELS'
-        );
-        if (favSetting && favSetting.value !== '***') {
-          try {
-            setFavourites(JSON.parse(favSetting.value));
-          } catch {
-            /* ignore */
-          }
-        }
         setPageTitle(routine ? routine.name : 'New routine');
         if (routine) {
           setForm({
@@ -491,15 +486,36 @@ export default function RoutineForm() {
     }
     return allowedPrefixes.has(m.slice(0, slash));
   });
-  const favouriteSet = new Set(favourites.filter((m) => availableModels.includes(m)));
-  const modelOptions: SelectOption[] = [
-    ...favourites
-      .filter((m) => availableModels.includes(m))
-      .map((m) => ({ value: m, label: m, group: 'Favourites' })),
-    ...availableModels
-      .filter((m) => !favouriteSet.has(m))
-      .map((m) => ({ value: m, label: m, group: m.split('/', 1)[0] })),
-  ];
+
+  const currentProvider = useMemo(() => {
+    const slash = form.model.indexOf('/');
+    return slash !== -1 ? form.model.slice(0, slash) : '';
+  }, [form.model]);
+
+  const providerOptions = useMemo((): SelectOption[] => {
+    const seen = new Set<string>();
+    return availableModels.reduce<SelectOption[]>((acc, m) => {
+      const slash = m.indexOf('/');
+      const prefix = slash !== -1 ? m.slice(0, slash) : '';
+      if (prefix && !seen.has(prefix)) {
+        seen.add(prefix);
+        const info = PROVIDERS.find((p) => p.id === prefix);
+        acc.push({ value: prefix, label: info?.name || prefix });
+      }
+      return acc;
+    }, []);
+  }, [availableModels]);
+
+  const modelsForProvider = useMemo((): SelectOption[] => {
+    return availableModels
+      .filter((m) => m.startsWith(currentProvider + '/'))
+      .map((m) => ({ value: m, label: m.slice(currentProvider.length + 1) }));
+  }, [availableModels, currentProvider]);
+
+  const handleProviderChange = (provider: string) => {
+    const first = availableModels.find((m) => m.startsWith(provider + '/'));
+    setForm((f) => ({ ...f, model: first ?? '' }));
+  };
 
   if (loading) {
     return <p className="hint">Loading…</p>;
@@ -507,26 +523,8 @@ export default function RoutineForm() {
 
   return (
     <div className="route-fade max-w-[820px]">
-      <Link to="/routines" className="back">
-        <svg
-          viewBox="0 0 16 16"
-          width="14"
-          height="14"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="m10 3-5 5 5 5" />
-        </svg>
-        Routines
-      </Link>
-      <div className="page-head">
-        <div>
-          <h1>{isEdit ? 'Edit' : 'New'} Routine</h1>
-        </div>
-      </div>
+      <BackLink to="/routines">Routines</BackLink>
+      <PageHeader title={`${isEdit ? 'Edit' : 'New'} Routine`} />
 
       <form onSubmit={handleSubmit} className="grid gap-5">
         <div className="form-row">
@@ -536,15 +534,6 @@ export default function RoutineForm() {
             value={form.name}
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
             required
-          />
-        </div>
-
-        <div className="form-row">
-          <label>Description</label>
-          <input
-            className="input"
-            value={form.description}
-            onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
           />
         </div>
 
@@ -561,30 +550,40 @@ export default function RoutineForm() {
 
         <div className="grid grid-cols-2 gap-2.5">
           <div className="form-row !mb-0">
+            <label>Provider</label>
+            <SelectDropdown
+              value={currentProvider}
+              onChange={handleProviderChange}
+              options={providerOptions}
+              placeholder="Select a provider…"
+            />
+          </div>
+          <div className="form-row !mb-0">
             <label>Model</label>
             <SelectDropdown
               value={form.model}
               onChange={(v) => setForm((f) => ({ ...f, model: v }))}
-              options={modelOptions}
+              options={modelsForProvider}
               placeholder="Select a model…"
               filterable
             />
           </div>
-          <div className="form-row !mb-0">
-            <label>Agent</label>
-            <SelectDropdown
-              value={form.agent}
-              onChange={(v) => setForm((f) => ({ ...f, agent: v }))}
-              options={AGENT_OPTIONS}
-              placeholder="Select an agent…"
-            />
-          </div>
+        </div>
+
+        <div className="form-row">
+          <label>Agent</label>
+          <SelectDropdown
+            value={form.agent}
+            onChange={(v) => setForm((f) => ({ ...f, agent: v }))}
+            options={AGENT_OPTIONS}
+            placeholder="Select an agent…"
+          />
         </div>
 
         {/* Triggers */}
         <div>
-          <label className="text-[12.5px] font-medium block mb-1">Triggers</label>
-          <div className="hint mb-2.5">
+          <label className={'block mb-1'}>Triggers</label>
+          <div className={'hint mb-2.5'}>
             Zero or more · any trigger starts the routine. No triggers = manual only.
           </div>
 
@@ -604,13 +603,15 @@ export default function RoutineForm() {
           ))}
 
           {addingTriggerType === null ? (
-            <button
-              type="button"
-              className="inline-flex items-center gap-1.5 py-1.5 px-2.5 rounded-[6px] text-[13px] text-[color:var(--accent)] font-medium cursor-pointer border-0 bg-transparent hover:bg-[var(--accent-soft)]"
-              onClick={() => setAddingTriggerType('cron')}
-            >
-              + Add trigger
-            </button>
+            <div className="flex">
+              <button
+                type="button"
+                className="inline-flex items-center gap-1.5 py-1.5 px-2.5 rounded-[6px] text-body-sm text-accent font-medium cursor-pointer border-0 bg-transparent hover:bg-accent-soft"
+                onClick={() => setAddingTriggerType('cron')}
+              >
+                + Add trigger
+              </button>
+            </div>
           ) : (
             <div className="flex items-center gap-2 mt-2">
               <SelectDropdown
@@ -638,14 +639,14 @@ export default function RoutineForm() {
 
         {/* Run mode */}
         <div>
-          <label className="text-[12.5px] font-medium block mb-3">Run mode</label>
+          <label className={'block mb-3'}>Run mode</label>
           {[
+            { id: 'foreground', label: 'Foreground', desc: 'only runs while the app is open' },
             {
               id: 'background',
               label: 'Background',
               desc: 'runs on schedule even when the app is closed',
             },
-            { id: 'foreground', label: 'Foreground', desc: 'only runs while the app is open' },
           ].map((opt) => (
             <label key={opt.id} className="flex items-center gap-2.5 py-2.5 cursor-pointer text-sm">
               <input
@@ -656,11 +657,11 @@ export default function RoutineForm() {
                 onChange={() =>
                   setForm((f) => ({ ...f, run_mode: opt.id as 'background' | 'foreground' }))
                 }
-                className="w-[18px] h-[18px] accent-[var(--accent)] shrink-0 cursor-pointer"
+                className="w-[18px] h-[18px] accent-accent shrink-0 cursor-pointer"
               />
               <span>
                 <span className="font-semibold">{opt.label}</span>
-                <span className="text-[color:var(--fg-muted)] font-normal"> — {opt.desc}</span>
+                <span className="text-muted-foreground font-normal"> — {opt.desc}</span>
               </span>
             </label>
           ))}

@@ -5,6 +5,8 @@ import { api } from '../lib/api';
 import { PROVIDERS } from '../lib/providers';
 import type { Provider } from '../lib/providers';
 import type { Setting } from '../lib/types';
+import { PageHeader } from '../components/PageHeader';
+import { SectionLabel } from '../components/SectionLabel';
 
 const FAVOURITE_MODELS_KEY = 'FAVOURITE_MODELS';
 
@@ -21,11 +23,11 @@ function ModelLabel({ id }: { id: string }) {
   return (
     <span className="flex items-center gap-3">
       {provider && (
-        <span className="font-mono text-[10.5px] text-[color:var(--fg-dim)] uppercase tracking-[.06em] w-[80px] shrink-0">
+        <span className="font-mono text-micro-sm text-fg-dim uppercase tracking-caps-tight w-[80px] shrink-0">
           {provider}
         </span>
       )}
-      <span className="font-mono text-[13.5px] flex-1">{model || id}</span>
+      <span className="font-mono text-body flex-1">{model || id}</span>
     </span>
   );
 }
@@ -41,13 +43,11 @@ function ConfiguredProviderCard({
 }) {
   const configured = provider.fields.filter((f) => settingKeys.has(f.key));
   return (
-    <div className="border border-[var(--border)] rounded-[10px] bg-[var(--surface-hi)] overflow-hidden">
+    <div className="border border-border rounded-md bg-surface-hi overflow-hidden">
       <div className="flex items-center gap-3 px-4 py-3">
         <div className="flex-1">
-          <div className="font-semibold text-[14px]">{provider.name}</div>
-          <div className="font-mono text-[11.5px] text-[color:var(--fg-dim)] mt-[2px]">
-            {provider.description}
-          </div>
+          <div className="font-semibold text-label">{provider.name}</div>
+          <div className="font-mono text-code text-fg-dim mt-[2px]">{provider.description}</div>
         </div>
         <span className="status success">
           <span className="dot" />
@@ -57,15 +57,15 @@ function ConfiguredProviderCard({
           Remove
         </button>
       </div>
-      <div className="border-t border-[var(--border)]">
+      <div className="border-t border-border">
         {configured.map((f, i) => (
           <div
             key={f.key}
             className={classNames('flex items-center justify-between px-4 py-2 text-xs', {
-              'border-b border-[var(--border)]': i < configured.length - 1,
+              'border-b border-border': i < configured.length - 1,
             })}
           >
-            <span className="font-mono text-[color:var(--fg-muted)]">{f.key}</span>
+            <span className="font-mono text-muted-foreground">{f.key}</span>
             <span className="font-mono">
               {f.secret ? '••••••••' : settingKeys.has(f.key) ? '(set)' : '—'}
             </span>
@@ -112,22 +112,17 @@ function AddProviderForm({
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="border border-[var(--accent)] rounded-[10px] bg-[var(--surface-hi)] p-4"
-    >
+    <form onSubmit={handleSubmit} className="border border-accent rounded-md bg-surface-hi p-4">
       <div className="flex items-start justify-between gap-2 mb-3">
         <div>
-          <p className="font-semibold text-[14px]">{provider.name}</p>
-          <p className="text-[12.5px] text-[color:var(--fg-muted)] mt-[2px]">
-            {provider.description}
-          </p>
+          <p className="font-semibold text-label">{provider.name}</p>
+          <p className="text-caption text-muted-foreground mt-[2px]">{provider.description}</p>
         </div>
         <a
           href={provider.docsUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs text-[color:var(--accent)] shrink-0"
+          className="text-xs text-accent shrink-0"
         >
           Docs ↗
         </a>
@@ -235,19 +230,17 @@ function CopilotDeviceFlow({
   };
 
   return (
-    <div className="border border-[var(--accent)] rounded-[10px] bg-[var(--surface-hi)] p-4">
+    <div className="border border-accent rounded-md bg-surface-hi p-4">
       <div className="flex items-start justify-between gap-2 mb-4">
         <div>
-          <p className="font-semibold text-[14px]">{provider.name}</p>
-          <p className="text-[12.5px] text-[color:var(--fg-muted)] mt-[2px]">
-            {provider.description}
-          </p>
+          <p className="font-semibold text-label">{provider.name}</p>
+          <p className="text-caption text-muted-foreground mt-[2px]">{provider.description}</p>
         </div>
         <a
           href={provider.docsUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs text-[color:var(--accent)] shrink-0"
+          className="text-xs text-accent shrink-0"
         >
           Docs
         </a>
@@ -255,7 +248,7 @@ function CopilotDeviceFlow({
 
       {phase === 'idle' && (
         <div>
-          <p className="text-[13px] text-[color:var(--fg-muted)] mb-3">
+          <p className="text-body-sm text-muted-foreground mb-3">
             Connect your GitHub Copilot subscription by authorizing via GitHub.
           </p>
           <div className="flex gap-2">
@@ -271,7 +264,7 @@ function CopilotDeviceFlow({
 
       {phase === 'waiting' && (
         <div>
-          <p className="text-[13px] mb-3">
+          <p className="text-body-sm mb-3">
             Go to{' '}
             <a
               href="#"
@@ -279,22 +272,22 @@ function CopilotDeviceFlow({
                 e.preventDefault();
                 window.electronAPI?.openExternal(verificationUri);
               }}
-              className="text-[color:var(--accent)] underline"
+              className="text-accent underline"
             >
               {verificationUri}
             </a>{' '}
             and enter this code:
           </p>
           <div className="flex items-center gap-3 mb-3">
-            <code className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-[20px] font-mono font-bold tracking-[.12em] select-all">
+            <code className="rounded-lg border border-border bg-surface px-4 py-2 text-[20px] font-mono font-bold tracking-code select-all">
               {userCode}
             </code>
             <button onClick={handleCopy} className="btn sm">
               {copied ? 'Copied!' : 'Copy'}
             </button>
           </div>
-          <div className="flex items-center gap-2 text-[13px] text-[color:var(--fg-muted)] mb-3">
-            <span className="inline-block w-3 h-3 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-[pulse_1s_linear_infinite]" />
+          <div className="flex items-center gap-2 text-body-sm text-muted-foreground mb-3">
+            <span className="inline-block w-3 h-3 rounded-full border-2 border-accent border-t-transparent animate-[pulse_1s_linear_infinite]" />
             Waiting for authorization...
           </div>
           <button
@@ -310,15 +303,15 @@ function CopilotDeviceFlow({
       )}
 
       {phase === 'success' && (
-        <div className="flex items-center gap-2 text-[13px] font-medium text-[color:var(--status-success)]">
-          <span className="w-2 h-2 rounded-full bg-[var(--status-success)]" />
+        <div className="flex items-center gap-2 text-body-sm font-medium text-success">
+          <span className="w-2 h-2 rounded-full bg-success" />
           Connected successfully!
         </div>
       )}
 
       {phase === 'error' && (
         <div>
-          <p className="text-[13px] text-[color:var(--status-failed)] mb-3">{errorMsg}</p>
+          <p className="text-body-sm text-destructive mb-3">{errorMsg}</p>
           <div className="flex gap-2">
             <button onClick={startFlow} className="btn primary">
               Try again
@@ -379,24 +372,20 @@ function ProviderPicker({
           <div
             key={p.id}
             onClick={() => onSelect(p)}
-            className="py-[14px] px-4 border border-[var(--border)] bg-[var(--surface-hi)] cursor-pointer rounded-[10px] transition-all duration-[160ms]"
+            className="py-[14px] px-4 border border-border bg-surface-hi cursor-pointer rounded-md transition-all duration-[160ms]"
           >
-            <div className="font-semibold text-[14px] mb-1">{p.name}</div>
-            <div className="text-[12.5px] text-[color:var(--fg-muted)] leading-[1.4]">
-              {p.description}
-            </div>
+            <div className="font-semibold text-label mb-1">{p.name}</div>
+            <div className="text-caption text-muted-foreground leading-tight">{p.description}</div>
           </div>
         ))}
         {visible.length === 0 && (
-          <p className="text-[13px] text-[color:var(--fg-muted)] col-span-full">
-            No matching providers.
-          </p>
+          <p className="text-body-sm text-muted-foreground col-span-full">No matching providers.</p>
         )}
       </div>
       {!isSearching && !showAll && hiddenCount > 0 && (
         <div
           onClick={() => setShowAll(true)}
-          className="mt-[10px] text-[color:var(--accent)] font-mono text-[13px] cursor-pointer"
+          className="mt-[10px] text-accent font-mono text-body-sm cursor-pointer"
         >
           Show all providers ({hiddenCount} more)
         </div>
@@ -404,7 +393,7 @@ function ProviderPicker({
       {!isSearching && showAll && (
         <div
           onClick={() => setShowAll(false)}
-          className="mt-[10px] text-[color:var(--fg-muted)] font-mono text-[13px] cursor-pointer"
+          className="mt-[10px] text-muted-foreground font-mono text-body-sm cursor-pointer"
         >
           Show popular only
         </div>
@@ -428,7 +417,7 @@ function ThemeToggle({
 }) {
   return (
     <div className="flex items-center justify-between py-[10px]">
-      <span className="text-[13px] font-medium">{label}</span>
+      <span className="text-body-sm font-medium">{label}</span>
       <div className="pills gap-1">
         {options.map((o) => (
           <button
@@ -577,7 +566,7 @@ export default function Settings() {
     return <p className="hint">Loading…</p>;
   }
   if (error) {
-    return <p className="text-[color:var(--status-failed)] text-[13px]">Error: {error}</p>;
+    return <p className="text-destructive text-body-sm">Error: {error}</p>;
   }
 
   const handleReset = async () => {
@@ -593,25 +582,18 @@ export default function Settings() {
 
   return (
     <div className="route-fade max-w-[820px]">
-      <div className="page-head mb-7">
-        <div>
-          <h1>Settings</h1>
-          <div className="sub">Manage providers, appearance and app configuration.</div>
-        </div>
-      </div>
+      <PageHeader title="Settings" subtitle="Manage providers, appearance and app configuration." />
 
       {/* ── Models ── */}
       <div className="mb-2">
-        <div className="text-[11px] font-semibold uppercase tracking-[.08em] text-[color:var(--fg-dim)] mb-4">
-          Models
-        </div>
+        <SectionLabel className="mb-4">Models</SectionLabel>
       </div>
 
       {/* Providers */}
       <div className="mb-9">
         <div className="flex items-start justify-between mb-4">
           <div>
-            <div className="text-[16px] font-semibold mb-[3px]">Providers</div>
+            <div className="text-section font-semibold mb-[3px]">Providers</div>
             <div className="hint">API keys stored here are injected into every routine run.</div>
           </div>
           {addState.step === 'idle' ? (
@@ -667,13 +649,11 @@ export default function Settings() {
           </div>
         ) : (
           addState.step === 'idle' && (
-            <div className="card py-12 px-6 text-center border border-dashed border-[var(--border-hi)]">
-              <div className="text-[color:var(--fg-muted)] mb-[10px]">
-                No providers connected yet.
-              </div>
+            <div className="card py-12 px-6 text-center border border-dashed border-border-strong">
+              <div className="text-muted-foreground mb-[10px]">No providers connected yet.</div>
               <span
                 onClick={() => setAddState({ step: 'pick' })}
-                className="text-[color:var(--accent)] cursor-pointer font-mono text-[13px]"
+                className="text-accent cursor-pointer font-mono text-body-sm"
               >
                 Add your first provider →
               </span>
@@ -685,7 +665,7 @@ export default function Settings() {
       {/* Favourite models */}
       <div className="mb-9">
         <div className="mb-4">
-          <div className="text-[16px] font-semibold mb-[3px]">Favourite models</div>
+          <div className="text-section font-semibold mb-[3px]">Favourite models</div>
           <div className="hint">
             Favourite models appear first when selecting a model for a routine.
           </div>
@@ -705,7 +685,7 @@ export default function Settings() {
 
             {favourites.length > 0 && (
               <div className="mb-[14px]">
-                <div className="font-mono text-[10.5px] uppercase tracking-[.08em] text-[color:var(--fg-dim)] mb-[6px]">
+                <div className="font-mono text-micro-sm uppercase tracking-caps text-fg-dim mb-[6px]">
                   Favourites
                 </div>
                 <div className="card overflow-hidden">
@@ -713,7 +693,7 @@ export default function Settings() {
                     <div
                       key={m}
                       className={classNames('flex items-center gap-3 py-[10px] px-4', {
-                        'border-b border-[var(--border)]': i < favourites.length - 1,
+                        'border-b border-border': i < favourites.length - 1,
                       })}
                     >
                       <ModelLabel id={m} />
@@ -735,7 +715,7 @@ export default function Settings() {
                 );
                 return filtered.length > 0 ? (
                   <div>
-                    <div className="font-mono text-[10.5px] uppercase tracking-[.08em] text-[color:var(--fg-dim)] mb-[6px]">
+                    <div className="font-mono text-micro-sm uppercase tracking-caps text-fg-dim mb-[6px]">
                       All models
                     </div>
                     <div className="card overflow-hidden max-h-[320px] overflow-y-auto">
@@ -743,7 +723,7 @@ export default function Settings() {
                         <div
                           key={m}
                           className={classNames('flex items-center gap-3 py-[10px] px-4', {
-                            'border-b border-[var(--border)]': i < filtered.length - 1,
+                            'border-b border-border': i < filtered.length - 1,
                           })}
                         >
                           <span className="flex-1">
@@ -757,14 +737,14 @@ export default function Settings() {
                     </div>
                   </div>
                 ) : (
-                  <p className="text-[13px] text-[color:var(--fg-muted)]">
+                  <p className="text-body-sm text-muted-foreground">
                     No models matching &quot;{modelQuery}&quot;.
                   </p>
                 );
               })()}
 
             {!modelQuery && favourites.length === 0 && (
-              <p className="text-[13px] text-[color:var(--fg-muted)]">
+              <p className="text-body-sm text-muted-foreground">
                 Use the search box above to find models and add them to your favourites.
               </p>
             )}
@@ -774,13 +754,11 @@ export default function Settings() {
 
       {/* ── Display ── */}
       <div className="mb-2 mt-4">
-        <div className="text-[11px] font-semibold uppercase tracking-[.08em] text-[color:var(--fg-dim)] mb-4">
-          Display
-        </div>
+        <SectionLabel className="mb-4">Display</SectionLabel>
       </div>
       <div className="mb-9">
         <div className="mb-4">
-          <div className="text-[16px] font-semibold mb-[3px]">Appearance</div>
+          <div className="text-section font-semibold mb-[3px]">Appearance</div>
           <div className="hint">Customise the look and feel of the interface.</div>
         </div>
         <div className="card py-2 px-5">
@@ -819,13 +797,11 @@ export default function Settings() {
 
       {/* ── Configuration ── */}
       <div className="mb-2 mt-4">
-        <div className="text-[11px] font-semibold uppercase tracking-[.08em] text-[color:var(--fg-dim)] mb-4">
-          Configuration
-        </div>
+        <SectionLabel className="mb-4">Configuration</SectionLabel>
       </div>
       <div>
         <div className="mb-4">
-          <div className="text-[16px] font-semibold mb-[3px]">Reset data</div>
+          <div className="text-section font-semibold mb-[3px]">Reset data</div>
           <div className="hint">
             Permanently delete all routines, runs and settings. The app will quit.
           </div>
@@ -837,9 +813,7 @@ export default function Settings() {
             </button>
           ) : (
             <div className="flex items-center gap-3">
-              <span className="text-[13px] text-[color:var(--status-failed)]">
-                This cannot be undone.
-              </span>
+              <span className="text-body-sm text-destructive">This cannot be undone.</span>
               <button onClick={handleReset} disabled={resetting} className="btn delete-rt">
                 {resetting ? 'Deleting…' : 'Confirm reset'}
               </button>

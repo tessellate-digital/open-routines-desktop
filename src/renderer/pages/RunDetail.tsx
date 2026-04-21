@@ -1,5 +1,7 @@
 import { useEffect, useState, useRef, useCallback, useMemo, memo } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { BackLink } from '../components/BackLink';
+import { PageHeader } from '../components/PageHeader';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import classNames from 'classnames';
@@ -88,7 +90,7 @@ function extractTodos(segments: Segment[]): TodoItem[] {
 function UserBubble({ text }: { text: string }) {
   return (
     <div className="flex justify-end mb-[14px]">
-      <div className="bg-[var(--accent)] text-[color:var(--accent-fg)] py-2.5 px-4 rounded-[20px] text-sm leading-[1.55] max-w-[480px] whitespace-pre-wrap">
+      <div className="bg-accent text-accent-foreground py-2.5 px-4 rounded-[20px] text-sm leading-relaxed max-w-[480px] whitespace-pre-wrap">
         {text}
       </div>
     </div>
@@ -120,15 +122,15 @@ function ToolRow({
     <div className="mb-3">
       <button
         onClick={onToggle}
-        className="inline-flex items-center gap-[5px] bg-transparent border-none py-0.5 px-0 font-mono text-[12.5px] text-[color:var(--fg-muted)] cursor-pointer"
+        className="inline-flex items-center gap-[5px] bg-transparent border-none py-0.5 px-0 font-mono text-caption text-muted-foreground cursor-pointer"
       >
-        <span className="text-[10px] opacity-70">{seg.open ? '▼' : '›'}</span>
+        <span className="text-micro-xs opacity-70">{seg.open ? '▼' : '›'}</span>
         <span className="font-medium">{seg.name}</span>
       </button>
       {seg.open && (
-        <div className="mt-1 bg-[var(--surface-hi)] border border-[var(--border)] rounded-lg py-3 px-[14px] font-mono text-xs text-[color:var(--fg-muted)] whitespace-pre-wrap leading-relaxed">
+        <div className="mt-1 bg-surface-hi border border-border rounded-lg py-3 px-[14px] font-mono text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed">
           {seg.args && <div className={classNames({ 'mb-2': seg.result })}>{seg.args}</div>}
-          {seg.result && <div className="text-[color:var(--fg-dim)]">{seg.result}</div>}
+          {seg.result && <div className="text-fg-dim">{seg.result}</div>}
         </div>
       )}
     </div>
@@ -183,11 +185,11 @@ function QuestionsCard({
       {questions.map((q, qi) => (
         <div key={qi}>
           {q.header && (
-            <div className="font-mono text-[10.5px] uppercase tracking-[.08em] text-[color:var(--fg-dim)] mb-[6px]">
+            <div className="font-mono text-micro-sm uppercase tracking-caps text-fg-dim mb-[6px]">
               {q.header}
             </div>
           )}
-          <p className="text-[13.5px] font-medium mb-3">{q.question}</p>
+          <p className="text-body font-medium mb-3">{q.question}</p>
           <div className="flex flex-col gap-[6px]">
             {q.options.map((opt, oi) => {
               const isSelected = selected === opt.label;
@@ -200,22 +202,22 @@ function QuestionsCard({
                   className={`cursor-pointer text-left px-3 py-2.5 rounded-[10px] border transition-all duration-[160ms] group
                     ${
                       isSelected
-                        ? 'border-[var(--accent)] bg-[var(--accent-soft)]'
+                        ? 'border-accent bg-accent-soft'
                         : isOther
-                          ? 'border-[var(--border)] bg-[var(--surface)] opacity-40'
+                          ? 'border-border bg-surface opacity-40'
                           : interactive
-                            ? 'border-[var(--border)] bg-[var(--surface)] hover:border-[var(--accent)] hover:bg-[var(--accent-soft)]'
-                            : 'border-[var(--border)] bg-[var(--surface)] opacity-60 cursor-default'
+                            ? 'border-border bg-surface hover:border-accent hover:bg-accent-soft'
+                            : 'border-border bg-surface opacity-60 cursor-default'
                     }`}
                 >
                   <span
-                    className={`font-mono text-[12px] font-semibold ${isSelected ? 'text-[color:var(--accent)]' : 'text-[color:var(--accent)]'}`}
+                    className={`font-mono text-caption-sm font-semibold ${isSelected ? 'text-accent' : 'text-accent'}`}
                   >
                     {opt.label}
                     {isSelected && <span className="ml-1.5 opacity-70">✓</span>}
                   </span>
                   {opt.description && (
-                    <span className="text-[12.5px] text-[color:var(--fg-muted)] ml-2">
+                    <span className="text-caption text-muted-foreground ml-2">
                       — {opt.description}
                     </span>
                   )}
@@ -247,7 +249,7 @@ function AgentText({ content, onReply }: { content: string; onReply?: (text: str
 function ErrorBubble({ content }: { content: string }) {
   return (
     <div
-      className="py-2.5 px-[14px] rounded-[10px] text-[color:var(--status-failed)] text-[13px] font-mono whitespace-pre-wrap"
+      className="py-2.5 px-[14px] rounded-[10px] text-destructive text-body-sm font-mono whitespace-pre-wrap"
       style={{
         background: 'color-mix(in srgb, var(--status-failed) 10%, transparent)',
         border: '1px solid color-mix(in srgb, var(--status-failed) 25%, transparent)',
@@ -265,11 +267,11 @@ function StepDivider() {
 function PromptContext({ context }: { context: string }) {
   return (
     <details>
-      <summary className="cursor-pointer text-xs text-[color:var(--fg-muted)] font-mono list-none flex items-center gap-1">
-        <span className="text-[10px]">›</span>
+      <summary className="cursor-pointer text-xs text-muted-foreground font-mono list-none flex items-center gap-1">
+        <span className="text-micro-xs">›</span>
         Prompt context
       </summary>
-      <pre className="mt-1.5 bg-[var(--surface-hi)] border border-[var(--border)] rounded-lg py-3 px-[14px] font-mono text-[11px] text-[color:var(--fg-muted)] whitespace-pre-wrap overflow-auto max-h-[200px]">
+      <pre className="mt-1.5 bg-surface-hi border border-border rounded-lg py-3 px-[14px] font-mono text-micro text-muted-foreground whitespace-pre-wrap overflow-auto max-h-[200px]">
         {context.trim()}
       </pre>
     </details>
@@ -336,16 +338,14 @@ const AssistantCard = memo(function AssistantCard({
   return (
     <div className="flex justify-start mb-[14px]">
       <div
-        className={`border border-[var(--border)] py-3 px-4 rounded-2xl shadow-[var(--shadow-sm)] max-w-[640px] w-full${isStreaming ? ' streaming-border' : ''}`}
+        className={`border border-border py-3 px-4 rounded-2xl shadow-sm max-w-[640px] w-full${isStreaming ? ' streaming-border' : ''}`}
         style={{
           background:
             'radial-gradient(60% 60% at 0% 100%, rgba(79, 70, 229, 0.05) 0%, transparent 100%), radial-gradient(60% 60% at 100% 0%, rgba(236, 72, 153, 0.04) 0%, transparent 100%), var(--surface-hi)',
         }}
       >
         {segments.length === 0 && isStreaming ? (
-          <span className="font-mono text-[13px] text-[color:var(--fg-dim)] animate-pulse">
-            Thinking…
-          </span>
+          <span className="font-mono text-body-sm text-fg-dim animate-pulse">Thinking…</span>
         ) : (
           <SegmentList
             segments={segments}
@@ -663,10 +663,10 @@ export default function RunDetail() {
     return null;
   }
   if (error) {
-    return <p className="text-[color:var(--status-failed)] text-[13px]">Error: {error}</p>;
+    return <p className="text-destructive text-body-sm">Error: {error}</p>;
   }
   if (!thread.length) {
-    return <p className="text-[color:var(--status-failed)] text-[13px]">Run not found</p>;
+    return <p className="text-destructive text-body-sm">Run not found</p>;
   }
 
   const currentRun = thread[thread.length - 1];
@@ -677,56 +677,35 @@ export default function RunDetail() {
 
   return (
     <div className="route-fade">
-      <Link to="/runs" className="back">
-        <svg
-          viewBox="0 0 16 16"
-          width="14"
-          height="14"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="m10 3-5 5 5 5" />
-        </svg>
-        Runs
-      </Link>
+      <BackLink to="/runs">Runs</BackLink>
 
-      <div className="page-head">
-        <div>
-          <div className="flex items-center gap-2.5 mb-1.5">
-            <span className="mono text-xs text-[color:var(--fg-dim)]">
-              {currentRun.id.slice(0, 8)}
-            </span>
-            <span className="text-[color:var(--fg-dim)]">·</span>
-            <StatusBadge status={currentRun.status} />
-            <span className="text-[color:var(--fg-dim)]">·</span>
-            <span className="mono text-xs text-[color:var(--fg-dim)]">
-              {currentRun.trigger_type}
-            </span>
-            <span className="text-[color:var(--fg-dim)]">·</span>
-            <span className="mono text-xs text-[color:var(--fg-dim)]">
-              {duration(currentRun.started_at, currentRun.finished_at)}
-            </span>
-            {thread.length > 1 && (
-              <>
-                <span className="text-[color:var(--fg-dim)]">·</span>
-                <span className="text-xs text-[color:var(--fg-dim)]">{thread.length} turns</span>
-              </>
-            )}
-          </div>
-          <h1>{currentRun.routine_name}</h1>
-        </div>
-        <div className="flex gap-2">
+      <div className="flex items-center gap-2 mb-1 font-mono text-xs text-fg-dim">
+        <span>{currentRun.id.slice(0, 8)}</span>
+        <span>·</span>
+        <StatusBadge status={currentRun.status} />
+        <span>·</span>
+        <span>{currentRun.trigger_type}</span>
+        <span>·</span>
+        <span>{duration(currentRun.started_at, currentRun.finished_at)}</span>
+        {thread.length > 1 && (
+          <>
+            <span>·</span>
+            <span>{thread.length} turns</span>
+          </>
+        )}
+      </div>
+
+      <PageHeader
+        title={currentRun.routine_name}
+        actions={
           <Link to={`/routines/${currentRun.routine_id}`} className="btn">
             View routine
           </Link>
-        </div>
-      </div>
+        }
+      />
 
       {currentRun.status === 'lost' && (
-        <div className="delete-confirm mb-4 bg-[var(--surface-2)] border-[var(--border-hi)]">
+        <div className="delete-confirm mb-4 bg-secondary border-border-strong">
           <span className="font-semibold">Connection lost.</span> This run was interrupted — no
           further interaction is possible.
         </div>
@@ -755,11 +734,11 @@ export default function RunDetail() {
 
         {currentRun.stderr && isFinished && (
           <details className="mb-2">
-            <summary className="cursor-pointer text-xs text-[color:var(--fg-muted)] font-mono list-none flex items-center gap-1">
-              <span className="text-[10px]">›</span>
+            <summary className="cursor-pointer text-xs text-muted-foreground font-mono list-none flex items-center gap-1">
+              <span className="text-micro-xs">›</span>
               Stderr output
             </summary>
-            <pre className="mt-1.5 bg-[var(--surface-hi)] border border-[var(--border)] rounded-lg py-3 px-[14px] font-mono text-[11px] text-[color:var(--fg-muted)] whitespace-pre-wrap overflow-auto max-h-[200px]">
+            <pre className="mt-1.5 bg-surface-hi border border-border rounded-lg py-3 px-[14px] font-mono text-micro text-muted-foreground whitespace-pre-wrap overflow-auto max-h-[200px]">
               {currentRun.stderr}
             </pre>
           </details>
