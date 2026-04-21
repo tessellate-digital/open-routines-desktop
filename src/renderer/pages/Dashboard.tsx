@@ -9,7 +9,6 @@ import type { Routine, Run } from '../lib/types';
 export default function Dashboard() {
   const [routines, setRoutines] = useState<Routine[]>([]);
   const [runs, setRuns] = useState<Run[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -20,8 +19,6 @@ export default function Dashboard() {
       setError(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Unknown error');
-    } finally {
-      setLoading(false);
     }
   }, []);
 
@@ -34,9 +31,6 @@ export default function Dashboard() {
     }, [load])
   );
 
-  if (loading) {
-    return <p className="hint">Loading…</p>;
-  }
   if (error) {
     return <p className="text-[color:var(--status-failed)] text-[13px]">Error: {error}</p>;
   }

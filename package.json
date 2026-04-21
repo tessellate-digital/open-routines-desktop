@@ -17,7 +17,7 @@
     "test:frontend": "vitest run --config vitest.frontend.config.ts",
     "test:backend": "vitest run --config vitest.backend.config.ts",
     "test": "npm run test:frontend && npm run test:backend",
-    "postinstall": "electron-rebuild",
+    "postinstall": "electron-rebuild && cp resources/icon.icns node_modules/electron/dist/Electron.app/Contents/Resources/electron.icns",
     "prepare": "husky"
   },
   "dependencies": {

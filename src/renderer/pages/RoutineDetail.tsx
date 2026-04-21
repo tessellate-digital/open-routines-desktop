@@ -198,7 +198,7 @@ export default function RoutineDetail() {
   };
 
   if (loading) {
-    return <p className="hint">Loading…</p>;
+    return null;
   }
   if (error) {
     return <p className="text-[color:var(--status-failed)] text-[13px]">Error: {error}</p>;

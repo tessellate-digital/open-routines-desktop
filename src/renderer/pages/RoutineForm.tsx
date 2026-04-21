@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import classNames from 'classnames';
 import { api } from '../lib/api';
+import { PROVIDERS } from '../lib/providers';
 import type { Trigger } from '../lib/types';
 import { CronPicker } from '../components/CronPicker';
 import { FolderPicker } from '../components/FolderPicker';
@@ -9,6 +10,11 @@ import { FileTypeFilter, type FileFilterValue } from '../components/FileTypeFilt
 import { SelectDropdown, type SelectOption } from '../components/SelectDropdown';
 import { useHostMounts } from '../contexts/HostMountsContext';
 import { usePageContext } from '../contexts/PageContext';
+
+const AGENT_OPTIONS: SelectOption[] = [
+  { value: 'build', label: 'Build' },
+  { value: 'plan', label: 'Plan' },
+];
 
 const FS_EVENTS = [
   { value: 'add', label: 'File created' },
@@ -52,6 +58,57 @@ function triggerSummary(d: TriggerDraft, resolve: (p: string) => string): string
   }
   const paths = d.paths.map((p) => resolve(p).split('/').pop() || p).join(', ');
   return paths || 'No paths';
+}
+
+function WatcherCollapsedSummary({
+  draft,
+  resolveHostPath,
+}: {
+  draft: WatcherDraft;
+  resolveHostPath: (p: string) => string;
+}) {
+  const pathNames = draft.paths.map((p) => resolveHostPath(p).split('/').pop() || p);
+  const eventLabels: Record<string, string> = {
+    add: 'created',
+    change: 'changed',
+    addDir: 'dir created',
+    unlink: 'deleted',
+    unlinkDir: 'dir deleted',
+  };
+  return (
+    <span className="summary flex items-center gap-2 flex-wrap min-w-0">
+      {pathNames.length > 0 ? (
+        <span className="font-mono text-[11.5px] truncate max-w-[160px]">
+          {pathNames.join(', ')}
+        </span>
+      ) : (
+        <span className="text-[color:var(--fg-dim)] text-[11.5px]">No paths</span>
+      )}
+      <span className="text-[color:var(--fg-dim)] text-[11px]">·</span>
+      <span className="flex gap-1 flex-wrap">
+        {draft.events.map((ev) => (
+          <span key={ev} className="code-chip text-[10.5px] py-0 px-1.5">
+            {eventLabels[ev] ?? ev}
+          </span>
+        ))}
+      </span>
+      {!draft.recursive && (
+        <>
+          <span className="text-[color:var(--fg-dim)] text-[11px]">·</span>
+          <span className="code-chip text-[10.5px] py-0 px-1.5">top-level only</span>
+        </>
+      )}
+      {draft.fileFilter.mode !== 'none' && draft.fileFilter.patterns.length > 0 && (
+        <>
+          <span className="text-[color:var(--fg-dim)] text-[11px]">·</span>
+          <span className="text-[11px] text-[color:var(--fg-dim)]">
+            {draft.fileFilter.mode === 'include' ? 'include' : 'exclude'}:{' '}
+            {draft.fileFilter.patterns.join(', ')}
+          </span>
+        </>
+      )}
+    </span>
+  );
 }
 
 function triggerToDraft(t: Trigger): TriggerDraft {
@@ -129,7 +186,11 @@ function TriggerCard({
           </svg>
         </span>
         <span className="label">{typeLabel}</span>
-        <span className="summary">{summary}</span>
+        {collapsed && draft.type === 'watcher' ? (
+          <WatcherCollapsedSummary draft={draft} resolveHostPath={resolveHostPath} />
+        ) : (
+          <span className="summary">{summary}</span>
+        )}
         <button
           className="remove"
           onClick={(e) => {
@@ -249,6 +310,7 @@ export default function RoutineForm() {
   const [existingTriggers, setExistingTriggers] = useState<Trigger[]>([]);
   const [models, setModels] = useState<string[]>([]);
   const [favourites, setFavourites] = useState<string[]>([]);
+  const [configuredProviderIds, setConfiguredProviderIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [showFolderPicker, setShowFolderPicker] = useState(false);
@@ -266,6 +328,11 @@ export default function RoutineForm() {
           isEdit ? api.getTriggers(id!) : Promise.resolve([] as Trigger[]),
         ]);
         setModels(modelsRes.models || []);
+        const settingKeys = new Set(settingsRes.map((s: { key: string }) => s.key));
+        const providerIds = PROVIDERS.filter((p) =>
+          p.fields.some((f) => settingKeys.has(f.key))
+        ).map((p) => p.id);
+        setConfiguredProviderIds(providerIds);
         const favSetting = settingsRes.find(
           (s: { key: string; value: string }) => s.key === 'FAVOURITE_MODELS'
         );
@@ -416,12 +483,20 @@ export default function RoutineForm() {
     setFolderPickerTarget(null);
   };
 
-  const favouriteSet = new Set(favourites.filter((m) => models.includes(m)));
+  const allowedPrefixes = new Set(['opencode', 'opencode-go', ...configuredProviderIds]);
+  const availableModels = models.filter((m) => {
+    const slash = m.indexOf('/');
+    if (slash === -1) {
+      return true;
+    }
+    return allowedPrefixes.has(m.slice(0, slash));
+  });
+  const favouriteSet = new Set(favourites.filter((m) => availableModels.includes(m)));
   const modelOptions: SelectOption[] = [
     ...favourites
-      .filter((m) => models.includes(m))
+      .filter((m) => availableModels.includes(m))
       .map((m) => ({ value: m, label: m, group: 'Favourites' })),
-    ...models
+    ...availableModels
       .filter((m) => !favouriteSet.has(m))
       .map((m) => ({ value: m, label: m, group: m.split('/', 1)[0] })),
   ];
@@ -497,10 +572,11 @@ export default function RoutineForm() {
           </div>
           <div className="form-row !mb-0">
             <label>Agent</label>
-            <input
-              className="input"
+            <SelectDropdown
               value={form.agent}
-              onChange={(e) => setForm((f) => ({ ...f, agent: e.target.value }))}
+              onChange={(v) => setForm((f) => ({ ...f, agent: v }))}
+              options={AGENT_OPTIONS}
+              placeholder="Select an agent…"
             />
           </div>
         </div>

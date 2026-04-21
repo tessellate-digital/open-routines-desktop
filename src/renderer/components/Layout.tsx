@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { useGlobalSSE } from '../hooks/useSSE';
 import Sidebar from './Sidebar';
 import ContextToolbar from './ContextToolbar';
 
 export default function Layout() {
+  const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(() => {
     return localStorage.getItem('oc-sidebar-collapsed') === 'true';
   });
@@ -33,6 +34,30 @@ export default function Layout() {
   }, [fetchCounts]);
 
   useGlobalSSE(fetchCounts);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!e.metaKey && !e.ctrlKey) {
+        return;
+      }
+      switch (e.key) {
+        case 'n':
+          e.preventDefault();
+          navigate('/routines/new');
+          break;
+        case '2':
+          e.preventDefault();
+          navigate('/runs');
+          break;
+        case ',':
+          e.preventDefault();
+          navigate('/settings');
+          break;
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [navigate]);
 
   return (
     <div className="app-shell">
