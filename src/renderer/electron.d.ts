@@ -1,6 +1,7 @@
 interface ElectronAPI {
   getServerPort(): Promise<number>;
   selectDirectory(): Promise<string | null>;
+  selectFile(): Promise<string | null>;
   openExternal(url: string): Promise<void>;
   platform: string;
 }

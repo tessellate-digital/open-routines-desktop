@@ -1,32 +1,27 @@
+@reference "tailwindcss";
+
 .chat-composer {
-  width: 100%;
-  max-width: 700px;
-  background: var(--surface-2);
-  border: 1px solid var(--border-hi);
-  border-radius: 999px;
-  padding: 6px 6px 6px 20px;
+  @apply w-full max-w-[700px] flex items-center gap-2.5;
+  @apply bg-[var(--surface-2)] border border-[var(--border-hi)] rounded-full;
+  @apply pl-5 pr-1.5 py-1.5 outline-none overflow-hidden;
+  @apply backdrop-blur-xl;
   box-shadow:
     0 8px 32px rgba(20, 20, 30, 0.12),
     0 2px 8px rgba(20, 20, 30, 0.06),
     0 1px 0 rgba(255, 255, 255, 0.5) inset;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
   transition:
     max-width 380ms cubic-bezier(0.22, 0.61, 0.36, 1),
     padding 380ms cubic-bezier(0.22, 0.61, 0.36, 1),
     border-color 280ms ease,
     box-shadow 280ms ease;
-  outline: none;
-  overflow: hidden;
 }
+
 [data-theme='dark'] .chat-composer {
   box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.5),
     0 2px 8px rgba(0, 0, 0, 0.3);
 }
+
 .chat-composer:focus-within {
   border-color: color-mix(in srgb, var(--accent) 40%, transparent);
   box-shadow:
@@ -36,90 +31,45 @@
     0 1px 0 rgba(255, 255, 255, 0.5) inset;
 }
 
-.chat-composer textarea {
-  flex: 1;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  font-family: var(--font-sans);
-  font-size: 14px;
-  color: var(--fg);
-  resize: none;
-  padding: 10px 0;
-  line-height: 1.5;
-  min-height: 24px;
-  max-height: 180px;
+.chat-composer textarea,
+.chat-composer .composer-editable {
+  @apply flex-1 border-0 outline-none bg-transparent resize-none;
+  @apply font-sans text-sm text-[var(--fg)];
+  @apply py-2.5 leading-relaxed min-h-6 max-h-44;
 }
+
 .chat-composer textarea::placeholder {
-  color: var(--fg-dim);
+  @apply text-[var(--fg-dim)];
 }
+
 .chat-composer textarea:disabled {
-  opacity: 0.5;
+  @apply opacity-50;
 }
 
 .chat-composer .composer-input {
-  display: contents;
+  @apply contents;
 }
+
 .chat-composer .composer-input.fade-in {
   animation: fadeIn 300ms ease forwards;
 }
 
 .chat-composer.thinking {
+  @apply bg-[var(--surface-2)] cursor-pointer p-[7px] max-w-14 justify-center mx-auto;
   border-color: color-mix(in srgb, var(--accent) 40%, transparent);
-  background: var(--surface-2);
-  cursor: pointer;
   box-shadow:
     0 8px 32px rgba(20, 20, 30, 0.1),
     0 0 0 3px color-mix(in srgb, var(--accent) 10%, transparent);
-  padding: 7px;
-  max-width: 56px;
-  justify-content: center;
 }
+
 .chat-composer.thinking:hover {
   box-shadow:
     0 8px 32px rgba(20, 20, 30, 0.14),
     0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
 }
+
 .chat-composer.thinking:focus-within {
-  box-shadow: inherit;
-}
-
-/* ─── Animated streaming border ─── */
-@property --border-angle {
-  syntax: '<angle>';
-  initial-value: 0deg;
-  inherits: false;
-}
-
-.streaming-border {
-  position: relative;
-  border-color: transparent !important;
-}
-.streaming-border::before {
-  content: '';
-  position: absolute;
-  inset: -1.5px;
-  border-radius: inherit;
-  background: conic-gradient(from var(--border-angle), #4f46e5, #ec4899, #4f46e5);
-  -webkit-mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  padding: 1.5px;
-  animation: border-spin 2s linear infinite;
-  z-index: 0;
-  opacity: 0.75;
-}
-.streaming-border > * {
-  position: relative;
-  z-index: 1;
-}
-
-@keyframes border-spin {
-  to {
-    --border-angle: 360deg;
-  }
+  @apply shadow-inherit;
 }
 
 .orb-exit {

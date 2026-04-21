@@ -5,7 +5,7 @@ import RoutinesList from './pages/RoutinesList';
 import RoutineDetail from './pages/RoutineDetail';
 import RoutineForm from './pages/RoutineForm';
 import RunsList from './pages/RunsList';
-import RunDetail from './pages/RunDetail';
+import RunDetail from './pages/run-detail/RunDetail';
 import RoutineRuns from './pages/RoutineRuns';
 import Settings from './pages/Settings';
 import DevPage from './pages/DevPage';
