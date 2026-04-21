@@ -1,9 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import classNames from 'classnames';
 import { api } from '../lib/api';
 import { useGlobalSSE } from '../hooks/useSSE';
 import { RunsTable } from '../components/RunsTable';
+import { PageHeader } from '../components/PageHeader';
+import { StatCard } from '../components/StatCard';
+import { SectionLabel } from '../components/SectionLabel';
 import type { Routine, Run } from '../lib/types';
 
 export default function Dashboard() {
@@ -32,7 +34,7 @@ export default function Dashboard() {
   );
 
   if (error) {
-    return <p className="text-[color:var(--status-failed)] text-[13px]">Error: {error}</p>;
+    return <p className="text-destructive text-body-sm">Error: {error}</p>;
   }
 
   const running = runs.filter((r) => r.status === 'running').length;
@@ -41,59 +43,30 @@ export default function Dashboard() {
 
   return (
     <div className="route-fade">
-      <div className="page-head">
-        <div>
-          <h1>Overview</h1>
-          <div className="sub">
-            {routines.length} routines · {runs.length} recent runs
-          </div>
-        </div>
-        <Link to="/routines/new" className="btn primary">
-          + New Routine
-        </Link>
-      </div>
+      <PageHeader
+        title="Overview"
+        subtitle={`${routines.length} routines · ${runs.length} recent runs`}
+        actions={
+          <Link to="/routines/new" className="btn primary">
+            + New Routine
+          </Link>
+        }
+      />
 
       <div className="grid grid-cols-3 gap-3 mb-[22px]">
-        <div className="py-[14px] px-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-[var(--r-md)] shadow-[var(--shadow-sm)]">
-          <div className="font-mono text-[10.5px] uppercase tracking-[.08em] text-[color:var(--fg-dim)]">
-            Routines
-          </div>
-          <div className="text-[22px] font-semibold tracking-[-0.01em] mt-1 tabular-nums">
-            {routines.length}
-          </div>
-        </div>
-        <div className="py-[14px] px-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-[var(--r-md)] shadow-[var(--shadow-sm)]">
-          <div className="font-mono text-[10.5px] uppercase tracking-[.08em] text-[color:var(--fg-dim)]">
-            Running
-          </div>
-          <div className="text-[22px] font-semibold tracking-[-0.01em] mt-1 tabular-nums text-[color:var(--status-running)]">
-            {running}
-          </div>
-        </div>
-        <div className="py-[14px] px-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-[var(--r-md)] shadow-[var(--shadow-sm)]">
-          <div className="font-mono text-[10.5px] uppercase tracking-[.08em] text-[color:var(--fg-dim)]">
-            Recent failures
-          </div>
-          <div
-            className={classNames(
-              'text-[22px] font-semibold tracking-[-0.01em] mt-1 tabular-nums',
-              { 'text-[color:var(--status-failed)]': failed > 0 }
-            )}
-          >
-            {failed}
-          </div>
-          {success > 0 && (
-            <div className="font-mono text-[11px] text-[color:var(--fg-muted)] mt-0.5">
-              {success} success
-            </div>
-          )}
-        </div>
+        <StatCard label="Routines" value={routines.length} />
+        <StatCard label="Running" value={<span className="text-running">{running}</span>} />
+        <StatCard
+          label="Recent failures"
+          value={<span className={failed > 0 ? 'text-destructive' : ''}>{failed}</span>}
+          sub={success > 0 ? `${success} success` : undefined}
+        />
       </div>
 
       <div>
         <div className="flex items-center justify-between mb-3">
-          <div className="section-h">Recent runs</div>
-          <Link to="/runs" className="font-mono text-xs text-[color:var(--accent)] no-underline">
+          <SectionLabel className="mb-0">Recent runs</SectionLabel>
+          <Link to="/runs" className="font-mono text-xs text-accent no-underline">
             View all →
           </Link>
         </div>

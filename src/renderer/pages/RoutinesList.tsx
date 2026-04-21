@@ -2,8 +2,14 @@ import { useEffect, useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import classNames from 'classnames';
 import { api } from '../lib/api';
+import { FilterTabs } from '../components/FilterTabs';
+import type { FilterValue } from '../components/FilterTabs';
 import { useGlobalSSE } from '../hooks/useSSE';
 import { StatusBadge } from '../components/RunsTable';
+import { DataTable, TableRow, TableCell } from '../components/DataTable';
+import { PageHeader } from '../components/PageHeader';
+import { SearchBox } from '../components/SearchBox';
+import { EmptyState } from '../components/EmptyState';
 import type { Routine } from '../lib/types';
 
 function ChevronIcon() {
@@ -23,30 +29,12 @@ function ChevronIcon() {
   );
 }
 
-function SearchIcon() {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      width="14"
-      height="14"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="7" cy="7" r="4.5" />
-      <path d="m13 13-2.8-2.8" />
-    </svg>
-  );
-}
-
 export default function RoutinesList() {
   const navigate = useNavigate();
   const [routines, setRoutines] = useState<Routine[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState('all');
+  const [filter, setFilter] = useState<FilterValue>('all');
   const [search, setSearch] = useState('');
 
   const load = useCallback(async () => {
@@ -70,7 +58,7 @@ export default function RoutinesList() {
   );
 
   if (error) {
-    return <p className="text-[color:var(--status-failed)] text-[13px]">Error: {error}</p>;
+    return <p className="text-destructive text-body-sm">Error: {error}</p>;
   }
 
   const filtered = routines.filter((r) => {
@@ -83,124 +71,83 @@ export default function RoutinesList() {
 
   return (
     <div className="route-fade">
-      <div className="page-head">
-        <div>
-          <h1>Routines</h1>
-          <div className="sub">
-            {routines.length} routine{routines.length !== 1 ? 's' : ''}
-          </div>
-        </div>
-        <Link to="/routines/new" className="btn primary">
-          + New routine
-        </Link>
-      </div>
+      <PageHeader
+        title="Routines"
+        subtitle={`${routines.length} routine${routines.length !== 1 ? 's' : ''}`}
+        actions={
+          <Link to="/routines/new" className="btn primary">
+            + New routine
+          </Link>
+        }
+      />
 
-      <div className="toolbar">
-        <div className="pills">
-          {['all', 'running', 'success', 'failed'].map((p) => (
-            <button
-              key={p}
-              className={classNames('pill', { active: filter === p })}
-              onClick={() => setFilter(p)}
-            >
-              {p[0].toUpperCase() + p.slice(1)}
-            </button>
-          ))}
-        </div>
-        <div className="search">
-          <SearchIcon />
-          <input
-            placeholder="Filter routines…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
+      <div className="flex items-center gap-2 mb-4 flex-wrap">
+        <FilterTabs value={filter} onChange={setFilter} />
+        <SearchBox value={search} onChange={setSearch} placeholder="Filter routines…" />
       </div>
 
       {filtered.length > 0 ? (
-        <div className="card">
-          <table className="tbl">
-            <thead>
-              <tr>
-                <th>Routine</th>
-                <th>Triggers</th>
-                <th>Last status</th>
-                <th>Enabled</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((r) => (
-                <tr key={r.id} onClick={() => navigate(`/routines/${r.id}`)}>
-                  <td>
-                    <div className="primary-cell">{r.name}</div>
-                    <div className="sub">{r.model || 'default'}</div>
-                  </td>
-                  <td>
-                    <span className="mono">
-                      {r.triggers_count} trigger{r.triggers_count !== 1 ? 's' : ''}
-                    </span>
-                  </td>
-                  <td>
-                    {r.last_run_status ? (
-                      <StatusBadge status={r.last_run_status} />
-                    ) : (
-                      <span className="status pending">
-                        <span className="dot" />
-                        idle
-                      </span>
-                    )}
-                  </td>
-                  <td>
-                    <span
-                      className={classNames({
-                        'text-[color:var(--status-success)] font-medium': r.enabled,
-                        'text-[color:var(--fg-dim)] font-normal': !r.enabled,
-                      })}
-                    >
-                      {r.enabled ? 'Yes' : 'No'}
-                    </span>
-                  </td>
-                  <td className="chev">
-                    <ChevronIcon />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable columns={['Routine', 'Triggers', 'Last status', 'Enabled', '']}>
+          {filtered.map((r) => (
+            <TableRow key={r.id} onClick={() => navigate(`/routines/${r.id}`)}>
+              <TableCell>
+                <div className="font-medium text-body text-foreground">{r.name}</div>
+                <div className="font-mono text-micro text-fg-dim mt-0.5">
+                  {r.model || 'default'}
+                </div>
+              </TableCell>
+              <TableCell>
+                <span className="font-mono text-xs text-muted-foreground">
+                  {r.triggers_count} trigger{r.triggers_count !== 1 ? 's' : ''}
+                </span>
+              </TableCell>
+              <TableCell>
+                {r.last_run_status ? (
+                  <StatusBadge status={r.last_run_status} />
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 font-mono text-xs text-pending">
+                    <span className="w-[7px] h-[7px] rounded-full bg-current shadow-[0_0_0_3px_color-mix(in_srgb,currentColor_22%,transparent)]" />
+                    idle
+                  </span>
+                )}
+              </TableCell>
+              <TableCell>
+                <span
+                  className={classNames({
+                    'text-success font-medium': r.enabled,
+                    'text-fg-dim font-normal': !r.enabled,
+                  })}
+                >
+                  {r.enabled ? 'Yes' : 'No'}
+                </span>
+              </TableCell>
+              <TableCell className="text-right text-fg-dim [&_svg]:w-3.5 [&_svg]:h-3.5">
+                <ChevronIcon />
+              </TableCell>
+            </TableRow>
+          ))}
+        </DataTable>
       ) : routines.length === 0 && filter === 'all' && !loading ? (
-        <div className="card">
-          <div className="py-20 px-10 text-center grid gap-2.5 justify-items-center">
-            <div className="w-[72px] h-[72px] rounded-[22px] bg-gradient-to-br from-[#4f46e5] to-[#c5b8ff] grid place-items-center text-white mb-3 shadow-[0_12px_40px_rgba(79,70,229,0.3)] animate-[float_4s_ease-in-out_infinite]">
+        <EmptyState
+          icon={
+            <div className="w-[72px] h-[72px] rounded-[22px] bg-gradient-to-br from-[#4f46e5] to-[#c5b8ff] grid place-items-center text-white shadow-[0_12px_40px_rgba(79,70,229,0.3)] animate-[float_4s_ease-in-out_infinite]">
               <svg viewBox="0 0 16 16" width="32" height="32" fill="currentColor" stroke="none">
                 <path d="M8 1.5 9.4 6 14 7.4 9.4 8.8 8 13.3 6.6 8.8 2 7.4 6.6 6 8 1.5z" />
               </svg>
             </div>
-            <h2 className="text-[22px] m-0 font-semibold">Nothing scheduled yet</h2>
-            <p className="text-[color:var(--fg-muted)] text-sm max-w-[420px] m-0 leading-[1.55]">
-              Routines run a prompt when a trigger fires — on a schedule, or when files change. Set
-              your first one up in under a minute.
-            </p>
-            <div className="flex gap-2 mt-4">
-              <Link to="/routines/new" className="btn primary">
-                + New routine
-              </Link>
-            </div>
-          </div>
-        </div>
+          }
+          title="Nothing scheduled yet"
+          description="Routines run a prompt when a trigger fires — on a schedule, or when files change. Set your first one up in under a minute."
+          actions={
+            <Link to="/routines/new" className="btn primary">
+              + New routine
+            </Link>
+          }
+        />
       ) : routines.length === 0 && filter !== 'all' ? (
-        <div className="card">
-          <div className="p-12 text-center text-[color:var(--fg-muted)]">
-            No routines with status &quot;{filter}&quot;.
-          </div>
-        </div>
+        <EmptyState title={`No routines with status "${filter}".`} />
       ) : (
-        <div className="card">
-          <div className="p-12 text-center text-[color:var(--fg-muted)]">
-            No routines match your search.
-          </div>
-        </div>
+        <EmptyState title="No routines match your search." />
       )}
     </div>
   );

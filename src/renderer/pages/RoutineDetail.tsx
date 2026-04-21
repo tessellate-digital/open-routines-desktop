@@ -1,29 +1,20 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import classNames from 'classnames';
 import { api } from '../lib/api';
 import { useGlobalSSE } from '../hooks/useSSE';
-import { RunsTable } from '../components/RunsTable';
+import { RunsTable, StatusBadge } from '../components/RunsTable';
+import { BackLink } from '../components/BackLink';
+import { PageHeader } from '../components/PageHeader';
+import { SectionLabel } from '../components/SectionLabel';
+import { EventChip } from '../components/EventChip';
 import type { Routine, Trigger, Run } from '../lib/types';
 import { useHostMounts } from '../contexts/HostMountsContext';
 import { usePageContext } from '../contexts/PageContext';
 
-function ChevronLeftIcon() {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      width="14"
-      height="14"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="m10 3-5 5 5 5" />
-    </svg>
-  );
-}
+const trigCardClasses = 'border border-border-strong rounded-md bg-surface-hi overflow-hidden mb-2';
+const trigHeadClasses = 'flex items-center gap-2.5 py-2.5 px-3.5 cursor-default';
+const trigLabelClasses = 'font-medium text-body';
+const trigSummaryClasses = 'font-mono text-xs text-fg-dim';
 
 function TriggerSummary({ trigger }: { trigger: Trigger }) {
   const { resolveHostPath } = useHostMounts();
@@ -31,10 +22,10 @@ function TriggerSummary({ trigger }: { trigger: Trigger }) {
 
   if (trigger.type === 'cron') {
     return (
-      <div className="trig-card mb-2">
-        <div className="trig-head cursor-default">
-          <span className="label">Cron</span>
-          <span className="summary">{String(cfg.expression || '')}</span>
+      <div className={trigCardClasses}>
+        <div className={trigHeadClasses}>
+          <span className={trigLabelClasses}>Cron</span>
+          <span className={trigSummaryClasses}>{String(cfg.expression || '')}</span>
           <span className="code-chip ml-2">{String(cfg.expression || '')}</span>
         </div>
       </div>
@@ -56,30 +47,26 @@ function TriggerSummary({ trigger }: { trigger: Trigger }) {
       Array.isArray(fileFilter.patterns) &&
       fileFilter.patterns.length > 0;
     return (
-      <div className="trig-card mb-2">
-        <div className="trig-head cursor-default flex-wrap gap-1.5">
-          <span className="label">Filesystem</span>
-          <span className="summary font-mono text-xs">
+      <div className={trigCardClasses}>
+        <div className={`${trigHeadClasses} flex-wrap gap-1.5`}>
+          <span className={trigLabelClasses}>Filesystem</span>
+          <span className={`${trigSummaryClasses} font-mono text-xs`}>
             {paths.map(resolveHostPath).join(', ') || '—'}
           </span>
-          {!recursive && <span className="code-chip text-[10.5px]">top-level only</span>}
+          {!recursive && <span className="code-chip text-micro-sm">top-level only</span>}
         </div>
-        <div className="px-[14px] pt-2 pb-3 border-t border-t-[var(--border)] flex gap-2 flex-wrap items-center">
-          <span className="font-mono text-[11px] text-[color:var(--fg-dim)] uppercase tracking-[.06em]">
-            on
-          </span>
+        <div className="px-3.5 pt-2 pb-3 border-t border-muted flex gap-2 flex-wrap items-center">
+          <span className="font-mono text-micro text-fg-dim uppercase tracking-caps-tight">on</span>
           {events.map((ev) => (
-            <span key={ev} className="trig text-[11.5px]">
-              {ev}
-            </span>
+            <EventChip key={ev}>{ev}</EventChip>
           ))}
           {hasFilter && (
             <>
-              <span className="font-mono text-[11px] text-[color:var(--fg-dim)] uppercase tracking-[.06em] ml-2">
+              <span className="font-mono text-micro text-fg-dim uppercase tracking-caps-tight ml-2">
                 {fileFilter.mode === 'exclude' ? 'except' : 'only'}
               </span>
               {fileFilter.patterns!.map((p) => (
-                <span key={p} className="code-chip text-[11px]">
+                <span key={p} className="code-chip text-micro">
                   {p}
                 </span>
               ))}
@@ -92,9 +79,9 @@ function TriggerSummary({ trigger }: { trigger: Trigger }) {
 
   if (trigger.type === 'api') {
     return (
-      <div className="trig-card mb-2">
-        <div className="trig-head cursor-default">
-          <span className="label">API</span>
+      <div className={trigCardClasses}>
+        <div className={trigHeadClasses}>
+          <span className={trigLabelClasses}>API</span>
           <span className="code-chip">/hooks/api/{trigger.id}</span>
         </div>
       </div>
@@ -104,10 +91,10 @@ function TriggerSummary({ trigger }: { trigger: Trigger }) {
   if (trigger.type === 'github') {
     const events = Array.isArray(cfg.events) ? (cfg.events as string[]).join(', ') : '';
     return (
-      <div className="trig-card mb-2">
-        <div className="trig-head cursor-default">
-          <span className="label">GitHub</span>
-          <span className="summary">{events || '—'}</span>
+      <div className={trigCardClasses}>
+        <div className={trigHeadClasses}>
+          <span className={trigLabelClasses}>GitHub</span>
+          <span className={trigSummaryClasses}>{events || '—'}</span>
         </div>
       </div>
     );
@@ -115,6 +102,9 @@ function TriggerSummary({ trigger }: { trigger: Trigger }) {
 
   return null;
 }
+
+const detailCardClasses = 'py-4 px-[18px] bg-secondary border border-muted rounded-md';
+const detailLabelClasses = 'font-mono text-micro-sm uppercase tracking-caps text-fg-dim mb-1.5';
 
 export default function RoutineDetail() {
   const { id } = useParams<{ id: string }>();
@@ -201,124 +191,118 @@ export default function RoutineDetail() {
     return null;
   }
   if (error) {
-    return <p className="text-[color:var(--status-failed)] text-[13px]">Error: {error}</p>;
+    return <p className="text-destructive text-body-sm">Error: {error}</p>;
   }
   if (!routine) {
-    return <p className="text-[color:var(--status-failed)] text-[13px]">Routine not found</p>;
+    return <p className="text-destructive text-body-sm">Routine not found</p>;
   }
 
   return (
     <div className="route-fade">
-      <Link to="/routines" className="back">
-        <ChevronLeftIcon /> Routines
-      </Link>
+      <BackLink to="/routines">Routines</BackLink>
 
-      <div className="page-head">
-        <div>
-          <h1>{routine.name}</h1>
-          <div className="sub flex items-center gap-2">
-            <span
-              className={classNames('status', {
-                success: routine.enabled,
-                pending: !routine.enabled,
-              })}
-            >
-              <span className="dot" />
-              <span>{routine.enabled ? 'enabled' : 'paused'}</span>
-            </span>
+      <PageHeader
+        title={routine.name}
+        subtitle={
+          <span className="flex items-center gap-2">
+            <StatusBadge status={routine.enabled ? 'success' : 'pending'} />
+            <span>{routine.enabled ? 'enabled' : 'paused'}</span>
             {routine.description && <span>· {routine.description}</span>}
+          </span>
+        }
+        actions={
+          <div className="flex gap-2 items-center">
+            {confirmDelete ? (
+              <div className="flex items-center gap-2.5 py-2.5 px-3.5 rounded-md bg-[#fff1f2] border border-[#fecdd3] text-body-sm [[data-theme='dark']_&]:bg-[rgba(251,113,133,0.08)] [[data-theme='dark']_&]:border-[rgba(251,113,133,0.25)] [[data-theme='dark']_&]:text-foreground">
+                <span>
+                  Delete <strong>{routine.name}</strong>?
+                </span>
+                <button className="btn sm delete-rt" onClick={handleDelete}>
+                  Yes, delete
+                </button>
+                <button className="btn sm" onClick={() => setConfirmDelete(false)}>
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <>
+                <button className="btn run" onClick={handleRun}>
+                  ▶ Run now
+                </button>
+                <Link to={`/routines/${id}/edit`} className="btn">
+                  Edit
+                </Link>
+                <button
+                  className="btn"
+                  onClick={handleToggle}
+                  disabled={toggling}
+                  style={{ minWidth: '5rem', display: 'flex', justifyContent: 'center' }}
+                >
+                  {toggling ? '…' : routine.enabled ? 'Pause' : 'Enable'}
+                </button>
+                <button className="btn delete-rt" onClick={() => setConfirmDelete(true)}>
+                  Delete
+                </button>
+              </>
+            )}
           </div>
-        </div>
-        <div className="flex gap-2 items-center">
-          {confirmDelete ? (
-            <div className="delete-confirm">
-              <span>
-                Delete <strong>{routine.name}</strong>?
-              </span>
-              <button className="btn sm delete-rt" onClick={handleDelete}>
-                Yes, delete
-              </button>
-              <button className="btn sm" onClick={() => setConfirmDelete(false)}>
-                Cancel
-              </button>
-            </div>
-          ) : (
-            <>
-              <button className="btn run" onClick={handleRun}>
-                ▶ Run now
-              </button>
-              <Link to={`/routines/${id}/edit`} className="btn">
-                Edit
-              </Link>
-              <button
-                className="btn"
-                onClick={handleToggle}
-                disabled={toggling}
-                style={{ minWidth: '5rem', display: 'flex', justifyContent: 'center' }}
-              >
-                {toggling ? '…' : routine.enabled ? 'Pause' : 'Enable'}
-              </button>
-              <button className="btn delete-rt" onClick={() => setConfirmDelete(true)}>
-                Delete
-              </button>
-            </>
-          )}
-        </div>
-      </div>
+        }
+      />
 
       <div className="grid gap-5">
         {/* Prompt */}
-        <div className="py-4 px-[18px] bg-[var(--surface-2)] border border-[var(--border)] rounded-[var(--r-md)]">
-          <div className="font-mono text-[10.5px] uppercase tracking-[.08em] text-[color:var(--fg-dim)] mb-1.5">
-            Prompt
-          </div>
-          <div className="font-mono text-[13px] leading-[1.65] whitespace-pre-wrap mt-1">
+        <div className={detailCardClasses}>
+          <div className={detailLabelClasses}>Prompt</div>
+          <div className="font-mono text-body-sm leading-prose whitespace-pre-wrap mt-1">
             {routine.prompt}
           </div>
         </div>
 
         {/* Config grid */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="py-4 px-[18px] bg-[var(--surface-2)] border border-[var(--border)] rounded-[var(--r-md)]">
-            <div className="font-mono text-[10.5px] uppercase tracking-[.08em] text-[color:var(--fg-dim)] mb-1.5">
-              Model
-            </div>
-            <div className="font-mono text-[13px] font-medium text-[color:var(--fg)]">
-              {routine.model || '—'}
-            </div>
-          </div>
-          <div className="py-4 px-[18px] bg-[var(--surface-2)] border border-[var(--border)] rounded-[var(--r-md)]">
-            <div className="font-mono text-[10.5px] uppercase tracking-[.08em] text-[color:var(--fg-dim)] mb-1.5">
-              Agent
-            </div>
-            <div className="font-mono text-[13px] font-medium text-[color:var(--fg)]">
+          {(() => {
+            const slash = (routine.model || '').indexOf('/');
+            const provider = slash !== -1 ? routine.model.slice(0, slash) : '—';
+            const model = slash !== -1 ? routine.model.slice(slash + 1) : routine.model || '—';
+            return (
+              <>
+                <div className={detailCardClasses}>
+                  <div className={detailLabelClasses}>Provider</div>
+                  <div className="font-mono text-body-sm font-medium text-foreground">
+                    {provider}
+                  </div>
+                </div>
+                <div className={detailCardClasses}>
+                  <div className={detailLabelClasses}>Model</div>
+                  <div className="font-mono text-body-sm font-medium text-foreground">{model}</div>
+                </div>
+              </>
+            );
+          })()}
+          <div className={detailCardClasses}>
+            <div className={detailLabelClasses}>Agent</div>
+            <div className="font-mono text-body-sm font-medium text-foreground">
               {routine.agent}
             </div>
           </div>
-          <div className="py-4 px-[18px] bg-[var(--surface-2)] border border-[var(--border)] rounded-[var(--r-md)]">
-            <div className="font-mono text-[10.5px] uppercase tracking-[.08em] text-[color:var(--fg-dim)] mb-1.5">
-              Run mode
-            </div>
-            <div className="text-sm font-medium text-[color:var(--fg)]">
+          <div className={detailCardClasses}>
+            <div className={detailLabelClasses}>Run mode</div>
+            <div className="text-sm font-medium text-foreground">
               {routine.run_mode === 'foreground' ? 'Foreground only' : 'Background'}
             </div>
           </div>
           {routine.repository && (
-            <div className="py-4 px-[18px] bg-[var(--surface-2)] border border-[var(--border)] rounded-[var(--r-md)]">
-              <div className="font-mono text-[10.5px] uppercase tracking-[.08em] text-[color:var(--fg-dim)] mb-1.5">
-                Repository
-              </div>
-              <div className="font-mono text-[13px] font-medium text-[color:var(--fg)]">
+            <div className={detailCardClasses}>
+              <div className={detailLabelClasses}>Repository</div>
+              <div className="font-mono text-body-sm font-medium text-foreground">
                 {routine.repository}
               </div>
             </div>
           )}
           {routine.repository && (
-            <div className="py-4 px-[18px] bg-[var(--surface-2)] border border-[var(--border)] rounded-[var(--r-md)]">
-              <div className="font-mono text-[10.5px] uppercase tracking-[.08em] text-[color:var(--fg-dim)] mb-1.5">
-                Branch
-              </div>
-              <div className="font-mono text-[13px] font-medium text-[color:var(--fg)]">
+            <div className={detailCardClasses}>
+              <div className={detailLabelClasses}>Branch</div>
+              <div className="font-mono text-body-sm font-medium text-foreground">
                 {routine.branch}
               </div>
             </div>
@@ -326,8 +310,8 @@ export default function RoutineDetail() {
         </div>
 
         {/* Triggers */}
-        <div>
-          <div className="section-h">Triggers · {triggers.length}</div>
+        <div className="mt-4">
+          <SectionLabel>Triggers · {triggers.length}</SectionLabel>
           {triggers.length > 0 ? (
             triggers.map((t) => <TriggerSummary key={t.id} trigger={t} />)
           ) : (
@@ -336,8 +320,16 @@ export default function RoutineDetail() {
         </div>
 
         {/* Run history */}
-        <div>
-          <div className="section-h">Recent runs · {runs.length}</div>
+        <div className="mt-4">
+          <div className="flex items-center justify-between mb-2.5">
+            <SectionLabel className="mb-0">Recent runs · {runs.length}</SectionLabel>
+            <Link
+              to={`/routines/${id}/runs`}
+              className="font-mono text-xs text-accent no-underline"
+            >
+              See all →
+            </Link>
+          </div>
           <RunsTable runs={runs} />
         </div>
       </div>

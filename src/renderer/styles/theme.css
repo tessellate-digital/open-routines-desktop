@@ -1,0 +1,160 @@
+@import 'tailwindcss';
+
+/* ─── Tailwind theme compatibility layer ─── */
+@theme {
+  --font-sans: 'Inter Tight', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  --color-canvas: var(--bg);
+  --color-surface: var(--surface);
+  --color-foreground: var(--fg);
+  --color-muted: var(--border);
+  --color-muted-foreground: var(--fg-muted);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-hi);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
+  --color-primary: var(--fg);
+  --color-secondary: var(--surface-2);
+  --color-success: var(--status-success);
+  --color-warning: var(--status-warning);
+  --color-destructive: var(--status-failed);
+  --color-surface-hi: var(--surface-hi);
+  --color-surface-2: var(--surface-2);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-dim: var(--fg-dim);
+  --color-border-hi: var(--border-hi);
+  --color-running: var(--status-running);
+  --color-pending: var(--status-pending);
+
+  --radius-sm: var(--r-sm);
+  --radius-md: var(--r-md);
+  --radius-lg: var(--r-lg);
+  --radius-xl: var(--r-xl);
+
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+
+  --duration-default: var(--dur);
+
+  --ease-default: var(--ease);
+
+  /* ─── Typography scale ─── */
+  --text-heading: 28px;
+  --text-title: 22px;
+  --text-section: 16px;
+  --text-label: 14px;
+  --text-body: 13.5px;
+  --text-body-sm: 13px;
+  --text-caption: 12.5px;
+  --text-caption-sm: 12px;
+  --text-code: 11.5px;
+  --text-micro: 11px;
+  --text-micro-sm: 10.5px;
+  --text-micro-xs: 10px;
+
+  /* ─── Tracking ─── */
+  --tracking-caps: 0.08em;
+  --tracking-caps-tight: 0.06em;
+  --tracking-caps-wide: 0.1em;
+  --tracking-title: -0.02em;
+  --tracking-code: 0.12em;
+
+  /* ─── Leading ─── */
+  --leading-body: 1.5;
+  --leading-tight: 1.4;
+  --leading-snug: 1.45;
+  --leading-relaxed: 1.55;
+  --leading-loose: 1.6;
+  --leading-prose: 1.65;
+}
+
+/* ─── CSS Custom Properties ─── */
+:root {
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 20px;
+  --dur: 180ms;
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* ─── GRADIENT theme (default) ─── */
+:root,
+[data-theme='gradient'] {
+  --bg: #ffffff;
+  --bg-grad: none;
+  --bg-dots: none;
+  --surface: rgba(255, 255, 255, 0.78);
+  --surface-2: rgba(255, 255, 255, 0.92);
+  --surface-hi: #ffffff;
+  --border: rgba(20, 20, 30, 0.08);
+  --border-hi: rgba(20, 20, 30, 0.14);
+  --fg: #15151a;
+  --fg-muted: #6b6b75;
+  --fg-dim: #9a9aa4;
+  --accent: #4f46e5;
+  --accent-fg: #ffffff;
+  --accent-soft: #e0e2fb;
+  --shadow-sm: 0 1px 2px rgba(20, 20, 30, 0.04), 0 1px 0 rgba(255, 255, 255, 0.6) inset;
+  --shadow-md:
+    0 2px 4px rgba(20, 20, 30, 0.04), 0 8px 24px rgba(20, 20, 30, 0.06),
+    0 1px 0 rgba(255, 255, 255, 0.7) inset;
+  --shadow-lg: 0 12px 40px rgba(20, 20, 30, 0.1), 0 1px 0 rgba(255, 255, 255, 0.8) inset;
+  --status-success: #0a8a4e;
+  --status-running: #2c5cf0;
+  --status-failed: #c83b3b;
+  --status-warning: #c07a00;
+  --status-pending: #8a8a95;
+}
+
+/* ─── LIGHT theme ─── */
+[data-theme='light'] {
+  --bg: #ffffff;
+  --bg-grad: none;
+  --bg-dots: none;
+  --surface: #ffffff;
+  --surface-2: #ffffff;
+  --surface-hi: #ffffff;
+  --border: #eceae6;
+  --border-hi: #d9d6d0;
+  --fg: #14141a;
+  --fg-muted: #646470;
+  --fg-dim: #9797a0;
+  --accent: #4f46e5;
+  --accent-fg: #ffffff;
+  --accent-soft: #ecedfb;
+  --shadow-sm: 0 1px 0 rgba(20, 20, 30, 0.03);
+  --shadow-md: 0 1px 0 rgba(20, 20, 30, 0.04);
+  --shadow-lg: 0 8px 28px rgba(20, 20, 30, 0.08);
+}
+
+/* ─── DARK theme ─── */
+[data-theme='dark'] {
+  --bg: #0c0d10;
+  --bg-grad:
+    radial-gradient(1200px 700px at 0% 100%, rgba(79, 70, 229, 0.08) 0%, transparent 60%),
+    radial-gradient(900px 600px at 100% 0%, rgba(90, 190, 255, 0.05) 0%, transparent 60%);
+  --bg-dots: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.05) 1px, transparent 0);
+  --surface: rgba(22, 24, 30, 0.72);
+  --surface-2: rgba(22, 24, 30, 0.92);
+  --surface-hi: #181a21;
+  --border: rgba(255, 255, 255, 0.07);
+  --border-hi: rgba(255, 255, 255, 0.14);
+  --fg: #e8e8ed;
+  --fg-muted: #9a9aa4;
+  --fg-dim: #62626c;
+  --accent: #8b82ff;
+  --accent-fg: #0c0d10;
+  --accent-soft: rgba(139, 130, 255, 0.14);
+  --shadow-sm: 0 1px 0 rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.5);
+  --status-success: #3fcf8e;
+  --status-running: #7ba1ff;
+  --status-failed: #ff6b6b;
+  --status-warning: #ffb648;
+  --status-pending: #7a7a85;
+}

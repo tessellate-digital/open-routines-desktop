@@ -1,0 +1,232 @@
+/* ─── Buttons ─── */
+@layer components {
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: var(--r-md);
+    border: 1px solid var(--border-hi);
+    background: var(--surface-hi);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--dur) var(--ease);
+    box-shadow: var(--shadow-sm);
+    text-decoration: none;
+  }
+  .btn:hover {
+    background: var(--surface-2);
+    border-color: var(--fg-dim);
+  }
+  .btn:disabled {
+    opacity: 0.45;
+    pointer-events: none;
+  }
+  .btn svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .btn-primary,
+  .btn.primary {
+    background: var(--accent);
+    color: var(--accent-fg);
+    border-color: transparent;
+    box-shadow:
+      0 1px 2px rgba(79, 70, 229, 0.3),
+      0 4px 10px rgba(79, 70, 229, 0.2);
+  }
+  .btn-primary:hover,
+  .btn.primary:hover {
+    filter: brightness(1.05);
+  }
+  .btn-primary:disabled,
+  .btn.primary:disabled {
+    opacity: 0.45;
+    pointer-events: none;
+  }
+
+  .btn-secondary {
+    background: var(--surface-hi);
+    border: 1px solid var(--border-hi);
+  }
+  .btn-secondary:hover {
+    background: var(--surface-2);
+    border-color: var(--fg-dim);
+  }
+
+  .btn.ghost,
+  .btn-ghost {
+    background: transparent;
+    border-color: transparent;
+    color: var(--fg-muted);
+    box-shadow: none;
+  }
+  .btn.ghost:hover,
+  .btn-ghost:hover {
+    background: var(--border);
+    color: var(--fg);
+  }
+
+  .btn.sm {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+
+  .btn-danger,
+  .btn.danger {
+    color: var(--status-failed);
+    border-color: var(--border-hi);
+    background: transparent;
+  }
+  .btn-danger:hover,
+  .btn.danger:hover {
+    background: rgba(200, 59, 59, 0.08);
+    border-color: var(--status-failed);
+  }
+
+  .btn.run {
+    color: #15803d;
+    border-color: #bbf7d0;
+    background: #f0fdf4;
+  }
+  .btn.run:hover {
+    background: #dcfce7;
+    border-color: #86efac;
+  }
+  [data-theme='dark'] .btn.run {
+    color: #4ade80;
+    border-color: rgba(74, 222, 128, 0.25);
+    background: rgba(74, 222, 128, 0.08);
+  }
+  [data-theme='dark'] .btn.run:hover {
+    background: rgba(74, 222, 128, 0.14);
+  }
+
+  .btn.delete-rt {
+    color: #be123c;
+    border-color: #fecdd3;
+    background: #fff1f2;
+  }
+  .btn.delete-rt:hover {
+    background: #ffe4e6;
+    border-color: #fda4af;
+  }
+  [data-theme='dark'] .btn.delete-rt {
+    color: #fb7185;
+    border-color: rgba(251, 113, 133, 0.25);
+    background: rgba(251, 113, 133, 0.08);
+  }
+  [data-theme='dark'] .btn.delete-rt:hover {
+    background: rgba(251, 113, 133, 0.14);
+  }
+
+  /* ─── Form inputs ─── */
+  .input {
+    @apply font-sans text-body py-[9px] px-3 border border-border-strong rounded-md bg-surface-hi text-foreground w-full outline-none focus:border-accent focus:shadow-[0_0_0_3px_var(--accent-soft)] placeholder:text-fg-dim;
+    transition:
+      border-color var(--duration-default) var(--ease-default),
+      box-shadow var(--duration-default) var(--ease-default);
+  }
+  .textarea {
+    @apply font-mono text-caption py-[9px] px-3 border border-border-strong rounded-md bg-surface-hi text-foreground w-full outline-none focus:border-accent focus:shadow-[0_0_0_3px_var(--accent-soft)] placeholder:text-fg-dim min-h-[160px] resize-y leading-loose;
+    transition:
+      border-color var(--duration-default) var(--ease-default),
+      box-shadow var(--duration-default) var(--ease-default);
+  }
+
+  /* ─── Hints / labels ─── */
+  .hint {
+    @apply font-mono text-xs text-fg-muted leading-body;
+  }
+  .section-h {
+    @apply font-mono text-micro uppercase tracking-caps text-muted-foreground m-0 mb-2.5 font-semibold;
+  }
+
+  /* ─── Code chips ─── */
+  .code-chip {
+    @apply font-mono text-code py-0.5 px-1.5 bg-muted rounded text-muted-foreground;
+  }
+
+  /* ─── Form rows ─── */
+  .form-row {
+    @apply grid gap-1.5 mb-[18px];
+  }
+  .form-row label {
+    @apply text-caption font-medium text-foreground;
+  }
+  .form-row .hint {
+    @apply font-mono text-micro text-fg-dim;
+  }
+
+  /* ─── Cards ─── */
+  .card {
+    @apply bg-surface-2 border border-border rounded-lg shadow-md overflow-hidden;
+  }
+
+  /* ─── Pills / chip toggles ─── */
+  .pills {
+    @apply flex gap-1 p-[3px] bg-surface border border-muted rounded-full;
+  }
+  .pill {
+    @apply py-[5px] px-3.5 rounded-full text-caption text-muted-foreground cursor-pointer font-sans border border-transparent bg-transparent hover:text-foreground;
+    transition: all var(--duration-default) var(--ease-default);
+  }
+  .pill.active {
+    @apply bg-accent-soft text-accent font-medium;
+  }
+
+  .chip-row {
+    @apply flex flex-wrap gap-1;
+  }
+  .chip {
+    @apply py-1 px-2.5 rounded-full text-caption-sm text-muted-foreground cursor-pointer font-sans border border-border bg-transparent hover:text-foreground hover:border-border-strong;
+    transition: all var(--duration-default) var(--ease-default);
+  }
+  .chip.active {
+    @apply bg-accent-soft text-accent border-accent/30 font-medium;
+  }
+
+  /* ─── Dividers ─── */
+  .divider {
+    @apply h-px bg-border;
+  }
+
+  /* ─── Page header ─── */
+  .page-head {
+    @apply flex items-end justify-between gap-4 mb-[22px];
+  }
+  .page-head .sub {
+    @apply text-muted-foreground text-body-sm font-mono;
+  }
+
+  /* ─── Status badges (inline) ─── */
+  .status {
+    @apply inline-flex items-center gap-1.5 text-caption-sm font-medium;
+  }
+  .status .dot {
+    @apply w-2 h-2 rounded-full bg-current;
+  }
+  .status.success {
+    @apply text-success;
+  }
+}
+
+/* ─── Route transition ─── */
+.route-fade {
+  animation: fadeIn 0.28s var(--ease);
+}
+
+/* ─── Electron drag regions ─── */
+.app-drag {
+  -webkit-app-region: drag;
+}
+.app-drag * {
+  -webkit-app-region: no-drag;
+}
+.app-no-drag {
+  -webkit-app-region: no-drag;
+}

@@ -1,16 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
-import { api } from '../lib/api';
-import { useGlobalSSE } from '../hooks/useSSE';
-import Sidebar from './Sidebar';
-import ContextToolbar from './ContextToolbar';
+import { Sidebar } from './Sidebar';
+import { ContextToolbar } from './ContextToolbar';
 
-export default function Layout() {
+export function Layout() {
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(() => {
     return localStorage.getItem('oc-sidebar-collapsed') === 'true';
   });
-  const [routineCount, setRoutineCount] = useState(0);
 
   const toggle = useCallback(() => {
     setCollapsed((prev) => {
@@ -19,21 +16,6 @@ export default function Layout() {
       return next;
     });
   }, []);
-
-  const fetchCounts = useCallback(async () => {
-    try {
-      const routines = await api.getRoutines();
-      setRoutineCount(routines.length);
-    } catch {
-      // ignore
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchCounts();
-  }, [fetchCounts]);
-
-  useGlobalSSE(fetchCounts);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -60,14 +42,14 @@ export default function Layout() {
   }, [navigate]);
 
   return (
-    <div className="app-shell">
-      <div className="chrome">
-        <Sidebar collapsed={collapsed} onToggle={toggle} routineCount={routineCount} />
-        <div className="chrome-right">
+    <div className="h-screen overflow-hidden relative bg-[radial-gradient(900px_600px_at_0%_100%,rgba(168,85,247,0.18)_0%,transparent_60%),radial-gradient(800px_500px_at_30%_0%,rgba(79,70,229,0.14)_0%,transparent_60%),radial-gradient(600px_400px_at_100%_80%,rgba(236,72,153,0.12)_0%,transparent_60%)] bg-surface">
+      <div className="flex h-full relative z-1">
+        <Sidebar collapsed={collapsed} onToggle={toggle} />
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           <ContextToolbar />
-          <div className="content-card">
-            <div className="scroller">
-              <main className="main-content">
+          <div className="flex-1 bg-canvas border-t border-l border-muted rounded-tl-xl overflow-hidden">
+            <div className="scroller h-full overflow-y-auto">
+              <main className="max-w-[1060px] mx-auto w-full py-8 px-12 pb-20">
                 <Outlet />
               </main>
             </div>

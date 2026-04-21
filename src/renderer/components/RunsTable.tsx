@@ -3,16 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import classNames from 'classnames';
 import type { Run } from '../lib/types';
 import { timeAgo, duration } from '../lib/utils';
+import { DataTable, TableRow, TableCell } from './DataTable';
+import { Card } from './Card';
 
-const statusClassMap: Record<string, string> = {
-  pending: 'pending',
-  running: 'running',
-  success: 'success',
-  failed: 'failed',
-  cancelled: 'cancelled',
-  lost: 'lost',
-  warning: 'warning',
-  answered: 'success',
+const statusColorMap: Record<string, string> = {
+  pending: 'text-pending',
+  running: 'text-running',
+  success: 'text-success',
+  failed: 'text-destructive',
+  cancelled: 'text-warning',
+  lost: 'text-fg-dim',
+  warning: 'text-warning',
+  answered: 'text-success',
 };
 
 const statusLabelMap: Record<string, string> = {
@@ -20,11 +22,17 @@ const statusLabelMap: Record<string, string> = {
 };
 
 export function StatusBadge({ status }: { status: string }) {
-  const cls = statusClassMap[status] ?? 'pending';
+  const color = statusColorMap[status] ?? 'text-pending';
   const label = statusLabelMap[status] ?? status;
+  const isRunning = status === 'running';
   return (
-    <span className={classNames('status', cls)}>
-      <span className="dot" />
+    <span className={classNames('inline-flex items-center gap-1.5 font-mono text-xs', color)}>
+      <span
+        className={classNames(
+          'w-[7px] h-[7px] rounded-full bg-current shadow-[0_0_0_3px_color-mix(in_srgb,currentColor_22%,transparent)]',
+          { 'animate-pulse': isRunning }
+        )}
+      />
       <span>{label}</span>
     </span>
   );
@@ -84,7 +92,7 @@ function LiveCounter({
     [startAt, endAt, format]
   );
 
-  return <span className="mono" ref={refCb} />;
+  return <span className="font-mono text-xs text-muted-foreground" ref={refCb} />;
 }
 
 export function RunsTable({ runs }: { runs: Run[] }) {
@@ -92,67 +100,55 @@ export function RunsTable({ runs }: { runs: Run[] }) {
 
   if (!runs.length) {
     return (
-      <div className="card">
-        <div className="p-12 text-center text-[color:var(--fg-muted)]">No runs yet.</div>
-      </div>
+      <Card>
+        <div className="p-12 text-center text-muted-foreground">No runs yet.</div>
+      </Card>
     );
   }
 
   return (
-    <div className="card">
-      <table className="tbl">
-        <thead>
-          <tr>
-            <th>Routine</th>
-            <th>Trigger</th>
-            <th>Status</th>
-            <th>Duration</th>
-            <th>Started</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {runs.map((r) => {
-            const isActive = r.status === 'pending' || r.status === 'running';
-            // Fall back to created_at so the counter starts immediately even
-            // before the backend sets started_at.
-            const effectiveStart = r.started_at ?? (isActive ? r.created_at : null);
+    <DataTable columns={['Routine', 'Trigger', 'Status', 'Duration', 'Started', '']}>
+      {runs.map((r) => {
+        const isActive = r.status === 'pending' || r.status === 'running';
+        const effectiveStart = r.started_at ?? (isActive ? r.created_at : null);
 
-            return (
-              <tr key={r.id} onClick={() => navigate(`/runs/${r.id}`)}>
-                <td>
-                  <div className="primary-cell">{r.routine_name}</div>
-                </td>
-                <td>
-                  <span className="trig">
-                    <span>{r.trigger_type}</span>
-                  </span>
-                </td>
-                <td>
-                  <StatusBadge status={r.status} />
-                </td>
-                <td>
-                  {isActive && effectiveStart ? (
-                    <LiveCounter startAt={effectiveStart} endAt={r.finished_at} format="duration" />
-                  ) : (
-                    <span className="mono">{duration(r.started_at, r.finished_at)}</span>
-                  )}
-                </td>
-                <td>
-                  {isActive && effectiveStart ? (
-                    <LiveCounter startAt={effectiveStart} endAt={null} format="timeAgo" />
-                  ) : (
-                    <span className="mono">{timeAgo(r.started_at)}</span>
-                  )}
-                </td>
-                <td className="chev">
-                  <ChevronIcon />
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+        return (
+          <TableRow key={r.id} onClick={() => navigate(`/runs/${r.id}`)}>
+            <TableCell>
+              <div className="font-medium text-body text-foreground">{r.routine_name}</div>
+            </TableCell>
+            <TableCell>
+              <span className="inline-flex items-center gap-[5px] font-mono text-xs text-muted-foreground py-0.5 px-2 rounded bg-muted">
+                <span>{r.trigger_type}</span>
+              </span>
+            </TableCell>
+            <TableCell>
+              <StatusBadge status={r.status} />
+            </TableCell>
+            <TableCell>
+              {isActive && effectiveStart ? (
+                <LiveCounter startAt={effectiveStart} endAt={r.finished_at} format="duration" />
+              ) : (
+                <span className="font-mono text-xs text-muted-foreground">
+                  {duration(r.started_at, r.finished_at)}
+                </span>
+              )}
+            </TableCell>
+            <TableCell>
+              {isActive && effectiveStart ? (
+                <LiveCounter startAt={effectiveStart} endAt={null} format="timeAgo" />
+              ) : (
+                <span className="font-mono text-xs text-muted-foreground">
+                  {timeAgo(r.started_at)}
+                </span>
+              )}
+            </TableCell>
+            <TableCell className="text-right text-fg-dim [&_svg]:w-3.5 [&_svg]:h-3.5">
+              <ChevronIcon />
+            </TableCell>
+          </TableRow>
+        );
+      })}
+    </DataTable>
   );
 }

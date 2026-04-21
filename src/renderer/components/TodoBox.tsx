@@ -58,10 +58,10 @@ export function TodoBox({ items }: TodoBoxProps) {
   const pct = Math.round((done / items.length) * 100);
 
   return (
-    <div className="sticky top-[53px] z-[9] mb-5 border border-[var(--border)] rounded-[12px] overflow-hidden bg-[var(--surface-hi)]/90 backdrop-blur-[16px] shadow-[var(--shadow-sm)]">
+    <div className="sticky top-[53px] z-[9] mb-5 border border-border rounded-[12px] overflow-hidden bg-surface-hi/90 backdrop-blur-[16px] shadow-sm">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center gap-3 px-4 py-3 text-left cursor-pointer hover:bg-[var(--surface-2)] transition-colors"
+        className="w-full flex items-center gap-3 px-4 py-3 text-left cursor-pointer hover:bg-secondary transition-colors"
       >
         <svg
           viewBox="0 0 16 16"
@@ -72,34 +72,34 @@ export function TodoBox({ items }: TodoBoxProps) {
           strokeWidth="1.8"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className={classNames('shrink-0 text-[color:var(--fg-dim)] transition-transform', {
+          className={classNames('shrink-0 text-fg-dim transition-transform', {
             'rotate-90': open,
           })}
         >
           <path d="m6 3 5 5-5 5" />
         </svg>
-        <span className="text-[13px] font-medium text-[color:var(--fg)]">Tasks</span>
-        <div className="flex-1 h-[3px] rounded-full bg-[var(--border)] overflow-hidden">
+        <span className="text-body-sm font-medium text-foreground">Tasks</span>
+        <div className="flex-1 h-[3px] rounded-full bg-border overflow-hidden">
           <div
-            className="h-full rounded-full bg-[var(--accent)] transition-all"
+            className="h-full rounded-full bg-accent transition-all"
             style={{ width: `${pct}%` }}
           />
         </div>
-        <span className="text-[11px] font-mono text-[color:var(--fg-dim)] shrink-0">
+        <span className="text-micro font-mono text-fg-dim shrink-0">
           {done}/{items.length}
         </span>
       </button>
 
       {open && (
-        <ul className="list-none m-0 py-1.5 px-0 border-t border-[var(--border)]">
+        <ul className="list-none m-0 py-1.5 px-0 border-t border-border">
           {items.map((item, i) => (
             <li
               key={i}
               className={classNames(
-                'flex items-start gap-2.5 py-[5px] px-4 text-[12.5px] leading-[1.45]',
+                'flex items-start gap-2.5 py-[5px] px-4 text-caption leading-snug',
                 {
-                  'text-[color:var(--fg)]': item.status === 'in_progress',
-                  'text-[color:var(--fg-muted)]': item.status !== 'in_progress',
+                  'text-foreground': item.status === 'in_progress',
+                  'text-muted-foreground': item.status !== 'in_progress',
                 }
               )}
             >

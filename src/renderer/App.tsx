@@ -1,11 +1,12 @@
 import { HashRouter, Routes, Route } from 'react-router-dom';
-import Layout from './components/Layout';
+import { Layout } from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import RoutinesList from './pages/RoutinesList';
 import RoutineDetail from './pages/RoutineDetail';
 import RoutineForm from './pages/RoutineForm';
 import RunsList from './pages/RunsList';
 import RunDetail from './pages/RunDetail';
+import RoutineRuns from './pages/RoutineRuns';
 import Settings from './pages/Settings';
 import DevPage from './pages/DevPage';
 import { HostMountsProvider } from './contexts/HostMountsContext';
@@ -23,6 +24,7 @@ export default function App() {
               <Route path="/routines/new" element={<RoutineForm />} />
               <Route path="/routines/:id" element={<RoutineDetail />} />
               <Route path="/routines/:id/edit" element={<RoutineForm />} />
+              <Route path="/routines/:id/runs" element={<RoutineRuns />} />
               <Route path="/runs" element={<RunsList />} />
               <Route path="/runs/:id" element={<RunDetail />} />
               <Route path="/settings" element={<Settings />} />
