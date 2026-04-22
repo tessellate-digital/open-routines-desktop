@@ -41,6 +41,11 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
           security list-keychains -d user -s $KEYCHAIN_PATH login.keychain-db
 
+      - name: Set version from release tag
+        run: |
+          VERSION="${{ github.event.release.tag_name }}"
+          npm version "${VERSION#v}" --no-git-tag-version
+
       - name: Build, sign & notarize
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
