@@ -151,6 +151,20 @@
     @apply font-mono text-code py-0.5 px-1.5 bg-muted rounded text-muted-foreground;
   }
 
+  /* ─── Mention chips ─── */
+  .mention-chip {
+    @apply inline-flex items-center rounded px-1.5;
+    @apply text-[13px] font-semibold leading-relaxed;
+    @apply select-all cursor-default;
+    background: linear-gradient(90deg, #f5a623, #f06292, #ba68c8, #7986cb, #4dd0e1, #f5a623);
+    background-size: 300% 300%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    animation: mention-gradient-shift 4s ease infinite;
+  }
+
   /* ─── Form rows ─── */
   .form-row {
     @apply grid gap-1.5 mb-[18px];
@@ -212,6 +226,19 @@
   }
   .status.success {
     @apply text-success;
+  }
+}
+
+/* ─── Mention chip gradient animation ─── */
+@keyframes mention-gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
   }
 }
 

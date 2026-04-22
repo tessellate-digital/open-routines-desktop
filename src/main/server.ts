@@ -5,6 +5,7 @@ import { streamSSE } from 'hono/streaming';
 import * as path from 'path';
 import * as fs from 'fs';
 import { config } from './config';
+import { regenerateOpencodeConfig } from './opencodeConfig';
 import { initDb, db } from '../backend/database';
 import { schedulerService } from '../backend/services/scheduler';
 import { eventBus } from '../backend/services/eventBus';
@@ -184,6 +185,7 @@ export async function startServer(): Promise<number> {
   fs.mkdirSync(config.workspacesDir, { recursive: true });
 
   initDb();
+  regenerateOpencodeConfig();
   const staleCount = runsRepository.markStaleAsLost();
   if (staleCount > 0) {
     logger.info(`Marked ${staleCount} stale run(s) as lost`);

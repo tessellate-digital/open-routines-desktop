@@ -1,5 +1,15 @@
 // API response types (matches backend JSON responses)
 
+export type PermissionLevel = 'allow' | 'ask' | 'deny';
+
+export interface RoutinePermissions {
+  edit?: PermissionLevel;
+  bash?: PermissionLevel | Record<string, PermissionLevel>;
+  webfetch?: PermissionLevel;
+  doom_loop?: PermissionLevel;
+  external_directory?: PermissionLevel;
+}
+
 export interface Routine {
   id: string;
   name: string;
@@ -12,6 +22,8 @@ export interface Routine {
   env_vars: Record<string, string>;
   enabled: boolean;
   run_mode: 'background' | 'foreground';
+  permissions: RoutinePermissions;
+  temperature: number | null;
   created_at: string;
   updated_at: string;
   triggers_count: number;

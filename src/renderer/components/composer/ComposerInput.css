@@ -16,11 +16,3 @@
 .composer-editable[aria-disabled='true'] {
   @apply opacity-50 pointer-events-none;
 }
-
-.mention-chip {
-  @apply inline-flex items-center rounded px-1.5;
-  @apply text-[13px] font-medium leading-relaxed;
-  @apply bg-[color-mix(in_srgb,var(--accent)_12%,transparent)];
-  @apply text-[var(--accent)];
-  @apply select-all cursor-default;
-}

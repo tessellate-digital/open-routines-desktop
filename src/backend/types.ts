@@ -14,6 +14,8 @@ export interface RoutineRow {
   env_vars: string;
   enabled: number;
   run_mode: string;
+  permissions: string;
+  temperature: number | null;
   last_run_status: string | null;
   triggers_count: number;
   created_at: string;
@@ -59,6 +61,18 @@ export interface SettingRow {
 
 // --- Zod schemas ---
 
+const PermissionLevelSchema = z.enum(['allow', 'ask', 'deny']);
+
+const RoutinePermissionsSchema = z
+  .object({
+    edit: PermissionLevelSchema.optional(),
+    bash: z.union([PermissionLevelSchema, z.record(PermissionLevelSchema)]).optional(),
+    webfetch: PermissionLevelSchema.optional(),
+    doom_loop: PermissionLevelSchema.optional(),
+    external_directory: PermissionLevelSchema.optional(),
+  })
+  .default({});
+
 export const RoutineCreateSchema = z.object({
   name: z.string().min(1),
   description: z.string().default(''),
@@ -70,6 +84,8 @@ export const RoutineCreateSchema = z.object({
   env_vars: z.record(z.string()).default({}),
   enabled: z.boolean().default(true),
   run_mode: z.enum(['background', 'foreground']).default('background'),
+  permissions: RoutinePermissionsSchema,
+  temperature: z.number().min(0).max(1).nullable().default(null),
 });
 
 export const RoutineUpdateSchema = z.object({
@@ -83,6 +99,8 @@ export const RoutineUpdateSchema = z.object({
   env_vars: z.record(z.string()).optional(),
   enabled: z.boolean().optional(),
   run_mode: z.enum(['background', 'foreground']).optional(),
+  permissions: RoutinePermissionsSchema.optional(),
+  temperature: z.number().min(0).max(1).nullable().optional(),
 });
 
 export const TriggerCreateSchema = z.object({

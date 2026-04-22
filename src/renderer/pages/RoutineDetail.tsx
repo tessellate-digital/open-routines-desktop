@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import classNames from 'classnames';
 import { api } from '../lib/api';
 import { useGlobalSSE } from '../hooks/useSSE';
 import { RunsTable, StatusBadge } from '../components/RunsTable';
@@ -7,7 +8,7 @@ import { BackLink } from '../components/BackLink';
 import { PageHeader } from '../components/PageHeader';
 import { SectionLabel } from '../components/SectionLabel';
 import { EventChip } from '../components/EventChip';
-import type { Routine, Trigger, Run } from '../lib/types';
+import type { Routine, Trigger, Run, RoutinePermissions, PermissionLevel } from '../lib/types';
 import { useHostMounts } from '../contexts/HostMountsContext';
 import { usePageContext } from '../contexts/PageContext';
 
@@ -126,7 +127,7 @@ export default function RoutineDetail() {
       const [r, t, ru] = await Promise.all([
         api.getRoutine(id),
         api.getTriggers(id),
-        api.getRuns({ routine_id: id, limit: 20 }),
+        api.getRuns({ routine_id: id, limit: 10 }),
       ]);
       setRoutine(r);
       setPageTitle(r.name);
@@ -280,12 +281,6 @@ export default function RoutineDetail() {
             );
           })()}
           <div className={detailCardClasses}>
-            <div className={detailLabelClasses}>Agent</div>
-            <div className="font-mono text-body-sm font-medium text-foreground">
-              {routine.agent}
-            </div>
-          </div>
-          <div className={detailCardClasses}>
             <div className={detailLabelClasses}>Run mode</div>
             <div className="text-sm font-medium text-foreground">
               {routine.run_mode === 'foreground' ? 'Foreground only' : 'Background'}
@@ -308,6 +303,58 @@ export default function RoutineDetail() {
             </div>
           )}
         </div>
+
+        {/* Permissions */}
+        {(() => {
+          const perms = (routine.permissions ?? {}) as RoutinePermissions;
+          const rows: { key: keyof RoutinePermissions; label: string }[] = [
+            { key: 'edit', label: 'File editing' },
+            { key: 'bash', label: 'Shell commands' },
+            { key: 'webfetch', label: 'Web fetch' },
+            { key: 'doom_loop', label: 'Loop prevention' },
+          ];
+          const chipStyle: Record<PermissionLevel, string> = {
+            allow: 'bg-success/15 text-success',
+            ask: 'bg-accent/15 text-accent',
+            deny: 'bg-destructive/15 text-destructive',
+          };
+          const dotStyle: Record<PermissionLevel, string> = {
+            allow: 'bg-success',
+            ask: 'bg-accent',
+            deny: 'bg-destructive',
+          };
+          return (
+            <div>
+              <SectionLabel>Permissions</SectionLabel>
+              <div className={trigCardClasses}>
+                <div className="px-3.5 py-2.5 flex gap-2 flex-wrap items-center">
+                  {rows.map(({ key, label }) => {
+                    const raw = perms[key];
+                    const level: PermissionLevel =
+                      typeof raw === 'string' ? (raw as PermissionLevel) : 'ask';
+                    return (
+                      <span
+                        key={key}
+                        className={classNames(
+                          'inline-flex items-center gap-1.5 font-sans text-xs font-medium py-1 px-2.5 rounded-md',
+                          chipStyle[level]
+                        )}
+                      >
+                        <span
+                          className={classNames(
+                            'w-1.5 h-1.5 rounded-full flex-shrink-0',
+                            dotStyle[level]
+                          )}
+                        />
+                        {label}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Triggers */}
         <div className="mt-4">
