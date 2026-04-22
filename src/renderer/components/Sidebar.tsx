@@ -1,24 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { NavLink, Link, useNavigate } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import classNames from 'classnames';
 import { api } from '../lib/api';
 import { useGlobalSSE } from '../hooks/useSSE';
 
 import type { Run } from '../lib/types';
-
-function formatElapsed(startedAt: string | null): string {
-  if (!startedAt) {
-    return '0s';
-  }
-  const ms = Date.now() - new Date(startedAt).getTime();
-  const s = Math.floor(ms / 1000);
-  if (s < 60) {
-    return `${s}s`;
-  }
-  const m = Math.floor(s / 60);
-  const rs = s % 60;
-  return `${m}m ${rs.toString().padStart(2, '0')}s`;
-}
 
 interface SidebarProps {
   collapsed: boolean;
@@ -26,9 +12,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ collapsed }: SidebarProps) {
-  const navigate = useNavigate();
   const [activeRuns, setActiveRuns] = useState<Run[]>([]);
-  const [, setTick] = useState(0);
 
   const fetchActive = useCallback(async () => {
     try {
@@ -44,14 +28,6 @@ export function Sidebar({ collapsed }: SidebarProps) {
   }, [fetchActive]);
 
   useGlobalSSE(fetchActive);
-
-  useEffect(() => {
-    if (activeRuns.length === 0) {
-      return;
-    }
-    const id = setInterval(() => setTick((t) => t + 1), 1000);
-    return () => clearInterval(id);
-  }, [activeRuns.length]);
 
   return (
     <aside
@@ -227,22 +203,6 @@ export function Sidebar({ collapsed }: SidebarProps) {
           </div>
         )}
       </NavLink>
-
-      {/* Active runs */}
-      {activeRuns.length > 0 && (
-        <div className="w-full flex flex-col items-center gap-1">
-          {activeRuns.map((run) => (
-            <div
-              key={run.id}
-              className="w-[52px] h-[52px] rounded-[14px] bg-transparent hover:bg-muted grid place-items-center cursor-pointer transition-colors duration-default ease-default relative"
-              onClick={() => navigate(`/runs/${run.id}`)}
-              title={`${run.routine_name} — ${formatElapsed(run.started_at)}`}
-            >
-              <span className="w-2.5 h-2.5 rounded-full bg-running shadow-[0_0_0_3px_rgba(44,92,240,0.2)] animate-pulse" />
-            </div>
-          ))}
-        </div>
-      )}
     </aside>
   );
 }

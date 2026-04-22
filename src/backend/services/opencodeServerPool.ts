@@ -115,6 +115,7 @@ function spawnAndWaitForServer(
       PATH: [env.PATH ?? '', opencodeBinDir, '/usr/local/bin', '/opt/homebrew/bin']
         .filter(Boolean)
         .join(':'),
+      OPENCODE_CONFIG: appConfig.opencodeConfigPath,
     };
 
     const proc = spawn(
