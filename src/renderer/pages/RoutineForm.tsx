@@ -3,20 +3,16 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import classNames from 'classnames';
 import { api } from '../lib/api';
 import { PROVIDERS } from '../lib/providers';
-import type { Trigger } from '../lib/types';
+import type { Trigger, PermissionLevel, RoutinePermissions } from '../lib/types';
 import { CronPicker } from '../components/CronPicker';
 import { FolderPicker } from '../components/FolderPicker';
 import { FileTypeFilter, type FileFilterValue } from '../components/FileTypeFilter';
 import { SelectDropdown, type SelectOption } from '../components/SelectDropdown';
 import { BackLink } from '../components/BackLink';
 import { PageHeader } from '../components/PageHeader';
+import { PermissionRadio } from '../components/PermissionRadio';
 import { useHostMounts } from '../contexts/HostMountsContext';
 import { usePageContext } from '../contexts/PageContext';
-
-const AGENT_OPTIONS: SelectOption[] = [
-  { value: 'build', label: 'Build' },
-  { value: 'plan', label: 'Plan' },
-];
 
 const FS_EVENTS = [
   { value: 'add', label: 'File created' },
@@ -260,8 +256,10 @@ function TriggerCard({
                       type="button"
                       key={value}
                       className={classNames(
-                        'py-1.5 px-3 rounded-md border border-border-strong bg-surface-hi text-caption text-muted-foreground cursor-pointer font-sans inline-flex items-center gap-1.5 transition-all duration-default ease-default hover:text-foreground hover:border-fg-dim',
-                        { 'bg-accent-soft text-accent border-accent': draft.events.includes(value) }
+                        'py-1.5 px-3 rounded-md border text-caption cursor-pointer font-sans inline-flex items-center gap-1.5 transition-all duration-default ease-default',
+                        draft.events.includes(value)
+                          ? 'bg-accent-soft text-accent border-accent'
+                          : 'bg-surface-hi border-border-strong text-muted-foreground hover:text-foreground hover:border-fg-dim'
                       )}
                       onClick={() =>
                         onChange({
@@ -306,10 +304,16 @@ export default function RoutineForm() {
     model: 'opencode/minimax-m2.5-free',
     repository: '',
     branch: 'main',
-    agent: 'build',
     env_vars: '{}',
     enabled: true,
     run_mode: 'foreground' as 'background' | 'foreground',
+    temperature: null as number | null,
+    permissions: {
+      edit: 'allow' as PermissionLevel,
+      bash: 'allow' as PermissionLevel,
+      webfetch: 'allow' as PermissionLevel,
+      doom_loop: 'ask' as PermissionLevel,
+    } as RoutinePermissions,
   });
   const [triggerDrafts, setTriggerDrafts] = useState<TriggerDraft[]>([]);
   const [collapsedTriggers, setCollapsedTriggers] = useState<Set<number>>(new Set());
@@ -347,10 +351,17 @@ export default function RoutineForm() {
             model: routine.model,
             repository: routine.repository,
             branch: routine.branch,
-            agent: routine.agent,
             env_vars: JSON.stringify(routine.env_vars, null, 2),
             enabled: routine.enabled,
             run_mode: routine.run_mode,
+            temperature: routine.temperature,
+            permissions: {
+              edit: 'allow',
+              bash: 'allow',
+              webfetch: 'allow',
+              doom_loop: 'ask',
+              ...(routine.permissions as RoutinePermissions),
+            },
           });
         }
         if (triggers && triggers.length > 0) {
@@ -388,10 +399,11 @@ export default function RoutineForm() {
       model: form.model,
       repository: '',
       branch: 'main',
-      agent: form.agent,
       env_vars: envVars,
       enabled: form.enabled,
       run_mode: form.run_mode,
+      permissions: form.permissions,
+      temperature: form.temperature,
     };
     try {
       const res = isEdit ? await api.updateRoutine(id!, data) : await api.createRoutine(data);
@@ -570,14 +582,68 @@ export default function RoutineForm() {
           </div>
         </div>
 
+        {/* Temperature */}
         <div className="form-row">
-          <label>Agent</label>
-          <SelectDropdown
-            value={form.agent}
-            onChange={(v) => setForm((f) => ({ ...f, agent: v }))}
-            options={AGENT_OPTIONS}
-            placeholder="Select an agent…"
-          />
+          <label>Temperature</label>
+          <div className="hint">
+            Controls randomness (0.0 = deterministic, 1.0 = creative). Leave empty to use the model
+            default.
+          </div>
+          <div className="flex items-center gap-3">
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.1"
+              value={form.temperature ?? 0.7}
+              disabled={form.temperature === null}
+              onChange={(e) => setForm((f) => ({ ...f, temperature: parseFloat(e.target.value) }))}
+              className="flex-1 accent-accent"
+            />
+            <span className="font-mono text-body-sm w-8 text-right">
+              {form.temperature !== null ? form.temperature.toFixed(1) : '—'}
+            </span>
+            <label className="flex items-center gap-1.5 text-body-sm cursor-pointer whitespace-nowrap">
+              <input
+                type="checkbox"
+                checked={form.temperature === null}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, temperature: e.target.checked ? null : 0.7 }))
+                }
+              />
+              Use default
+            </label>
+          </div>
+        </div>
+
+        {/* Permissions */}
+        <div>
+          <label className="block mb-3">Permissions</label>
+          {(
+            [
+              { key: 'edit', label: 'File editing' },
+              { key: 'bash', label: 'Shell commands' },
+              { key: 'webfetch', label: 'Web fetch' },
+              { key: 'doom_loop', label: 'Loop prevention' },
+            ] as { key: keyof RoutinePermissions; label: string }[]
+          ).map(({ key, label }) => (
+            <div key={key} className="flex items-center justify-between py-1.5">
+              <span className="text-body-sm">{label}</span>
+              <PermissionRadio
+                value={
+                  typeof form.permissions[key] === 'string'
+                    ? (form.permissions[key] as PermissionLevel)
+                    : 'allow'
+                }
+                onChange={(level) =>
+                  setForm((f) => ({
+                    ...f,
+                    permissions: { ...f.permissions, [key]: level },
+                  }))
+                }
+              />
+            </div>
+          ))}
         </div>
 
         {/* Triggers */}

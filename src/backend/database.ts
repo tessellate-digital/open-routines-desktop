@@ -56,12 +56,18 @@ export function initDb(): void {
     );
   `);
 
-  // Migration: add run_mode column if it doesn't exist yet
+  // Migration: add new columns if they don't exist yet
   const routineColumns = (
     db.prepare('PRAGMA table_info(routines)').all() as { name: string }[]
   ).map((c) => c.name);
   if (!routineColumns.includes('run_mode')) {
     db.exec("ALTER TABLE routines ADD COLUMN run_mode TEXT NOT NULL DEFAULT 'background'");
+  }
+  if (!routineColumns.includes('permissions')) {
+    db.exec("ALTER TABLE routines ADD COLUMN permissions TEXT NOT NULL DEFAULT '{}'");
+  }
+  if (!routineColumns.includes('temperature')) {
+    db.exec('ALTER TABLE routines ADD COLUMN temperature REAL DEFAULT NULL');
   }
   // Migration: denormalize stats onto routines table
   if (!routineColumns.includes('last_run_status')) {

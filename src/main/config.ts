@@ -12,12 +12,12 @@ const home = app.getPath('home');
 // Write opencode config next to the bundled binary so routines run autonomously.
 // Passed to `opencode serve` via OPENCODE_CONFIG env var — never touches the user's
 // own ~/.config/opencode.
+// Agent definitions are populated later by regenerateOpencodeConfig() once the DB is ready.
 const opencodeConfigPath = path.join(userData, 'opencode-bin', 'opencode.json');
 fs.mkdirSync(path.dirname(opencodeConfigPath), { recursive: true });
 fs.writeFileSync(
   opencodeConfigPath,
-  JSON.stringify({ $schema: 'https://opencode.ai/config.json', permission: 'allow' }, null, 2) +
-    '\n'
+  JSON.stringify({ $schema: 'https://opencode.ai/config.json', agent: {} }, null, 2) + '\n'
 );
 
 export const config = {

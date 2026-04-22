@@ -36,6 +36,7 @@ import { db } from '../database';
 import * as runStreamStore from './runStreamStore';
 import type { StreamEvent } from './runStreamStore';
 import { logger } from '../util/logger';
+import { showPermissionDialog } from './permissionBridge';
 
 // ─── Internal types ───────────────────────────────────────────────────────────
 
@@ -84,6 +85,12 @@ const sessionToClient = new Map<string, unknown>();
  * Used by answerQuestion() to route the reply to the correct server.
  */
 const questionToBaseUrl = new Map<string, string>();
+
+/**
+ * Tracks permission IDs for which a dialog has already been shown, so that
+ * subsequent `permission.updated` events for the same permission don't re-prompt.
+ */
+const handledPermissionIds = new Set<string>();
 
 /**
  * Tracks whether a session.error event was seen for a given sessionId.
@@ -342,6 +349,54 @@ async function runRelayLoop(client: unknown, relay: ServerRelay): Promise<void> 
           break;
         }
 
+        case 'permission.updated': {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const props = payload.properties as any;
+          const permId = props?.id as string | undefined;
+          const sid = props?.sessionID as string | undefined;
+
+          if (!permId || !sid) {
+            break;
+          }
+
+          // Only prompt once per permission ID (permission.updated may fire multiple times)
+          if (handledPermissionIds.has(permId)) {
+            break;
+          }
+
+          const subscriber = relay.subscribers.get(sid);
+          if (!subscriber) {
+            break;
+          }
+
+          const permTitle = (props?.title ?? '') as string;
+          const rawPattern = props?.pattern;
+          const permPattern = Array.isArray(rawPattern)
+            ? (rawPattern as string[]).join(', ')
+            : ((rawPattern ?? '') as string);
+          const permType = (props?.type ?? 'bash') as string;
+          const baseUrl = subscriber.baseUrl;
+
+          handledPermissionIds.add(permId);
+
+          // Fire-and-forget: show native dialog without blocking the relay loop
+          showPermissionDialog({
+            title: permTitle,
+            detail: permPattern,
+            permissionType: permType,
+          })
+            .then((response) => {
+              return respondToPermission(baseUrl, sid, permId, response);
+            })
+            .catch((err) => {
+              logger.error('[relay] permission.updated handler error:', err);
+              handledPermissionIds.delete(permId);
+            });
+
+          // Permission events are NOT pushed to the run stream
+          break;
+        }
+
         case 'question.asked': {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const props = payload.properties as any;
@@ -397,6 +452,25 @@ async function runRelayLoop(client: unknown, relay: ServerRelay): Promise<void> 
     relay.generator = null;
     relay.loopActive = false;
     logger.debug('[relay] Relay loop exited');
+  }
+}
+
+// ─── Permission response helper ───────────────────────────────────────────────
+
+async function respondToPermission(
+  baseUrl: string,
+  sessionId: string,
+  permissionId: string,
+  response: 'once' | 'always' | 'reject'
+): Promise<void> {
+  const res = await fetch(`${baseUrl}/session/${sessionId}/permissions/${permissionId}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ response }),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    logger.error(`[relay] Permission response failed (${res.status}): ${text}`);
   }
 }
 
@@ -513,6 +587,7 @@ export function closeServerRelay(client: unknown): void {
     sessionErrorFlags.delete(sessionId);
   }
   relay.subscribers.clear();
+  // No need to clear handledPermissionIds — IDs are globally unique and won't conflict
 
   serverRelays.delete(client);
 }

@@ -358,6 +358,11 @@ export default function RunDetail() {
       {/* Chat composer */}
       <div className="flex justify-center mt-3">
         <div className="relative w-full max-w-[700px]">
+          {!showThinking && (
+            <p className="hint text-center mb-2">
+              Type <kbd className="code-chip">@</kbd> to see available actions
+            </p>
+          )}
           {mention.open && (
             <MentionPopover
               groups={mention.filteredGroups}

@@ -11,7 +11,7 @@ export function UserBubble({ text }: { text: string }) {
           ) : (
             <span
               key={i}
-              className="inline-flex items-center rounded px-1.5 text-[13px] font-medium leading-relaxed bg-white/20 mx-0.5"
+              className="inline-flex items-center rounded px-2 py-0.5 text-[12px] font-medium font-mono leading-relaxed bg-white/20 mx-0.5"
               title={seg.rawValue}
             >
               {seg.displayText}

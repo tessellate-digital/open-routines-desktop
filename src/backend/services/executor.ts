@@ -12,7 +12,6 @@ import { config as appConfig } from '../../main/config';
 import * as relay from './opencodeEventRelay';
 import type { RoutineRow, RunRow } from '../types';
 import { runsRepository } from '../repositories/runsRepository';
-import { triggersRepository } from '../repositories/triggersRepository';
 import { logger } from '../util/logger';
 
 const execFileAsync = promisify(execFile);
@@ -244,39 +243,6 @@ export class Executor {
       extraLines.push(`Changed path: ${meta.fs_path}`);
     }
 
-    // Look up trigger config to add constraints (paths, recursion, file filters)
-    const runRow = db.prepare('SELECT trigger_id FROM runs WHERE id = ?').get(runId) as
-      | { trigger_id: string | null }
-      | undefined;
-    if (runRow?.trigger_id) {
-      const trigger = triggersRepository.findById(runRow.trigger_id);
-      if (trigger) {
-        const cfg = JSON.parse(trigger.config) as Record<string, unknown>;
-        if (trigger.type === 'watcher') {
-          const constraints: string[] = [];
-          const paths = Array.isArray(cfg.paths) ? (cfg.paths as string[]) : [];
-          const recursive = cfg.recursive !== false;
-          if (paths.length > 0) {
-            constraints.push(
-              `You MUST only access files within: ${paths.join(', ')}${recursive ? '' : ' (top-level only — do NOT descend into subfolders)'}`
-            );
-          }
-          const ff = cfg.fileFilter as { mode?: string; patterns?: string[] } | undefined;
-          if (ff && ff.mode !== 'none' && Array.isArray(ff.patterns) && ff.patterns.length > 0) {
-            if (ff.mode === 'include') {
-              constraints.push(`You MUST only touch files of type: ${ff.patterns.join(', ')}`);
-            } else if (ff.mode === 'exclude') {
-              constraints.push(`You MUST NOT touch files of type: ${ff.patterns.join(', ')}`);
-            }
-          }
-          if (constraints.length > 0) {
-            extraLines.push('[HARD REQUIREMENTS]');
-            extraLines.push(...constraints);
-          }
-        }
-      }
-    }
-
     const { context, fullPrompt } = this.buildPromptContext(routine, prompt, extraLines);
     meta.prompt_context = context;
     db.prepare('UPDATE runs SET metadata = ? WHERE id = ?').run(JSON.stringify(meta), runId);
@@ -294,22 +260,7 @@ export class Executor {
 
     runStreamStore.openRun(runId);
 
-    // Parse model string; on error, persist and bail out immediately
-    let sdkModel: { providerID: string; modelID: string } | null;
-    try {
-      sdkModel = parseModelString(routine.model ?? '');
-    } catch (err) {
-      db.prepare(
-        `UPDATE runs SET status = 'failed', stderr = ?, exit_code = NULL, finished_at = ? WHERE id = ?`
-      ).run(`${err}`, new Date().toISOString(), runId);
-      eventBus.broadcast('run_finished', {
-        run_id: runId,
-        routine_id: routine.id,
-        status: 'failed',
-      });
-      runStreamStore.close(runId, { status: 'failed', exit_code: null });
-      return;
-    }
+    // No model parsing needed — model is baked into the agent definition in opencode.json
 
     // Prepare workspace
     let workdir: string;
@@ -398,19 +349,12 @@ export class Executor {
         return;
       }
 
-      // Build prompt body
+      // Build prompt body — model, temperature, and permissions are baked into the agent definition
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const promptBody: Record<string, any> = {
         parts: [{ type: 'text', text: fullPrompt }],
+        agent: routine.id,
       };
-
-      if (sdkModel) {
-        promptBody.model = sdkModel;
-      }
-
-      if (routine.agent) {
-        promptBody.agent = routine.agent;
-      }
 
       // Send the prompt — non-blocking; the LLM response arrives via the event relay
       let result = await client.session.prompt({
@@ -464,13 +408,8 @@ export class Executor {
 
         const recoveredBody: Record<string, unknown> = {
           parts: [{ type: 'text', text: recoveredPrompt }],
+          agent: routine.id,
         };
-        if (sdkModel) {
-          recoveredBody.model = sdkModel;
-        }
-        if (routine.agent) {
-          recoveredBody.agent = routine.agent;
-        }
 
         // Re-send the prompt on the new session
         result = await client.session.prompt({

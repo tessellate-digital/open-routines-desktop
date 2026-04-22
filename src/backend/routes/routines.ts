@@ -9,10 +9,18 @@ import { logger } from '../util/logger';
 import type { RoutineRow } from '../types';
 import { runsRepository } from '../repositories/runsRepository';
 import { RoutineCreateSchema, RoutineUpdateSchema, RunTriggerSchema } from '../types';
+import { regenerateOpencodeConfig } from '../../main/opencodeConfig';
+import { invalidateAll } from '../services/opencodeServerPool';
 
 const router = new Hono();
 
 function routineToResponse(r: RoutineRow) {
+  let permissions: Record<string, unknown> = {};
+  try {
+    permissions = JSON.parse(r.permissions || '{}') as Record<string, unknown>;
+  } catch {
+    /* ignore */
+  }
   return {
     id: r.id,
     name: r.name,
@@ -25,6 +33,8 @@ function routineToResponse(r: RoutineRow) {
     env_vars: JSON.parse(r.env_vars) as Record<string, string>,
     enabled: r.enabled === 1,
     run_mode: r.run_mode as 'background' | 'foreground',
+    permissions,
+    temperature: r.temperature,
     created_at: r.created_at,
     updated_at: r.updated_at,
     triggers_count: r.triggers_count,
@@ -38,12 +48,14 @@ router.get('/', (c) => {
   return c.json(rows.map((r) => routineToResponse(r)));
 });
 
-router.post('/', zValidator('json', RoutineCreateSchema), (c) => {
+router.post('/', zValidator('json', RoutineCreateSchema), async (c) => {
   const data = c.req.valid('json');
   const id = randomUUID();
   const row = routinesRepository.create(id, data);
   const response = routineToResponse(row);
   eventBus.broadcast('routine_created', { routine: response });
+  regenerateOpencodeConfig();
+  await invalidateAll();
   return c.json(response, 201);
 });
 
@@ -76,10 +88,12 @@ router.put('/:id', zValidator('json', RoutineUpdateSchema), async (c) => {
     }
   }
 
+  regenerateOpencodeConfig();
+  await invalidateAll();
   return c.json(response);
 });
 
-router.delete('/:id', (c) => {
+router.delete('/:id', async (c) => {
   const id = c.req.param('id');
   const row = routinesRepository.findById(id);
   if (!row) {
@@ -87,6 +101,8 @@ router.delete('/:id', (c) => {
   }
   routinesRepository.delete(id);
   eventBus.broadcast('routine_deleted', { routine_id: id });
+  regenerateOpencodeConfig();
+  await invalidateAll();
   return new Response(null, { status: 204 });
 });
 
