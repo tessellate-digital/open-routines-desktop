@@ -1,0 +1,86 @@
+/* Import the app's theme (includes @import 'tailwindcss') */
+@import '../../renderer/styles/theme.css';
+@import '../../renderer/styles/base.css';
+@import '../../renderer/styles/utilities.css';
+
+/* ─── AppWindow responsive height ─── */
+.app-window-chrome {
+  @media (min-width: 768px) {
+    height: var(--app-height);
+  }
+}
+
+/* ─── Marketing page overrides ─── */
+@layer base {
+  body {
+    overflow-x: hidden;
+  }
+}
+
+@layer components {
+  .serif {
+    font-family: 'Instrument Serif', serif;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+  }
+
+  /* ── Run detail follow-up animations ── */
+  .run-detail-input-wrap {
+    transition:
+      opacity 300ms ease,
+      max-height 300ms ease,
+      margin 300ms ease;
+    max-height: 60px;
+    opacity: 1;
+    overflow: hidden;
+  }
+  .run-detail-input-collapsing {
+    max-height: 0;
+    opacity: 0;
+    margin-bottom: 0 !important;
+  }
+  .run-detail-input-hidden {
+    max-height: 0;
+    opacity: 0;
+    margin-bottom: 0 !important;
+    overflow: hidden;
+  }
+  .run-detail-fade-in {
+    animation: rd-fade-in 400ms ease both;
+  }
+  .run-detail-dot {
+    animation: rd-bounce 1.2s ease-in-out infinite;
+  }
+  .run-detail-dot-1 {
+    animation-delay: 0ms;
+  }
+  .run-detail-dot-2 {
+    animation-delay: 200ms;
+  }
+  .run-detail-dot-3 {
+    animation-delay: 400ms;
+  }
+}
+
+@keyframes rd-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes rd-bounce {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
