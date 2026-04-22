@@ -1,5 +1,3 @@
-import * as fs from 'fs';
-import * as path from 'path';
 import type { ForgeConfig } from '@electron-forge/shared-types';
 import { MakerZIP } from '@electron-forge/maker-zip';
 import { MakerDMG } from '@electron-forge/maker-dmg';
@@ -29,22 +27,6 @@ const config: ForgeConfig = {
           teamId: process.env.APPLE_TEAM_ID,
         },
       }),
-  },
-  hooks: {
-    postPackage: async (_forgeConfig, options) => {
-      // electron-packager ignores the icon option and leaves the default Electron icon
-      // as electron.icns. Electron's native framework reads this file directly during
-      // startup/shutdown, causing a brief dock flash. Overwrite it with our custom icon.
-      for (const outputPath of options.outputPaths) {
-        const dest = path.join(outputPath, 'Open Routines.app', 'Contents', 'Resources', 'electron.icns');
-        const src = path.resolve(__dirname, 'resources', 'icon.icns');
-        try {
-          fs.copyFileSync(src, dest);
-        } catch {
-          // non-fatal
-        }
-      }
-    },
   },
   makers: [new MakerZIP({}, ['darwin', 'linux']), new MakerDMG({})],
   plugins: [
