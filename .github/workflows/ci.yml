@@ -29,4 +29,4 @@ jobs:
         run: npx tsc --noEmit
 
       - name: Test
-        run: npm run test:frontend
+        run: npm run test
