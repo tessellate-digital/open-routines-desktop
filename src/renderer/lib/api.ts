@@ -171,4 +171,12 @@ export const api = {
       method: 'POST',
       body: '{}',
     }),
+
+  // Gmail OAuth
+  gmailAuthorize: () =>
+    request<{ url: string }>('/auth/gmail/authorize', { method: 'POST', body: '{}' }),
+  gmailStatus: () =>
+    request<{ connected: boolean; email?: string }>('/auth/gmail/status'),
+  gmailDisconnect: () =>
+    request<{ ok: boolean }>('/auth/gmail/disconnect', { method: 'POST', body: '{}' }),
 };

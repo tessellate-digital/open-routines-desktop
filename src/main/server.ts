@@ -22,6 +22,8 @@ import runsRouter from '../backend/routes/runs';
 import webhooksRouter from '../backend/routes/webhooks';
 import settingsRouter from '../backend/routes/settings';
 import copilotAuthRouter from '../backend/routes/copilotAuth';
+import gmailAuthRouter from '../backend/routes/gmailAuth';
+import gmailRouter from '../backend/routes/gmail';
 
 const app = new Hono();
 
@@ -35,6 +37,8 @@ app.route('/api/runs', runsRouter);
 app.route('/hooks', webhooksRouter);
 app.route('/api/settings', settingsRouter);
 app.route('/api/auth/github-copilot', copilotAuthRouter);
+app.route('/api/auth/gmail', gmailAuthRouter);
+app.route('/api/gmail', gmailRouter);
 
 // Reset all data
 app.post('/api/reset', (c) => {

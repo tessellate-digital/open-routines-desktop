@@ -433,6 +433,145 @@ function ThemeToggle({
   );
 }
 
+function GmailIntegration({ onSettingsChanged }: { onSettingsChanged: () => void }) {
+  const [phase, setPhase] = useState<'loading' | 'idle' | 'authorizing' | 'connected'>('loading');
+  const [connectedEmail, setConnectedEmail] = useState<string | null>(null);
+  const [error, setError] = useState('');
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const stopPolling = () => {
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+  };
+
+  useEffect(() => () => stopPolling(), []);
+
+  // Check status on mount
+  useEffect(() => {
+    api
+      .gmailStatus()
+      .then((res) => {
+        if (res.connected) {
+          setPhase('connected');
+          setConnectedEmail(res.email || null);
+        } else {
+          setPhase('idle');
+        }
+      })
+      .catch(() => setPhase('idle'));
+  }, []);
+
+  const handleConnect = async () => {
+    setError('');
+    try {
+      const { url } = await api.gmailAuthorize();
+      window.electronAPI?.openExternal(url);
+      setPhase('authorizing');
+
+      // Poll for completion
+      pollRef.current = setInterval(async () => {
+        try {
+          const status = await api.gmailStatus();
+          if (status.connected) {
+            stopPolling();
+            setPhase('connected');
+            setConnectedEmail(status.email || null);
+            onSettingsChanged();
+          }
+        } catch {
+          /* keep polling */
+        }
+      }, 2000);
+
+      // Stop polling after 5 minutes
+      setTimeout(stopPolling, 5 * 60 * 1000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to start authorization');
+      setPhase('idle');
+    }
+  };
+
+  const handleDisconnect = async () => {
+    if (!confirm('Disconnect Gmail?')) return;
+    try {
+      await api.gmailDisconnect();
+      setPhase('idle');
+      setConnectedEmail(null);
+      onSettingsChanged();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to disconnect');
+    }
+  };
+
+  if (phase === 'loading') {
+    return null;
+  }
+
+  // Connected state
+  if (phase === 'connected') {
+    return (
+      <div className="border border-border rounded-md bg-surface-hi overflow-hidden">
+        <div className="flex items-center gap-3 px-4 py-3">
+          <div className="flex-1">
+            <div className="font-semibold text-label">Gmail</div>
+            <div className="font-mono text-code text-fg-dim mt-[2px]">
+              {connectedEmail || 'Connected'}
+            </div>
+          </div>
+          <span className="status success">
+            <span className="dot" />
+            Connected
+          </span>
+          <button onClick={handleDisconnect} className="btn sm delete-rt">
+            Disconnect
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Idle or authorizing
+  return (
+    <div className="border border-border rounded-md bg-surface-hi p-4">
+      <div className="mb-4">
+        <div>
+          <p className="font-semibold text-label">Gmail</p>
+          <p className="text-caption text-muted-foreground mt-[2px]">
+            Connect your Gmail account to let routines read your emails.
+          </p>
+        </div>
+      </div>
+
+      {phase === 'authorizing' ? (
+        <div>
+          <div className="flex items-center gap-2 text-body-sm text-muted-foreground mb-3">
+            <span className="inline-block w-3 h-3 rounded-full border-2 border-accent border-t-transparent animate-[pulse_1s_linear_infinite]" />
+            Waiting for authorization in your browser...
+          </div>
+          <button
+            onClick={() => {
+              stopPolling();
+              setPhase('idle');
+            }}
+            className="btn"
+          >
+            Cancel
+          </button>
+        </div>
+      ) : (
+        <div>
+          {error && <p className="text-body-sm text-destructive mb-3">{error}</p>}
+          <button onClick={handleConnect} className="btn primary">
+            Connect Gmail
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Settings() {
   const navigate = useNavigate();
   const [settings, setSettings] = useState<Setting[]>([]);
@@ -660,6 +799,19 @@ export default function Settings() {
             </div>
           )
         )}
+      </div>
+
+      {/* ── Integrations ── */}
+      <div className="mb-2">
+        <SectionLabel className="mb-4">Integrations</SectionLabel>
+      </div>
+
+      <div className="mb-9">
+        <div className="mb-4">
+          <div className="text-section font-semibold mb-[3px]">Connected services</div>
+          <div className="hint">Connect external services to use in your routines.</div>
+        </div>
+        <GmailIntegration onSettingsChanged={load} />
       </div>
 
       {/* Favourite models */}

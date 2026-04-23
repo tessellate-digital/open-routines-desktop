@@ -29,4 +29,10 @@ export const config = {
   opencodeConfigPath,
   opencodeModel: process.env.OPENCODE_MODEL ?? '',
   port: 0, // OS-assigned
+
+  // Google OAuth credentials for Gmail integration — set via .env or CI secrets
+  gmail: {
+    clientId: process.env.GMAIL_CLIENT_ID ?? '',
+    clientSecret: process.env.GMAIL_CLIENT_SECRET ?? '',
+  },
 };
