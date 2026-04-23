@@ -15,12 +15,11 @@ function getGmailClient() {
   const refreshToken = settingsRepository.findByKey('GMAIL_REFRESH_TOKEN');
   const expiry = settingsRepository.findByKey('GMAIL_TOKEN_EXPIRY');
 
-  if (!refreshToken) return null;
+  if (!refreshToken) {
+    return null;
+  }
 
-  const oauth2Client = new google.auth.OAuth2(
-    config.gmail.clientId,
-    config.gmail.clientSecret
-  );
+  const oauth2Client = new google.auth.OAuth2(config.gmail.clientId, config.gmail.clientSecret);
 
   oauth2Client.setCredentials({
     access_token: accessToken?.value,
@@ -192,14 +191,20 @@ interface MimePart {
 }
 
 function extractBody(payload?: MimePart | null): string {
-  if (!payload) return '';
+  if (!payload) {
+    return '';
+  }
 
   // Try to find text/plain first, then text/html
   const plain = findPart(payload, 'text/plain');
-  if (plain) return decodeBase64Url(plain);
+  if (plain) {
+    return decodeBase64Url(plain);
+  }
 
   const html = findPart(payload, 'text/html');
-  if (html) return decodeBase64Url(html);
+  if (html) {
+    return decodeBase64Url(html);
+  }
 
   return '';
 }
@@ -211,7 +216,9 @@ function findPart(part: MimePart, mimeType: string): string | null {
   if (part.parts) {
     for (const child of part.parts) {
       const found = findPart(child, mimeType);
-      if (found) return found;
+      if (found) {
+        return found;
+      }
     }
   }
   return null;

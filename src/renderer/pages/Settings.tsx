@@ -494,7 +494,9 @@ function GmailIntegration({ onSettingsChanged }: { onSettingsChanged: () => void
   };
 
   const handleDisconnect = async () => {
-    if (!confirm('Disconnect Gmail?')) return;
+    if (!confirm('Disconnect Gmail?')) {
+      return;
+    }
     try {
       await api.gmailDisconnect();
       setPhase('idle');

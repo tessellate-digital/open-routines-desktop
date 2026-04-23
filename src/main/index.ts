@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { app, BrowserWindow, nativeImage } from 'electron';
 import * as path from 'path';
 import { startServer } from './server';
