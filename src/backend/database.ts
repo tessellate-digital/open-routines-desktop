@@ -1,5 +1,6 @@
 import Database from 'better-sqlite3';
 import { config } from '../main/config';
+import { encryptIfSecret } from './services/secureStorage';
 
 export const db = new Database(config.dbPath);
 db.pragma('journal_mode = WAL');
@@ -174,5 +175,27 @@ export function initDb(): void {
         SELECT name FROM routines WHERE routines.id = runs.routine_id
       ) WHERE routine_id IS NOT NULL AND routine_name = ''
     `);
+  }
+
+  // Migration: encrypt existing plaintext secrets with OS secure storage
+  const migrationMarker = db
+    .prepare("SELECT key FROM settings WHERE key = '_secrets_encrypted'")
+    .get();
+  if (!migrationMarker) {
+    const secretRows = db
+      .prepare('SELECT key, value FROM settings WHERE is_secret = 1')
+      .all() as Array<{ key: string; value: string }>;
+    const updateStmt = db.prepare('UPDATE settings SET value = ? WHERE key = ?');
+    for (const row of secretRows) {
+      const encrypted = encryptIfSecret(row.value, true);
+      if (encrypted !== row.value) {
+        updateStmt.run(encrypted, row.key);
+      }
+    }
+    // Mark migration as complete
+    const now = new Date().toISOString();
+    db.prepare(
+      'INSERT OR IGNORE INTO settings (key, value, is_secret, updated_at) VALUES (?, ?, 0, ?)'
+    ).run('_secrets_encrypted', '1', now);
   }
 }

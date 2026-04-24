@@ -12,6 +12,7 @@ import { config as appConfig } from '../../main/config';
 import * as relay from './opencodeEventRelay';
 import type { RoutineRow, RunRow } from '../types';
 import { runsRepository } from '../repositories/runsRepository';
+import { settingsRepository } from '../repositories/settingsRepository';
 import { logger } from '../util/logger';
 
 const execFileAsync = promisify(execFile);
@@ -129,11 +130,8 @@ export class Executor {
   private buildEnv(routine: RoutineRow): NodeJS.ProcessEnv {
     const env: NodeJS.ProcessEnv = { ...process.env };
 
-    // Load global settings
-    const rows = db.prepare('SELECT key, value FROM settings').all() as Array<{
-      key: string;
-      value: string;
-    }>;
+    // Load global settings (decrypted via repository)
+    const rows = settingsRepository.findAll();
     for (const row of rows) {
       env[row.key] = row.value;
     }
