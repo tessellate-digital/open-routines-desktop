@@ -211,7 +211,7 @@ export default function RunDetail() {
         setOrbExiting(false);
       }, 300);
     } catch (e) {
-      alert('Error: ' + (e instanceof Error ? e.message : 'Unknown'));
+      await window.electronAPI?.alert('Error: ' + (e instanceof Error ? e.message : 'Unknown'));
     }
   };
 
@@ -235,7 +235,7 @@ export default function RunDetail() {
       scrollAfterReply.current = true;
       addReplyRun(run_id, prompt, displayPrompt, currentRun.routine_name, currentRun.routine_id);
     } catch (err) {
-      alert('Error: ' + (err instanceof Error ? err.message : 'Unknown'));
+      await window.electronAPI?.alert('Error: ' + (err instanceof Error ? err.message : 'Unknown'));
     } finally {
       setReplying(false);
     }
@@ -252,7 +252,7 @@ export default function RunDetail() {
         await api.answerQuestion(run.id, pendingQuestionId, text);
         setPendingQuestionId(null);
       } catch (err) {
-        alert('Error: ' + (err instanceof Error ? err.message : 'Unknown'));
+        await window.electronAPI?.alert('Error: ' + (err instanceof Error ? err.message : 'Unknown'));
       } finally {
         setReplying(false);
       }
@@ -270,7 +270,7 @@ export default function RunDetail() {
         await api.answerPermission(run.id, permissionId, response);
         updatePermissionResponse(permissionId, response);
       } catch (err) {
-        alert('Error: ' + (err instanceof Error ? err.message : 'Unknown'));
+        await window.electronAPI?.alert('Error: ' + (err instanceof Error ? err.message : 'Unknown'));
       }
     },
     [thread, updatePermissionResponse]

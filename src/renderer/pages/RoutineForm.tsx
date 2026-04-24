@@ -773,7 +773,7 @@ export default function RoutineForm() {
     try {
       envVars = JSON.parse(form.env_vars || '{}');
     } catch {
-      alert('Invalid JSON in env vars');
+      await window.electronAPI?.alert('Invalid JSON in env vars');
       setSubmitting(false);
       return;
     }
@@ -817,7 +817,7 @@ export default function RoutineForm() {
       }
       navigate(`/routines/${routineId}`);
     } catch (err) {
-      alert('Error: ' + (err instanceof Error ? err.message : 'Unknown'));
+      await window.electronAPI?.alert('Error: ' + (err instanceof Error ? err.message : 'Unknown'));
     } finally {
       setSubmitting(false);
     }

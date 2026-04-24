@@ -157,7 +157,7 @@ export default function RoutineDetail() {
     try {
       navigate(`/runs/${(await api.runRoutine(id)).run_id}`);
     } catch (e) {
-      alert('Error: ' + (e instanceof Error ? e.message : 'Unknown'));
+      await window.electronAPI?.alert('Error: ' + (e instanceof Error ? e.message : 'Unknown'));
     }
   };
 
@@ -170,7 +170,7 @@ export default function RoutineDetail() {
       const updated = await api.toggleRoutine(id, !routine.enabled);
       setRoutine(updated);
     } catch (e) {
-      alert('Error: ' + (e instanceof Error ? e.message : 'Unknown'));
+      await window.electronAPI?.alert('Error: ' + (e instanceof Error ? e.message : 'Unknown'));
     } finally {
       setToggling(false);
     }
@@ -184,7 +184,7 @@ export default function RoutineDetail() {
       await api.deleteRoutine(id);
       navigate('/routines');
     } catch (e) {
-      alert('Error: ' + (e instanceof Error ? e.message : 'Unknown'));
+      await window.electronAPI?.alert('Error: ' + (e instanceof Error ? e.message : 'Unknown'));
     }
   };
 
