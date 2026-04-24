@@ -42,7 +42,7 @@ export default [
       // standard async data-fetching patterns in non-Compiler codebases.
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
-      'curly': 'error',
+      curly: 'error',
       'react/react-in-jsx-scope': 'off',
     },
     settings: {

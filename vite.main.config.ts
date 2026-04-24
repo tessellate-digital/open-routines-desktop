@@ -16,11 +16,9 @@ export default defineConfig({
       name: 'copy-native-modules',
       closeBundle() {
         for (const mod of nativeModules) {
-          cpSync(
-            resolve('node_modules', mod),
-            resolve('.vite/build/node_modules', mod),
-            { recursive: true }
-          );
+          cpSync(resolve('node_modules', mod), resolve('.vite/build/node_modules', mod), {
+            recursive: true,
+          });
         }
       },
     },

@@ -9,6 +9,7 @@ The typography system is notably multi-font: DM Sans serves as the primary UI wo
 What makes MiniMax distinctive is its pill-button geometry (9999px radius) for navigation and primary actions, combined with softer 8px–24px radiused cards for product showcases. The product cards themselves are richly colorful — vibrant gradients in pink, purple, orange, and blue — creating a "gallery of AI capabilities" feel. Against the white canvas, these colorful cards pop like app icons on a phone home screen, making each AI model/product feel like a self-contained creative tool.
 
 **Key Characteristics:**
+
 - White-dominant layout with colorful product card accents
 - Multi-font system: DM Sans (UI), Outfit (display), Poppins (mid-tier), Roboto (data)
 - Pill buttons (9999px radius) for primary navigation and CTAs
@@ -22,11 +23,13 @@ What makes MiniMax distinctive is its pill-button geometry (9999px radius) for n
 ## 2. Color Palette & Roles
 
 ### Brand Primary
+
 - **Brand Blue** (`#1456f0`): `--brand-6`, primary brand identity color
 - **Sky Blue** (`#3daeff`): `--col-brand00`, lighter brand variant for accents
 - **Brand Pink** (`#ea5ec1`): `--col-brand02`, secondary brand accent
 
 ### Blue Scale (Primary)
+
 - **Primary 200** (`#bfdbfe`): `--color-primary-200`, light blue backgrounds
 - **Primary Light** (`#60a5fa`): `--color-primary-light`, active states, highlights
 - **Primary 500** (`#3b82f6`): `--color-primary-500`, standard blue actions
@@ -35,6 +38,7 @@ What makes MiniMax distinctive is its pill-button geometry (9999px radius) for n
 - **Brand Deep** (`#17437d`): `--brand-3`, deep blue for emphasis
 
 ### Text Colors
+
 - **Near Black** (`#222222`): `--col-text00`, primary text
 - **Dark** (`#18181b`): Button text, headings
 - **Charcoal** (`#181e25`): Dark surface text, footer background
@@ -43,6 +47,7 @@ What makes MiniMax distinctive is its pill-button geometry (9999px radius) for n
 - **Light Gray** (`#5f5f5f`): `--brand-2`, helper text
 
 ### Surface & Background
+
 - **Pure White** (`#ffffff`): `--col-bg13`, primary background
 - **Light Gray** (`#f0f0f0`): Secondary button backgrounds
 - **Glass White** (`hsla(0, 0%, 100%, 0.4)`): `--fill-bg-white`, frosted glass overlay
@@ -50,9 +55,11 @@ What makes MiniMax distinctive is its pill-button geometry (9999px radius) for n
 - **Border Gray** (`#e5e7eb`): Component borders
 
 ### Semantic
+
 - **Success Background** (`#e8ffea`): `--success-bg`, positive state backgrounds
 
 ### Shadows
+
 - **Standard** (`rgba(0, 0, 0, 0.08) 0px 4px 6px`): Default card shadow
 - **Soft Glow** (`rgba(0, 0, 0, 0.08) 0px 0px 22.576px`): Ambient soft shadow
 - **Brand Purple** (`rgba(44, 30, 116, 0.16) 0px 0px 15px`): Brand-tinted glow
@@ -62,6 +69,7 @@ What makes MiniMax distinctive is its pill-button geometry (9999px radius) for n
 ## 3. Typography Rules
 
 ### Font Families
+
 - **Primary UI**: `DM Sans`, with fallbacks: `Helvetica Neue, Helvetica, Arial`
 - **Display**: `Outfit`, with fallbacks: `Helvetica Neue, Helvetica, Arial`
 - **Mid-tier**: `Poppins`
@@ -69,24 +77,25 @@ What makes MiniMax distinctive is its pill-button geometry (9999px radius) for n
 
 ### Hierarchy
 
-| Role | Font | Size | Weight | Line Height | Notes |
-|------|------|------|--------|-------------|-------|
-| Display Hero | DM Sans / Outfit | 80px (5.00rem) | 500 | 1.10 (tight) | Hero headlines |
-| Section Heading | Outfit | 31px (1.94rem) | 600 | 1.50 | Feature section titles |
-| Section Heading Alt | Roboto / DM Sans | 32px (2.00rem) | 600 | 0.88 (tight) | Compact headers |
-| Card Title | Outfit | 28px (1.75rem) | 500–600 | 1.71 (relaxed) | Product card headings |
-| Sub-heading | Poppins | 24px (1.50rem) | 500 | 1.50 | Mid-tier headings |
-| Feature Label | Poppins | 18px (1.13rem) | 500 | 1.50 | Feature names |
-| Body Large | DM Sans | 20px (1.25rem) | 500 | 1.50 | Emphasized body |
-| Body | DM Sans | 16px (1.00rem) | 400–500 | 1.50 | Standard body text |
-| Body Bold | DM Sans | 16px (1.00rem) | 700 | 1.50 | Strong emphasis |
-| Nav/Link | DM Sans | 14px (0.88rem) | 400–500 | 1.50 | Navigation, links |
-| Button Small | DM Sans | 13px (0.81rem) | 600 | 1.50 | Compact buttons |
-| Caption | DM Sans / Poppins | 13px (0.81rem) | 400 | 1.70 (relaxed) | Metadata |
-| Small Label | DM Sans | 12px (0.75rem) | 500–600 | 1.25–1.50 | Tags, badges |
-| Micro | DM Sans / Outfit | 10px (0.63rem) | 400–500 | 1.50–1.80 | Tiny annotations |
+| Role                | Font              | Size           | Weight  | Line Height    | Notes                  |
+| ------------------- | ----------------- | -------------- | ------- | -------------- | ---------------------- |
+| Display Hero        | DM Sans / Outfit  | 80px (5.00rem) | 500     | 1.10 (tight)   | Hero headlines         |
+| Section Heading     | Outfit            | 31px (1.94rem) | 600     | 1.50           | Feature section titles |
+| Section Heading Alt | Roboto / DM Sans  | 32px (2.00rem) | 600     | 0.88 (tight)   | Compact headers        |
+| Card Title          | Outfit            | 28px (1.75rem) | 500–600 | 1.71 (relaxed) | Product card headings  |
+| Sub-heading         | Poppins           | 24px (1.50rem) | 500     | 1.50           | Mid-tier headings      |
+| Feature Label       | Poppins           | 18px (1.13rem) | 500     | 1.50           | Feature names          |
+| Body Large          | DM Sans           | 20px (1.25rem) | 500     | 1.50           | Emphasized body        |
+| Body                | DM Sans           | 16px (1.00rem) | 400–500 | 1.50           | Standard body text     |
+| Body Bold           | DM Sans           | 16px (1.00rem) | 700     | 1.50           | Strong emphasis        |
+| Nav/Link            | DM Sans           | 14px (0.88rem) | 400–500 | 1.50           | Navigation, links      |
+| Button Small        | DM Sans           | 13px (0.81rem) | 600     | 1.50           | Compact buttons        |
+| Caption             | DM Sans / Poppins | 13px (0.81rem) | 400     | 1.70 (relaxed) | Metadata               |
+| Small Label         | DM Sans           | 12px (0.75rem) | 500–600 | 1.25–1.50      | Tags, badges           |
+| Micro               | DM Sans / Outfit  | 10px (0.63rem) | 400–500 | 1.50–1.80      | Tiny annotations       |
 
 ### Principles
+
 - **Multi-font purpose**: DM Sans = UI workhorse (body, nav, buttons); Outfit = geometric display (headings, product names); Poppins = friendly mid-tier (sub-headings, features); Roboto = technical/data contexts.
 - **Universal 1.50 line-height**: The overwhelming majority of text uses 1.50 line-height, creating a consistent reading rhythm regardless of font or size. Exceptions: display (1.10 tight) and some captions (1.70 relaxed).
 - **Weight 500 as default emphasis**: Most headings use 500 (medium) rather than bold, creating a modern, approachable tone. 600 for section titles, 700 reserved for strong emphasis.
@@ -97,6 +106,7 @@ What makes MiniMax distinctive is its pill-button geometry (9999px radius) for n
 ### Buttons
 
 **Pill Primary Dark**
+
 - Background: `#181e25`
 - Text: `#ffffff`
 - Padding: 11px 20px
@@ -104,12 +114,14 @@ What makes MiniMax distinctive is its pill-button geometry (9999px radius) for n
 - Use: Primary CTA ("Get Started", "Learn More")
 
 **Pill Nav**
+
 - Background: `rgba(0, 0, 0, 0.05)` (subtle tint)
 - Text: `#18181b`
 - Radius: 9999px (full pill)
 - Use: Navigation tabs, filter toggles
 
 **Pill White**
+
 - Background: `#ffffff`
 - Text: `rgba(24, 30, 37, 0.8)`
 - Radius: 9999px
@@ -117,6 +129,7 @@ What makes MiniMax distinctive is its pill-button geometry (9999px radius) for n
 - Use: Secondary nav, inactive tabs
 
 **Secondary Light**
+
 - Background: `#f0f0f0`
 - Text: `#333333`
 - Padding: 11px 20px
@@ -124,6 +137,7 @@ What makes MiniMax distinctive is its pill-button geometry (9999px radius) for n
 - Use: Secondary actions
 
 ### Product Cards
+
 - Background: Vibrant gradients (pink/purple/orange/blue)
 - Radius: 20px–24px (generous rounding)
 - Shadow: `rgba(44, 30, 116, 0.16) 0px 0px 15px` (brand purple glow)
@@ -131,6 +145,7 @@ What makes MiniMax distinctive is its pill-button geometry (9999px radius) for n
 - Each card has its own color palette matching the product identity
 
 ### AI Product Cards (Matrix)
+
 - Background: white with subtle shadow
 - Radius: 13px–16px
 - Shadow: `rgba(0, 0, 0, 0.08) 0px 4px 6px`
@@ -138,11 +153,13 @@ What makes MiniMax distinctive is its pill-button geometry (9999px radius) for n
 - Product name in DM Sans 14–16px weight 500
 
 ### Links
+
 - **Primary**: `#18181b` or `#181e25`, underline on dark text
 - **Secondary**: `#8e8e93`, muted for less emphasis
 - **On Dark**: `rgba(255, 255, 255, 0.8)` for footer and dark sections
 
 ### Navigation
+
 - Clean horizontal nav on white background
 - MiniMax logo left-aligned (red accent in logo)
 - DM Sans 14px weight 500 for nav items
@@ -153,28 +170,33 @@ What makes MiniMax distinctive is its pill-button geometry (9999px radius) for n
 ## 5. Layout Principles
 
 ### Spacing System
+
 - Base unit: 8px
 - Scale: 1px, 2px, 4px, 6px, 8px, 10px, 11px, 14px, 16px, 24px, 32px, 40px, 50px, 64px, 80px
 
 ### Grid & Container
+
 - Max content width centered on page
 - Product card grids: horizontal scroll or 3–4 column layout
 - Full-width white sections with contained content
 - Dark footer at full-width
 
 ### Breakpoints
-| Name | Width | Key Changes |
-|------|-------|-------------|
-| Mobile | <768px | Single column, stacked cards |
-| Tablet | 768–1024px | 2-column grids |
-| Desktop | >1024px | Full layout, horizontal card scrolls |
+
+| Name    | Width      | Key Changes                          |
+| ------- | ---------- | ------------------------------------ |
+| Mobile  | <768px     | Single column, stacked cards         |
+| Tablet  | 768–1024px | 2-column grids                       |
+| Desktop | >1024px    | Full layout, horizontal card scrolls |
 
 ### Whitespace Philosophy
+
 - **Gallery spacing**: Products are presented like gallery items with generous white space between cards, letting each AI model breathe as its own showcase.
 - **Section rhythm**: Large vertical gaps (64px–80px) between major sections create distinct "chapters" of content.
 - **Card breathing**: Product cards use internal padding of 16px–24px with ample whitespace around text.
 
 ### Border Radius Scale
+
 - Minimal (4px): Small tags, micro badges
 - Standard (8px): Buttons, small cards
 - Comfortable (11px–13px): Medium cards, panels
@@ -185,19 +207,20 @@ What makes MiniMax distinctive is its pill-button geometry (9999px radius) for n
 
 ## 6. Depth & Elevation
 
-| Level | Treatment | Use |
-|-------|-----------|-----|
-| Flat (Level 0) | No shadow | White background, text blocks |
-| Subtle (Level 1) | `rgba(0, 0, 0, 0.08) 0px 4px 6px` | Standard cards, containers |
-| Ambient (Level 2) | `rgba(0, 0, 0, 0.08) 0px 0px 22.576px` | Soft glow around elements |
-| Brand Glow (Level 3) | `rgba(44, 30, 116, 0.16) 0px 0px 15px` | Featured product cards |
-| Elevated (Level 4) | `rgba(36, 36, 36, 0.08) 0px 12px 16px -4px` | Lifted cards, hover states |
+| Level                | Treatment                                   | Use                           |
+| -------------------- | ------------------------------------------- | ----------------------------- |
+| Flat (Level 0)       | No shadow                                   | White background, text blocks |
+| Subtle (Level 1)     | `rgba(0, 0, 0, 0.08) 0px 4px 6px`           | Standard cards, containers    |
+| Ambient (Level 2)    | `rgba(0, 0, 0, 0.08) 0px 0px 22.576px`      | Soft glow around elements     |
+| Brand Glow (Level 3) | `rgba(44, 30, 116, 0.16) 0px 0px 15px`      | Featured product cards        |
+| Elevated (Level 4)   | `rgba(36, 36, 36, 0.08) 0px 12px 16px -4px` | Lifted cards, hover states    |
 
 **Shadow Philosophy**: MiniMax uses a distinctive purple-tinted shadow (`rgba(44, 30, 116, ...)`) for featured elements, creating a subtle brand-color glow that connects the shadow system to the blue brand identity. Standard shadows use neutral black but at low opacity (0.08), keeping everything feeling light and airy. The directional shadow variant (6.5px offset) adds dimensional interest to hero product cards.
 
 ## 7. Do's and Don'ts
 
 ### Do
+
 - Use white as the dominant background — let product cards provide the color
 - Apply pill radius (9999px) for navigation tabs and toggle buttons
 - Use generous border radius (20px–24px) for product showcase cards
@@ -208,6 +231,7 @@ What makes MiniMax distinctive is its pill-button geometry (9999px radius) for n
 - Let colorful product illustrations/gradients serve as the primary visual interest
 
 ### Don't
+
 - Don't add colored backgrounds to main content sections — white is structural
 - Don't use sharp corners (0–4px radius) on product cards — the rounded aesthetic is core
 - Don't apply the brand pink (`#ea5ec1`) to text or buttons — it's for logo and decorative accents only
@@ -219,13 +243,15 @@ What makes MiniMax distinctive is its pill-button geometry (9999px radius) for n
 ## 8. Responsive Behavior
 
 ### Breakpoints
-| Name | Width | Key Changes |
-|------|-------|-------------|
-| Mobile | <768px | Single column, stacked product cards, hamburger nav |
-| Tablet | 768–1024px | 2-column product grids, condensed spacing |
-| Desktop | >1024px | Full horizontal card layouts, expanded spacing |
+
+| Name    | Width      | Key Changes                                         |
+| ------- | ---------- | --------------------------------------------------- |
+| Mobile  | <768px     | Single column, stacked product cards, hamburger nav |
+| Tablet  | 768–1024px | 2-column product grids, condensed spacing           |
+| Desktop | >1024px    | Full horizontal card layouts, expanded spacing      |
 
 ### Collapsing Strategy
+
 - Hero: 80px → responsive scaling to ~40px on mobile
 - Product card grid: horizontal scroll → 2-column → single column stacked
 - Navigation: horizontal → hamburger menu
@@ -235,6 +261,7 @@ What makes MiniMax distinctive is its pill-button geometry (9999px radius) for n
 ## 9. Agent Prompt Guide
 
 ### Quick Color Reference
+
 - Background: `#ffffff` (primary), `#181e25` (dark/footer)
 - Text: `#222222` (primary), `#45515e` (secondary), `#8e8e93` (muted)
 - Brand Blue: `#1456f0` (brand), `#3b82f6` (primary-500), `#2563eb` (hover)
@@ -242,6 +269,7 @@ What makes MiniMax distinctive is its pill-button geometry (9999px radius) for n
 - Borders: `#e5e7eb`, `#f2f3f5`
 
 ### Example Component Prompts
+
 - "Create a hero section on white background. Headline at 80px Outfit weight 500, line-height 1.10, near-black (#222222) text. Sub-text at 16px DM Sans weight 400, line-height 1.50, #45515e. Dark CTA button (#181e25, 8px radius, 11px 20px padding, white text)."
 - "Design a product card grid: white cards with 20px border-radius, shadow rgba(44,30,116,0.16) 0px 0px 15px. Product name at 28px Outfit weight 600. Internal gradient background for the product illustration area."
 - "Build navigation bar: white background, DM Sans 14px weight 500 for links, #18181b text. Pill-shaped active tab (9999px radius, rgba(0,0,0,0.05) background). MiniMax logo left-aligned."
@@ -249,6 +277,7 @@ What makes MiniMax distinctive is its pill-button geometry (9999px radius) for n
 - "Design footer on dark (#181e25) background. Product links in DM Sans 14px, rgba(255,255,255,0.8). Multi-column layout."
 
 ### Iteration Guide
+
 1. Start with white — color comes from product cards and illustrations only
 2. Pill buttons (9999px) for nav/tabs, standard radius (8px) for CTA buttons
 3. Purple-tinted shadows for featured cards, neutral shadows for everything else
