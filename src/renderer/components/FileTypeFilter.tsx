@@ -20,9 +20,19 @@ const CATEGORIES: { name: string; extensions: string[] }[] = [
 ];
 
 const MODES = [
-  { value: 'none' as const, label: 'All files' },
-  { value: 'include' as const, label: 'Only these types' },
-  { value: 'exclude' as const, label: 'Exclude these types' },
+  { value: 'none' as const, label: 'All files', prefix: '●', activeClass: '' },
+  {
+    value: 'include' as const,
+    label: 'Only these types',
+    prefix: '✓',
+    activeClass: 'bg-success/15 text-success border-success/30',
+  },
+  {
+    value: 'exclude' as const,
+    label: 'Exclude these types',
+    prefix: '×',
+    activeClass: 'bg-destructive/15 text-destructive border-destructive/30',
+  },
 ];
 
 export function FileTypeFilter({ value, onChange }: FileTypeFilterProps) {
@@ -82,16 +92,27 @@ export function FileTypeFilter({ value, onChange }: FileTypeFilterProps) {
           <button
             type="button"
             key={m.value}
-            className={classNames('chip', { active: value.mode === m.value })}
+            className={classNames('chip', value.mode === m.value ? m.activeClass || 'active' : '')}
             onClick={() => onChange({ ...value, mode: m.value })}
           >
+            <span
+              className={classNames('mr-1', value.mode === m.value ? 'opacity-100' : 'opacity-40')}
+            >
+              {m.prefix}
+            </span>
             {m.label}
           </button>
         ))}
       </div>
 
       {active && (
-        <div className="flex flex-col gap-2.5 ml-1 pl-[14px] border-l-2 border-border">
+        <div className="flex flex-col gap-2.5 ml-1 pl-[14px] border-l-2 border-accent">
+          <div className="text-micro text-fg-dim">
+            {value.mode === 'include'
+              ? 'Only fire when a file has one of these extensions:'
+              : 'Fire for all files except those with these extensions:'}
+          </div>
+
           <div className="chip-row">
             {CATEGORIES.map((cat) => {
               const allPresent = cat.extensions.every((ext) => selected.has(ext));
@@ -103,6 +124,9 @@ export function FileTypeFilter({ value, onChange }: FileTypeFilterProps) {
                   onClick={() => toggleCategory(cat.extensions)}
                 >
                   {cat.name}
+                  <span className={classNames('ml-1 text-micro opacity-60')}>
+                    {cat.extensions.length}
+                  </span>
                 </button>
               );
             })}
@@ -115,8 +139,8 @@ export function FileTypeFilter({ value, onChange }: FileTypeFilterProps) {
               value={customInput}
               onChange={(e) => setCustomInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Custom extension, e.g. .csv"
-              className="input flex-1 max-w-[220px] !py-1.5 !px-2 !text-body-sm"
+              placeholder="custom extension — csv, dmg, ..."
+              className="input flex-1 max-w-[280px] !py-1.5 !px-2 !text-body-sm"
             />
             <button
               type="button"

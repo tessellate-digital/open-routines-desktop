@@ -6,6 +6,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getServerPort: (): Promise<number> => ipcRenderer.invoke('get-server-port'),
   selectDirectory: (): Promise<string | null> => ipcRenderer.invoke('dialog:openDirectory'),
   selectFile: (): Promise<string | null> => ipcRenderer.invoke('dialog:openFile'),
+  selectPath: (): Promise<string | null> => ipcRenderer.invoke('dialog:openPath'),
   openExternal: (url: string): Promise<void> => ipcRenderer.invoke('shell:openExternal', url),
   platform: process.platform,
 });

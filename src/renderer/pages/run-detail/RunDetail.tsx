@@ -32,6 +32,8 @@ export default function RunDetail() {
     appendToolResult,
     appendError,
     appendStep,
+    appendPermission,
+    updatePermissionResponse,
     updateRunStatus,
     finalizeStream,
     toggleTool,
@@ -158,6 +160,17 @@ export default function RunDetail() {
     onQuestion: useCallback((questionId: string) => {
       setPendingQuestionId(questionId);
     }, []),
+    onPermission: useCallback(
+      (data: string) => {
+        try {
+          const { id, permission, patterns } = JSON.parse(data);
+          appendPermission(id, permission, patterns);
+        } catch {
+          /* ignore malformed */
+        }
+      },
+      [appendPermission]
+    ),
     onReconnect: useCallback(() => clearLiveSegments(), [clearLiveSegments]),
     onDone: useCallback(
       (data: string) => {
@@ -245,6 +258,22 @@ export default function RunDetail() {
       }
     },
     [thread, pendingQuestionId]
+  );
+
+  const handlePermissionRespond = useCallback(
+    async (permissionId: string, response: 'once' | 'always' | 'reject') => {
+      const run = thread[thread.length - 1];
+      if (!run?.id) {
+        return;
+      }
+      try {
+        await api.answerPermission(run.id, permissionId, response);
+        updatePermissionResponse(permissionId, response);
+      } catch (err) {
+        alert('Error: ' + (err instanceof Error ? err.message : 'Unknown'));
+      }
+    },
+    [thread, updatePermissionResponse]
   );
 
   const handleToggleTool = useCallback(
@@ -338,6 +367,7 @@ export default function RunDetail() {
               toggledTools={runToggled}
               onToggleTool={(idx) => handleToggleTool(run.id, idx, isLast && isStreaming)}
               onReply={handleQuestionReply}
+              onPermissionRespond={handlePermissionRespond}
             />
           );
         })}

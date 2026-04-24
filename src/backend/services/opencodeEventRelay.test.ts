@@ -2,10 +2,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // ── Hoisted mocks ─────────────────────────────────────────────────────────────
 
-const { mockShowPermissionDialog, mockDbRun, mockFetch } = vi.hoisted(() => ({
-  mockShowPermissionDialog: vi.fn().mockResolvedValue('once'),
+const { mockDbRun, mockFetch, mockPush } = vi.hoisted(() => ({
   mockDbRun: vi.fn(),
-  mockFetch: vi.fn().mockResolvedValue({ ok: true }),
+  mockFetch: vi.fn().mockResolvedValue({ ok: true, text: () => Promise.resolve('') }),
+  mockPush: vi.fn(),
 }));
 
 vi.mock('../database', () => ({
@@ -16,14 +16,11 @@ vi.mock('../database', () => ({
   },
 }));
 vi.mock('./runStreamStore', () => ({
-  push: vi.fn(),
+  push: mockPush,
   streamText: vi.fn(),
   openRun: vi.fn(),
   close: vi.fn(),
   hasErrorEvents: vi.fn().mockReturnValue(false),
-}));
-vi.mock('./permissionBridge', () => ({
-  showPermissionDialog: mockShowPermissionDialog,
 }));
 vi.mock('../util/logger', () => ({
   logger: { info: vi.fn(), debug: vi.fn(), error: vi.fn(), warn: vi.fn() },
@@ -38,6 +35,7 @@ import {
   closeServerRelay,
   waitForDrain,
   hadErrors,
+  answerPermission,
 } from './opencodeEventRelay';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -70,16 +68,19 @@ function makeClient(events: Array<Record<string, unknown>>) {
   };
 }
 
-function makePermissionEvent(overrides: Record<string, unknown> = {}) {
+function makePermissionEvent(
+  overrides: Record<string, unknown> = {},
+  eventType = 'permission.asked'
+) {
   return {
     payload: {
-      type: 'permission.updated',
+      type: eventType,
       properties: {
         id: 'perm-1',
         sessionID: 'sess-1',
-        title: 'Allow shell command?',
-        pattern: 'rm -rf /tmp/x',
-        type: 'bash',
+        permission: 'bash',
+        patterns: ['rm -rf /tmp/x'],
+        metadata: {},
         ...overrides,
       },
     },
@@ -106,76 +107,67 @@ describe('subscribeRun / hadErrors / waitForDrain / unsubscribeRun', () => {
   });
 });
 
-// ── Relay loop — permission.updated event handling ────────────────────────────
+// ── Relay loop — permission.asked / permission.updated event handling ─────────
 
-// Each relay loop test resets modules to clear the module-level `handledPermissionIds` set
-// so that deduplication state does not leak between tests.
-describe('relay loop – permission.updated', () => {
+describe('relay loop – permission events', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockShowPermissionDialog.mockResolvedValue('once');
-    mockFetch.mockResolvedValue({ ok: true });
+    mockFetch.mockResolvedValue({ ok: true, text: () => Promise.resolve('') });
   });
 
-  it('calls showPermissionDialog with title, detail (pattern), and permissionType', async () => {
+  it('pushes a permission event to runStreamStore for permission.asked', async () => {
     const client = makeClient([makePermissionEvent()]);
     subscribeRun(client, 'sess-1', 'run-1', 'http://localhost:1234');
 
-    await vi.waitFor(() => expect(mockShowPermissionDialog).toHaveBeenCalled());
+    await vi.waitFor(() => expect(mockPush).toHaveBeenCalled());
 
-    expect(mockShowPermissionDialog).toHaveBeenCalledWith({
-      title: 'Allow shell command?',
-      detail: 'rm -rf /tmp/x',
-      permissionType: 'bash',
-    });
+    const [runId, event] = mockPush.mock.calls[0] as [string, { type: string; data: string }];
+    expect(runId).toBe('run-1');
+    expect(event.type).toBe('permission');
+    const parsed = JSON.parse(event.data) as Record<string, unknown>;
+    expect(parsed).toMatchObject({ id: 'perm-1', permission: 'bash', patterns: ['rm -rf /tmp/x'] });
 
     closeServerRelay(client);
   });
 
-  it('joins array patterns with ", " before passing to showPermissionDialog', async () => {
+  it('also handles permission.updated events', async () => {
+    const client = makeClient([makePermissionEvent({ id: 'perm-upd' }, 'permission.updated')]);
+    subscribeRun(client, 'sess-1', 'run-1', 'http://localhost:1234');
+
+    await vi.waitFor(() => expect(mockPush).toHaveBeenCalled());
+
+    const [, event] = mockPush.mock.calls[0] as [string, { type: string; data: string }];
+    expect(event.type).toBe('permission');
+
+    closeServerRelay(client);
+  });
+
+  it('normalises a single pattern string into an array', async () => {
     const client = makeClient([
-      makePermissionEvent({ pattern: ['*.ts', '*.tsx'], id: 'perm-arr' }),
+      makePermissionEvent({ id: 'perm-str', patterns: undefined, pattern: '~/projects/**' }),
     ]);
     subscribeRun(client, 'sess-1', 'run-1', 'http://localhost:1234');
 
-    await vi.waitFor(() => expect(mockShowPermissionDialog).toHaveBeenCalled());
+    await vi.waitFor(() => expect(mockPush).toHaveBeenCalled());
 
-    expect(mockShowPermissionDialog).toHaveBeenCalledWith(
-      expect.objectContaining({ detail: '*.ts, *.tsx' })
-    );
+    const [, event] = mockPush.mock.calls[0] as [string, { type: string; data: string }];
+    const parsed = JSON.parse(event.data) as Record<string, unknown>;
+    expect(parsed.patterns).toEqual(['~/projects/**']);
 
     closeServerRelay(client);
   });
 
-  it('defaults permissionType to "bash" when type is missing', async () => {
+  it('uses "bash" as default permissionType when permission/type field is missing', async () => {
     const event = makePermissionEvent({ id: 'perm-notype' });
-    delete (event.payload.properties as Record<string, unknown>).type;
+    delete (event.payload.properties as Record<string, unknown>).permission;
     const client = makeClient([event]);
     subscribeRun(client, 'sess-1', 'run-1', 'http://localhost:1234');
 
-    await vi.waitFor(() => expect(mockShowPermissionDialog).toHaveBeenCalled());
+    await vi.waitFor(() => expect(mockPush).toHaveBeenCalled());
 
-    expect(mockShowPermissionDialog).toHaveBeenCalledWith(
-      expect.objectContaining({ permissionType: 'bash' })
-    );
-
-    closeServerRelay(client);
-  });
-
-  it('calls respondToPermission with the dialog response', async () => {
-    mockShowPermissionDialog.mockResolvedValue('always');
-    const client = makeClient([makePermissionEvent({ id: 'perm-resp' })]);
-    subscribeRun(client, 'sess-1', 'run-1', 'http://localhost:1234');
-
-    await vi.waitFor(() => expect(mockFetch).toHaveBeenCalled());
-
-    expect(mockFetch).toHaveBeenCalledWith(
-      'http://localhost:1234/session/sess-1/permissions/perm-resp',
-      expect.objectContaining({
-        method: 'POST',
-        body: JSON.stringify({ response: 'always' }),
-      })
-    );
+    const [, evt] = mockPush.mock.calls[0] as [string, { type: string; data: string }];
+    const parsed = JSON.parse(evt.data) as Record<string, unknown>;
+    expect(parsed.permission).toBe('bash');
 
     closeServerRelay(client);
   });
@@ -186,10 +178,9 @@ describe('relay loop – permission.updated', () => {
     const client = makeClient([event]);
     subscribeRun(client, 'sess-1', 'run-1', 'http://localhost:1234');
 
-    // Give relay loop time to process
     await new Promise((r) => setTimeout(r, 30));
 
-    expect(mockShowPermissionDialog).not.toHaveBeenCalled();
+    expect(mockPush).not.toHaveBeenCalled();
 
     closeServerRelay(client);
   });
@@ -198,38 +189,103 @@ describe('relay loop – permission.updated', () => {
     const event = makePermissionEvent({ id: 'perm-nosid' });
     delete (event.payload.properties as Record<string, unknown>).sessionID;
     const client = makeClient([event]);
-    // Subscribe a different session so the module is active
     subscribeRun(client, 'sess-other', 'run-1', 'http://localhost:1234');
 
     await new Promise((r) => setTimeout(r, 30));
 
-    expect(mockShowPermissionDialog).not.toHaveBeenCalled();
+    expect(mockPush).not.toHaveBeenCalled();
 
     closeServerRelay(client);
   });
 
   it('skips the event when there is no subscriber for the session', async () => {
     const client = makeClient([makePermissionEvent({ id: 'perm-nosub', sessionID: 'sess-gone' })]);
-    // Subscribe a DIFFERENT session, not 'sess-gone'
     subscribeRun(client, 'sess-other', 'run-1', 'http://localhost:1234');
 
     await new Promise((r) => setTimeout(r, 30));
 
-    expect(mockShowPermissionDialog).not.toHaveBeenCalled();
+    expect(mockPush).not.toHaveBeenCalled();
 
     closeServerRelay(client);
   });
 
-  it('deduplicates: does not show dialog twice for the same permId', async () => {
+  it('deduplicates: only pushes once for the same permId', async () => {
     const event = makePermissionEvent({ id: 'perm-dup' });
     const client = makeClient([event, event]); // same event twice
     subscribeRun(client, 'sess-1', 'run-1', 'http://localhost:1234');
 
-    await vi.waitFor(() => expect(mockShowPermissionDialog).toHaveBeenCalled());
-    // Give extra time in case a second call would occur
+    await vi.waitFor(() => expect(mockPush).toHaveBeenCalled());
     await new Promise((r) => setTimeout(r, 30));
 
-    expect(mockShowPermissionDialog).toHaveBeenCalledOnce();
+    const permPushes = mockPush.mock.calls.filter(
+      ([, e]: [string, { type: string }]) => e.type === 'permission'
+    );
+    expect(permPushes).toHaveLength(1);
+
+    closeServerRelay(client);
+  });
+});
+
+// ── answerPermission ──────────────────────────────────────────────────────────
+
+describe('answerPermission', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockFetch.mockResolvedValue({ ok: true, text: () => Promise.resolve('') });
+  });
+
+  it('throws when permissionId was never registered', async () => {
+    await expect(answerPermission('no-such-perm', 'once')).rejects.toThrow(
+      'No server found for permission no-such-perm'
+    );
+  });
+
+  it('calls fetch with the correct URL and body after permission.asked', async () => {
+    const client = makeClient([makePermissionEvent({ id: 'perm-ans' })]);
+    subscribeRun(client, 'sess-1', 'run-1', 'http://localhost:1234');
+
+    await vi.waitFor(() => expect(mockPush).toHaveBeenCalled());
+
+    await answerPermission('perm-ans', 'once');
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      'http://localhost:1234/session/sess-1/permissions/perm-ans',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ response: 'once' }),
+      })
+    );
+
+    closeServerRelay(client);
+  });
+
+  it('supports "always" and "reject" response values', async () => {
+    for (const response of ['always', 'reject'] as const) {
+      vi.clearAllMocks();
+      const permId = `perm-${response}`;
+      const client = makeClient([makePermissionEvent({ id: permId })]);
+      subscribeRun(client, 'sess-1', `run-${response}`, 'http://localhost:1234');
+
+      await vi.waitFor(() => expect(mockPush).toHaveBeenCalled());
+      await answerPermission(permId, response);
+
+      const body = JSON.parse(
+        (mockFetch.mock.calls[0] as [string, RequestInit])[1].body as string
+      ) as { response: string };
+      expect(body.response).toBe(response);
+
+      closeServerRelay(client);
+    }
+  });
+
+  it('removes context after answering so a second call throws', async () => {
+    const client = makeClient([makePermissionEvent({ id: 'perm-once' })]);
+    subscribeRun(client, 'sess-1', 'run-1', 'http://localhost:1234');
+
+    await vi.waitFor(() => expect(mockPush).toHaveBeenCalled());
+    await answerPermission('perm-once', 'once');
+
+    await expect(answerPermission('perm-once', 'reject')).rejects.toThrow();
 
     closeServerRelay(client);
   });

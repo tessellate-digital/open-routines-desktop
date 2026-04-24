@@ -62,16 +62,9 @@ export interface SettingRow {
 // --- Zod schemas ---
 
 const PermissionLevelSchema = z.enum(['allow', 'ask', 'deny']);
+const PermissionValueSchema = z.union([PermissionLevelSchema, z.record(PermissionLevelSchema)]);
 
-const RoutinePermissionsSchema = z
-  .object({
-    edit: PermissionLevelSchema.optional(),
-    bash: z.union([PermissionLevelSchema, z.record(PermissionLevelSchema)]).optional(),
-    webfetch: PermissionLevelSchema.optional(),
-    doom_loop: PermissionLevelSchema.optional(),
-    external_directory: PermissionLevelSchema.optional(),
-  })
-  .default({});
+const RoutinePermissionsSchema = z.record(PermissionValueSchema).default({});
 
 export const RoutineCreateSchema = z.object({
   name: z.string().min(1),

@@ -4,12 +4,14 @@ import { AgentText } from './AgentText';
 import { ErrorBubble } from './ErrorBubble';
 import { StepDivider } from './StepDivider';
 import { ToolRow } from './ToolRow';
+import { PermissionCard } from './PermissionCard';
 
 interface SegmentListProps {
   segments: Segment[];
   toggledTools: Set<number>;
   onToggleTool: (idx: number) => void;
   onReply?: (text: string) => void;
+  onPermissionRespond?: (permissionId: string, response: 'once' | 'always' | 'reject') => void;
 }
 
 export const SegmentList = memo(function SegmentList({
@@ -17,6 +19,7 @@ export const SegmentList = memo(function SegmentList({
   toggledTools,
   onToggleTool,
   onReply,
+  onPermissionRespond,
 }: SegmentListProps) {
   return (
     <>
@@ -38,6 +41,18 @@ export const SegmentList = memo(function SegmentList({
               seg={{ ...seg, open }}
               onToggle={() => onToggleTool(idx)}
               onReply={onReply}
+            />
+          );
+        }
+        if (seg.kind === 'permission') {
+          return (
+            <PermissionCard
+              key={idx}
+              id={seg.id}
+              permission={seg.permission}
+              patterns={seg.patterns}
+              responded={seg.responded}
+              onRespond={onPermissionRespond}
             />
           );
         }

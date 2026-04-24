@@ -5,5 +5,6 @@ export default defineConfig({
     name: 'backend',
     environment: 'node',
     include: ['src/main/**/*.test.{ts,tsx}', 'src/backend/**/*.test.{ts,tsx}'],
+    setupFiles: ['src/test-setup/electron-mock.ts'],
   },
 });

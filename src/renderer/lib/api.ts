@@ -133,6 +133,11 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ questionId, answer }),
     }),
+  answerPermission: (runId: string, permissionId: string, response: 'once' | 'always' | 'reject') =>
+    request<{ ok: boolean }>(`/runs/${runId}/answer-permission`, {
+      method: 'POST',
+      body: JSON.stringify({ permissionId, response }),
+    }),
 
   // Settings
   getSettings: () => request<Setting[]>('/settings'),
