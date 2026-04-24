@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import classNames from 'classnames';
 import { api } from '../lib/api';
@@ -11,6 +11,8 @@ import { SelectDropdown, type SelectOption } from '../components/SelectDropdown'
 import { BackLink } from '../components/BackLink';
 import { PageHeader } from '../components/PageHeader';
 import { PermissionRadio } from '../components/PermissionRadio';
+import { ComposerInput, MentionPopover, type ComposerInputHandle } from '../components/composer';
+import { useMentionPopover } from '../hooks/composer';
 import { useHostMounts } from '../contexts/HostMountsContext';
 import { usePageContext } from '../contexts/PageContext';
 
@@ -160,28 +162,6 @@ const PERM_DEFS: {
   },
 ];
 
-const ADVANCED_PERM_DEFS: typeof PERM_DEFS = [
-  {
-    key: 'bash',
-    label: 'Run shell commands',
-    hint: 'Patterns match parsed commands, e.g. git *, npm *, rm *',
-    iconBg: 'bg-red-100',
-    iconColor: 'text-red-600',
-    icon: (
-      <svg viewBox="0 0 20 20" width="18" height="18" fill="currentColor">
-        <path
-          fillRule="evenodd"
-          d="M3.25 3A2.25 2.25 0 0 0 1 5.25v9.5A2.25 2.25 0 0 0 3.25 17h13.5A2.25 2.25 0 0 0 19 14.75v-9.5A2.25 2.25 0 0 0 16.75 3H3.25Zm.943 4.752a.75.75 0 0 1 1.057-.098l3 2.5a.75.75 0 0 1 0 1.152l-3 2.5a.75.75 0 0 1-.959-1.152L6.56 10.5 4.29 8.402a.75.75 0 0 1-.098-1.057ZM9.75 12.5a.75.75 0 0 0 0 1.5h3.5a.75.75 0 0 0 0-1.5h-3.5Z"
-          clipRule="evenodd"
-        />
-      </svg>
-    ),
-    defaultLevel: 'allow',
-    expandable: true,
-    browsable: false,
-  },
-];
-
 function PermissionRow({
   def,
   value,
@@ -230,35 +210,32 @@ function PermissionRow({
               onChange={(level) => onChange(permSetDefault(value, level))}
             />
           </div>
-          {def.expandable !== false && (
-            <span
-              className={classNames(
-                'text-fg-dim transition-transform duration-default ease-default',
-                {
-                  'rotate-90': expanded,
-                }
-              )}
+          <span
+            className={classNames(
+              'w-[22px] flex items-center justify-center shrink-0 transition-transform duration-default ease-default',
+              def.expandable !== false ? 'text-fg-dim' : 'invisible',
+              { 'rotate-90': expanded }
+            )}
+          >
+            <svg
+              viewBox="0 0 16 16"
+              width="14"
+              height="14"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             >
-              <svg
-                viewBox="0 0 16 16"
-                width="14"
-                height="14"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="m6 3 5 5-5 5" />
-              </svg>
-            </span>
-          )}
+              <path d="m6 3 5 5-5 5" />
+            </svg>
+          </span>
         </span>
       </div>
 
       {/* Expanded body */}
       {def.expandable !== false && expanded && (
-        <div className="border-t border-border bg-surface px-4 py-3 grid gap-2.5">
+        <div className="border-t border-border bg-surface px-3.5 py-3 grid gap-2.5">
           <div className="text-micro text-fg-dim">
             Exceptions — each rule overrides the default <strong>only for matching paths</strong>.
             Deny rules take precedence over allow rules.
@@ -698,12 +675,17 @@ export default function RoutineForm() {
       websearch: 'allow',
       bash: 'allow',
     } as RoutinePermissions,
+    connected_apps: {} as Record<string, boolean>,
   });
   const [triggerDrafts, setTriggerDrafts] = useState<TriggerDraft[]>([]);
   const [collapsedTriggers, setCollapsedTriggers] = useState<Set<number>>(new Set());
   const [existingTriggers, setExistingTriggers] = useState<Trigger[]>([]);
   const [models, setModels] = useState<string[]>([]);
   const [configuredProviderIds, setConfiguredProviderIds] = useState<string[]>([]);
+  const [gmailConnected, setGmailConnected] = useState(false);
+
+  const promptRef = useRef<ComposerInputHandle>(null);
+  const promptMention = useMentionPopover(promptRef);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [showFolderPicker, setShowFolderPicker] = useState(false);
@@ -714,12 +696,14 @@ export default function RoutineForm() {
   useEffect(() => {
     async function init() {
       try {
-        const [modelsRes, settingsRes, routine, triggers] = await Promise.all([
+        const [modelsRes, settingsRes, routine, triggers, gmailStatus] = await Promise.all([
           api.getModels(),
           api.getSettings(),
           isEdit ? api.getRoutine(id!) : Promise.resolve(null),
           isEdit ? api.getTriggers(id!) : Promise.resolve([] as Trigger[]),
+          api.gmailStatus().catch(() => ({ connected: false })),
         ]);
+        setGmailConnected(gmailStatus.connected);
         setModels(modelsRes.models || []);
         const settingKeys = new Set(settingsRes.map((s: { key: string }) => s.key));
         const providerIds = PROVIDERS.filter((p) =>
@@ -747,7 +731,11 @@ export default function RoutineForm() {
               bash: 'allow',
               ...(routine.permissions as RoutinePermissions),
             },
+            connected_apps: routine.connected_apps ?? {},
           });
+          // Initialize the prompt composer with the loaded text
+          // (runs after state update, ref may not be attached yet — use setTimeout)
+          setTimeout(() => promptRef.current?.setText(routine.prompt ?? ''), 0);
         }
         if (triggers && triggers.length > 0) {
           setExistingTriggers(triggers);
@@ -780,7 +768,7 @@ export default function RoutineForm() {
     const data = {
       name: form.name,
       description: form.description,
-      prompt: form.prompt,
+      prompt: promptRef.current?.getPlainText() ?? form.prompt,
       model: form.model,
       repository: '',
       branch: 'main',
@@ -789,6 +777,7 @@ export default function RoutineForm() {
       run_mode: form.run_mode,
       permissions: form.permissions,
       temperature: form.temperature,
+      connected_apps: form.connected_apps,
     };
     try {
       const res = isEdit ? await api.updateRoutine(id!, data) : await api.createRoutine(data);
@@ -937,13 +926,30 @@ export default function RoutineForm() {
 
         <div className="form-row">
           <label>Prompt</label>
-          <div className="hint">What the agent should do when a trigger fires.</div>
-          <textarea
-            className="textarea"
-            value={form.prompt}
-            onChange={(e) => setForm((f) => ({ ...f, prompt: e.target.value }))}
-            required
-          />
+          <div className="hint">
+            Type <kbd className="code-chip">@</kbd> to insert special commands.
+          </div>
+          <div className="relative">
+            {promptMention.open && (
+              <MentionPopover
+                groups={promptMention.filteredGroups}
+                activeIndex={promptMention.activeIndex}
+                caretPos={promptMention.caretPos}
+                onSelect={promptMention.handleSelect}
+                onDismiss={promptMention.dismiss}
+              />
+            )}
+            <div className="textarea p-0">
+              <ComposerInput
+                ref={promptRef}
+                placeholder="What should the agent do when a trigger fires…"
+                className="font-mono text-caption leading-loose py-[9px] px-3 max-h-none min-h-[160px]"
+                onChange={(text) => setForm((f) => ({ ...f, prompt: text }))}
+                onInput={promptMention.onInput}
+                onKeyDown={promptMention.onKeyDown}
+              />
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-2.5">
@@ -1024,7 +1030,8 @@ export default function RoutineForm() {
             />
           ))}
 
-          {/* Advanced permissions */}
+          {/* Advanced permissions — hidden from UI, bash defaults to allow */}
+          {/* Uncomment to re-expose:
           <details className="mt-1">
             <summary className="text-body-sm text-fg-dim cursor-pointer select-none py-1.5 hover:text-foreground">
               Advanced permissions
@@ -1045,7 +1052,42 @@ export default function RoutineForm() {
               ))}
             </div>
           </details>
+          */}
         </div>
+
+        {/* Connected Apps */}
+        {gmailConnected && (
+          <div>
+            <label className="block mb-1">Connected Apps</label>
+            <div className="hint mb-3">
+              Grant this routine access to external services you&apos;ve connected in Settings.
+            </div>
+
+            <div className="border border-border rounded-lg overflow-hidden mb-2">
+              <label className="flex items-center gap-3 py-2.5 px-3.5 cursor-pointer">
+                <span className="w-8 h-8 rounded-lg bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+                  <svg viewBox="0 0 20 20" width="18" height="18" fill="currentColor">
+                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0 0 16 4H4a2 2 0 0 0-1.997 1.884z" />
+                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8.118z" />
+                  </svg>
+                </span>
+                <span className="font-medium text-body-sm flex-1">Gmail</span>
+                <span className="text-micro text-fg-dim mr-2">Read-only</span>
+                <input
+                  type="checkbox"
+                  checked={!!form.connected_apps.gmail}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      connected_apps: { ...f.connected_apps, gmail: e.target.checked },
+                    }))
+                  }
+                  className="accent-accent"
+                />
+              </label>
+            </div>
+          </div>
+        )}
 
         {/* Triggers */}
         <div>

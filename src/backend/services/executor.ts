@@ -14,6 +14,7 @@ import type { RoutineRow, RunRow } from '../types';
 import { runsRepository } from '../repositories/runsRepository';
 import { settingsRepository } from '../repositories/settingsRepository';
 import { logger } from '../util/logger';
+import { ensureFreshGmailToken } from './gmailTokenRefresh';
 
 const execFileAsync = promisify(execFile);
 
@@ -207,6 +208,22 @@ export class Executor {
       lines.push(line);
     }
 
+    // Hint about available connected apps — full API docs are in the gmail SKILL.md
+    let connectedApps: Record<string, boolean> = {};
+    try {
+      connectedApps = JSON.parse(routine.connected_apps || '{}');
+    } catch {
+      /* ignore */
+    }
+    if (connectedApps.gmail) {
+      const port = process.env.OPEN_ROUTINES_API_PORT;
+      if (port) {
+        lines.push(
+          `Connected apps: Gmail (read-only). Gmail token endpoint: http://localhost:${port}/api/gmail/token. If the user's intent involves reading or searching emails, load the "gmail" skill for API details.`
+        );
+      }
+    }
+
     lines.push(''); // blank line before user prompt
 
     const context = lines.join('\n');
@@ -275,6 +292,17 @@ export class Executor {
       });
       runStreamStore.close(runId, { status: 'failed', exit_code: null });
       return;
+    }
+
+    // If Gmail is enabled, refresh the access token before building env
+    let connectedApps: Record<string, boolean> = {};
+    try {
+      connectedApps = JSON.parse(routine.connected_apps || '{}');
+    } catch {
+      /* ignore */
+    }
+    if (connectedApps.gmail) {
+      await ensureFreshGmailToken();
     }
 
     const env = this.buildEnv(routine);

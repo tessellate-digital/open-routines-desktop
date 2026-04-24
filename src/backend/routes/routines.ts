@@ -34,6 +34,7 @@ function routineToResponse(r: RoutineRow) {
     enabled: r.enabled === 1,
     run_mode: r.run_mode as 'background' | 'foreground',
     permissions,
+    connected_apps: JSON.parse(r.connected_apps || '{}') as Record<string, boolean>,
     temperature: r.temperature,
     created_at: r.created_at,
     updated_at: r.updated_at,

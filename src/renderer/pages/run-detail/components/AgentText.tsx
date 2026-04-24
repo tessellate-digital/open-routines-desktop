@@ -17,7 +17,7 @@ export function AgentText({ content, onReply }: AgentTextProps) {
     return <QuestionsCard questions={questions} onReply={onReply!} />;
   }
   return (
-    <div className="md">
+    <div className="md mb-3">
       <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
     </div>
   );

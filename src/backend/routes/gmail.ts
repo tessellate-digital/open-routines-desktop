@@ -163,6 +163,20 @@ router.get('/messages/:id', async (c) => {
 });
 
 // ---------------------------------------------------------------------------
+// GET /api/gmail/token
+//
+// Returns the current (decrypted) access token so agent processes can fetch
+// it at runtime without it ever being stored in prompts or run metadata.
+// ---------------------------------------------------------------------------
+router.get('/token', (c) => {
+  const accessToken = settingsRepository.findByKey('GMAIL_ACCESS_TOKEN');
+  if (!accessToken?.value) {
+    return c.json({ error: 'Gmail not connected' }, 401);
+  }
+  return c.json({ token: accessToken.value });
+});
+
+// ---------------------------------------------------------------------------
 // GET /api/gmail/labels
 // ---------------------------------------------------------------------------
 router.get('/labels', async (c) => {

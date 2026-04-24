@@ -83,7 +83,9 @@ export default function DevPage() {
 
   const handleDelete = async (triggerId: string, routineId: string) => {
     if (
-      !(await window.electronAPI?.confirm('Delete this trigger? If no other triggers remain, the routine will be disabled.'))
+      !(await window.electronAPI?.confirm(
+        'Delete this trigger? If no other triggers remain, the routine will be disabled.'
+      ))
     ) {
       return;
     }

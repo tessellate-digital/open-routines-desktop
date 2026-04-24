@@ -242,10 +242,7 @@ router.get('/callback', async (c) => {
   }
 
   if (!code || !state) {
-    return c.html(
-      page('Invalid request', 'Missing code or state parameter.', 'error'),
-      400
-    );
+    return c.html(page('Invalid request', 'Missing code or state parameter.', 'error'), 400);
   }
 
   pruneStates();
@@ -261,10 +258,7 @@ router.get('/callback', async (c) => {
 
   const host = c.req.header('host');
   if (!host) {
-    return c.html(
-      page('Server error', 'Could not determine server host.', 'error'),
-      500
-    );
+    return c.html(page('Server error', 'Could not determine server host.', 'error'), 500);
   }
 
   try {
@@ -318,7 +312,11 @@ router.get('/callback', async (c) => {
   } catch (err) {
     logger.error('Gmail OAuth token exchange failed:', err);
     return c.html(
-      page('Authorization failed', 'Could not exchange the code for tokens. You can close this tab and try again.', 'error'),
+      page(
+        'Authorization failed',
+        'Could not exchange the code for tokens. You can close this tab and try again.',
+        'error'
+      ),
       500
     );
   }

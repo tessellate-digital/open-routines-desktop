@@ -8,8 +8,12 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   return {
     define: {
-      'process.env.GMAIL_CLIENT_ID': JSON.stringify(env.GMAIL_CLIENT_ID ?? ''),
-      'process.env.GMAIL_CLIENT_SECRET': JSON.stringify(env.GMAIL_CLIENT_SECRET ?? ''),
+      'process.env.GMAIL_CLIENT_ID': JSON.stringify(
+        env.GMAIL_CLIENT_ID || process.env.GMAIL_CLIENT_ID || '',
+      ),
+      'process.env.GMAIL_CLIENT_SECRET': JSON.stringify(
+        env.GMAIL_CLIENT_SECRET || process.env.GMAIL_CLIENT_SECRET || '',
+      ),
     },
     build: {
       codeSplitting: false,

@@ -16,6 +16,7 @@ export interface RoutineRow {
   run_mode: string;
   permissions: string;
   temperature: number | null;
+  connected_apps: string;
   last_run_status: string | null;
   triggers_count: number;
   created_at: string;
@@ -79,6 +80,7 @@ export const RoutineCreateSchema = z.object({
   run_mode: z.enum(['background', 'foreground']).default('background'),
   permissions: RoutinePermissionsSchema,
   temperature: z.number().min(0).max(1).nullable().default(null),
+  connected_apps: z.record(z.boolean()).default({}),
 });
 
 export const RoutineUpdateSchema = z.object({
@@ -94,6 +96,7 @@ export const RoutineUpdateSchema = z.object({
   run_mode: z.enum(['background', 'foreground']).optional(),
   permissions: RoutinePermissionsSchema.optional(),
   temperature: z.number().min(0).max(1).nullable().optional(),
+  connected_apps: z.record(z.boolean()).optional(),
 });
 
 export const TriggerCreateSchema = z.object({

@@ -6,6 +6,7 @@ import { registerIpcHandlers, setServerPort } from './ipc-handlers';
 import { startFileWatcher, stopFileWatcher, setFileWatcherPort } from './fileWatcher';
 import { disposeAll as disposeServerPool } from '../backend/services/opencodeServerPool';
 import { isOpencodeInstalled, installOpencode } from './opencode-installer';
+import { writeGmailSkill } from './gmailSkill';
 
 // Set the dock icon at module load time — before app.whenReady() — so macOS never
 // gets a chance to show the Electron default icon during launch or quit.
@@ -95,6 +96,8 @@ app.whenReady().then(async () => {
 
   // Start the embedded Hono server
   const port = await startServer();
+  process.env.OPEN_ROUTINES_API_PORT = String(port);
+  writeGmailSkill();
   setServerPort(port);
   setFileWatcherPort(port);
 

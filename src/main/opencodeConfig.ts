@@ -82,6 +82,63 @@ function buildAgentDefinition(routine: RoutineRow): AgentDefinition {
         }
       }
     }
+    // Implicit read access: if edit allows a path, read should too.
+    // A routine granted write access to a path will almost always need to read it first.
+    const editPerm = serialized.edit;
+    if (editPerm !== undefined) {
+      const editAllowPatterns: string[] =
+        editPerm === 'allow'
+          ? ['*']
+          : typeof editPerm === 'object'
+            ? Object.entries(editPerm)
+                .filter(([, lvl]) => lvl === 'allow')
+                .map(([pat]) => pat)
+            : [];
+
+      for (const pattern of editAllowPatterns) {
+        const currentRead = serialized.read;
+        if (pattern === '*') {
+          // Edit is globally allowed — read should be too
+          if (!currentRead || currentRead === 'deny' || currentRead === 'ask') {
+            serialized.read = 'allow';
+          }
+        } else {
+          // Specific pattern — ensure read allows it
+          if (!currentRead || currentRead === 'ask' || currentRead === 'deny') {
+            serialized.read = {
+              '*': (currentRead as 'ask' | 'allow' | 'deny') ?? 'ask',
+              [pattern]: 'allow',
+            };
+          } else if (currentRead === 'allow') {
+            // Already globally allowed — nothing needed
+          } else if (typeof currentRead === 'object') {
+            (currentRead as Record<string, 'ask' | 'allow' | 'deny'>)[pattern] = 'allow';
+          }
+        }
+      }
+    }
+
+    // If Gmail is enabled, grant access to the Gmail API and skill
+    let connectedApps: Record<string, boolean> = {};
+    try {
+      connectedApps = JSON.parse(routine.connected_apps || '{}');
+    } catch {
+      /* ignore */
+    }
+
+    if (connectedApps.gmail) {
+      // Allow bash curl for authenticated Gmail API calls (WebFetch can't set headers)
+      const currentBash = serialized.bash;
+      if (typeof currentBash === 'string' && currentBash !== 'allow') {
+        serialized.bash = { '*': currentBash, 'curl *': 'allow' };
+      } else if (typeof currentBash === 'object' && currentBash !== null) {
+        serialized.bash = { ...currentBash, 'curl *': 'allow' };
+      }
+
+      // Allow the gmail skill so the agent can load API docs on demand
+      serialized['skill'] = { '*': 'deny', gmail: 'allow' };
+    }
+
     serialized['external_directory'] = 'allow';
     def.permission = serialized;
     logger.debug(

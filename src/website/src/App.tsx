@@ -1,7 +1,8 @@
 import { AppWindow } from './components/AppWindow';
 import { InteractiveMockup } from './components/InteractiveMockup';
-import { NewRoutineMockup } from './components/NewRoutineMockup';
+import { SettingsMockup } from './components/SettingsMockup';
 import { PermissionsMockup } from './components/PermissionsMockup';
+import { RoutineChatMockup } from './components/RoutineChatMockup';
 import { ChatMockup } from './components/ChatMockup';
 
 export function App() {
@@ -38,8 +39,7 @@ export function App() {
             <span className="serif italic text-accent">The boring parts.</span>
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-pretty text-[15px] leading-relaxed text-muted-foreground md:text-[17px]">
-            Define repeatable AI workflows that watch your files, run on schedule, and handle the
-            busywork.
+            Define repeatable AI workflows that run on your schedule, and handle the busywork.
           </p>
           <div className="mt-8 flex items-center justify-center gap-3">
             <a
@@ -65,110 +65,89 @@ export function App() {
           <InteractiveMockup />
         </section>
 
-        {/* ── TRIGGERS SECTION ── */}
+        {/* ── OPEN SECTION ── */}
         <section className="border-y border-muted bg-surface/60">
           <div className="max-w-[1280px] mx-auto px-6 py-10 md:py-20">
             <div className="grid items-center gap-12 md:grid-cols-2">
               <div>
                 <div className="font-mono text-micro uppercase tracking-caps-wide font-semibold text-accent mb-3">
-                  Triggers
+                  Open
                 </div>
                 <h2 className="text-balance text-[34px] font-semibold leading-tight tracking-tight md:text-[44px]">
-                  All kinds of{' '}
+                  Your models,{' '}
                   <span className="serif italic" style={{ color: '#ec4899' }}>
-                    when
+                    your compute.
                   </span>
-                  .
                 </h2>
                 <p className="mt-4 max-w-md text-[15px] leading-relaxed text-muted-foreground">
-                  Schedule routines on a cron expression, watch a directory and react the moment
-                  files change, or summon one straight from chat — more trigger types on the way.
+                  No vendor lock-in. Use Claude, GPT-4o, or any model you can run locally via
+                  Ollama. Bring your own API keys — your compute, fully under your control.
                 </p>
-                <div className="mt-7 space-y-3">
-                  <div className="card p-4">
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center font-mono text-xs text-accent py-0.5 px-2 rounded bg-accent-soft">
-                        cron
-                      </span>
-                      <span className="text-label font-medium">On a schedule</span>
-                    </div>
-                    <div className="mt-2 rounded-md px-3 py-2 font-mono text-code bg-muted text-fg-muted">
-                      0 9 * * 1-5 → weekday standup digest
-                    </div>
+                <div className="mt-6 space-y-2 text-body-sm text-muted-foreground">
+                  <div className="flex items-start gap-2">
+                    <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-foreground/40" />
+                    <span>Anthropic, OpenAI, and more.</span>
                   </div>
-                  <div className="card p-4">
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center font-mono text-xs py-0.5 px-2 rounded bg-muted text-muted-foreground">
-                        watcher
-                      </span>
-                      <span className="text-label font-medium">On a file event</span>
-                    </div>
-                    <div className="mt-2 rounded-md px-3 py-2 font-mono text-code bg-muted text-fg-muted">
-                      watch ~/screenshots → auto-OCR &amp; file
-                    </div>
+                  <div className="flex items-start gap-2">
+                    <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-foreground/40" />
+                    <span>Local models via Ollama.</span>
                   </div>
-                  <div className="card p-4">
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center font-mono text-xs py-0.5 px-2 rounded bg-muted text-muted-foreground">
-                        manual
-                      </span>
-                      <span className="text-label font-medium">On demand</span>
-                    </div>
-                    <div className="mt-2 rounded-md px-3 py-2 font-mono text-code bg-muted text-fg-muted">
-                      &quot;summarise my PRs&quot; → summon from chat
-                    </div>
+                  <div className="flex items-start gap-2">
+                    <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-foreground/40" />
+                    <span>Self-hostable. No telemetry.</span>
                   </div>
-                  <p className="font-mono text-xs text-fg-dim pl-1">… and more to come.</p>
                 </div>
               </div>
 
               <AppWindow
-                active="routines"
-                breadcrumbs={[{ label: 'Routines' }, { label: 'New routine' }]}
-                height={700}
+                active="settings"
+                breadcrumbs={[{ label: 'Settings' }]}
+                height={620}
                 scrollable={false}
               >
-                <NewRoutineMockup />
+                <SettingsMockup />
               </AppWindow>
             </div>
           </div>
         </section>
 
-        {/* ── PERMISSIONS SECTION ── */}
+        {/* ── CONTROL SECTION ── */}
         <section className="border-t border-muted bg-surface/60">
           <div className="max-w-[1280px] mx-auto px-6 py-10 md:py-24">
             <div className="grid items-start gap-12 md:grid-cols-[1fr_1.2fr]">
               <div className="md:sticky md:top-20">
                 <div className="font-mono text-micro uppercase tracking-caps-wide font-semibold text-accent mb-3">
-                  Permissions
+                  Control
                 </div>
                 <h2 className="text-balance text-[34px] font-semibold leading-tight tracking-tight md:text-[40px]">
-                  Each routine,{' '}
+                  You decide what runs, when,{' '}
                   <span className="serif italic" style={{ color: '#ec4899' }}>
-                    its own rules.
+                    and what it can do.
                   </span>
                 </h2>
                 <p className="mt-4 max-w-md text-[15px] leading-relaxed text-muted-foreground">
-                  Every routine has its own permission set. Disable shell access for one that only
-                  reads files. Block network calls for one that stays local. Set anything sensitive
-                  to <span className="font-mono text-xs text-foreground">ask</span> and it&apos;ll
-                  prompt you before acting.
+                  Schedule on a cron, watch a folder, or trigger on demand. Every routine carries
+                  its own permission set — grant or restrict access to files, the shell, and the
+                  network independently.
                 </p>
                 <p className="mt-3 max-w-md text-[15px] leading-relaxed text-muted-foreground">
-                  It won&apos;t delete your hard drive if it doesn&apos;t have shell access.
+                  Set anything sensitive to{' '}
+                  <span className="font-mono text-xs text-foreground">ask</span> and it will prompt
+                  you before acting. It won&apos;t delete your hard drive if it doesn&apos;t have
+                  shell access.
                 </p>
                 <div className="mt-6 space-y-2 text-body-sm text-muted-foreground">
                   <div className="flex items-start gap-2">
                     <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-foreground/40" />
-                    <span>Per-routine, not per-app.</span>
+                    <span>Cron, file watcher, or manual trigger.</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-foreground/40" />
-                    <span>Allow, ask, or deny — per tool category.</span>
+                    <span>Per-routine permissions, not per-app.</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-foreground/40" />
-                    <span>No silent escalation.</span>
+                    <span>Allow, ask, or deny — no silent escalation.</span>
                   </div>
                 </div>
               </div>
@@ -181,6 +160,56 @@ export function App() {
               >
                 <PermissionsMockup />
               </AppWindow>
+            </div>
+          </div>
+        </section>
+
+        {/* ── CONNECTED SECTION ── */}
+        <section className="border-t border-muted bg-surface/60">
+          <div className="max-w-[1280px] mx-auto px-6 py-10 md:py-20">
+            <div className="grid items-center gap-12 md:grid-cols-2">
+              {/* Text — first on mobile, right on desktop */}
+              <div className="md:order-2">
+                <div className="font-mono text-micro uppercase tracking-caps-wide font-semibold text-accent mb-3">
+                  Integrations
+                </div>
+                <h2 className="text-balance text-[34px] font-semibold leading-tight tracking-tight md:text-[44px]">
+                  Hello{' '}
+                  <span className="serif italic" style={{ color: '#ec4899' }}>
+                    world.
+                  </span>
+                </h2>
+                <p className="mt-4 max-w-md text-[15px] leading-relaxed text-muted-foreground">
+                  Routines aren&apos;t limited to your file system. Connect Gmail and let routines
+                  search your inbox, pull attachments, and act on what they find.
+                </p>
+                <div className="mt-6 space-y-2 text-body-sm text-muted-foreground">
+                  <div className="flex items-start gap-2">
+                    <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-foreground/40" />
+                    <span>Gmail — search, read, download attachments.</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-foreground/40" />
+                    <span>OAuth-secured, no credentials stored.</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-foreground/40" />
+                    <span>More integrations on the way.</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Mockup — second on mobile, left on desktop */}
+              <div className="md:order-1">
+                <AppWindow
+                  active="routines"
+                  breadcrumbs={[{ label: 'Routines' }, { label: 'Invoice tracker' }]}
+                  height={580}
+                  scrollable={false}
+                >
+                  <RoutineChatMockup routineId={4} name="Invoice tracker" />
+                </AppWindow>
+              </div>
             </div>
           </div>
         </section>

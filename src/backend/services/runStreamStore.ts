@@ -66,6 +66,8 @@ interface RunStore {
   stdoutLines: string[];
   /** Accumulated text from live deltas, flushed to history/DB on non-text events or close. */
   pendingText: string;
+  /** When true, the next tool_result should be suppressed (follows a filtered tool call). */
+  suppressNextToolResult: boolean;
 }
 
 const stores = new Map<string, RunStore>();
@@ -84,6 +86,7 @@ export function openRun(runId: string): void {
     history: [],
     stdoutLines: [],
     pendingText: '',
+    suppressNextToolResult: false,
   });
 }
 
@@ -133,6 +136,20 @@ export function push(runId: string, event: StreamEvent): void {
   const store = stores.get(runId);
   if (!store) {
     return;
+  }
+
+  // Filter out token-fetch bash calls and their results — they contain auth tokens
+  // and add no value to the transcript (UI or DB).
+  if (event.type === 'tool' && event.data.includes('/api/gmail/token')) {
+    store.suppressNextToolResult = true;
+    return;
+  }
+  if (event.type === 'tool_result' && store.suppressNextToolResult) {
+    store.suppressNextToolResult = false;
+    return;
+  }
+  if (event.type !== 'tool_result') {
+    store.suppressNextToolResult = false;
   }
 
   // Always stream to queue for live SSE consumers

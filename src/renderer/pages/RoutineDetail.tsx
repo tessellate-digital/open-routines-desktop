@@ -118,6 +118,7 @@ export default function RoutineDetail() {
   const [toggling, setToggling] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [expandedPerm, setExpandedPerm] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!id) {
@@ -308,19 +309,20 @@ export default function RoutineDetail() {
         {(() => {
           const perms = (routine.permissions ?? {}) as RoutinePermissions;
           const rows: { key: keyof RoutinePermissions; label: string }[] = [
-            { key: 'edit', label: 'File editing' },
-            { key: 'bash', label: 'Shell commands' },
+            { key: 'read', label: 'Read files' },
+            { key: 'edit', label: 'Edit files' },
+            // bash is always allowed — hidden from summary
             { key: 'webfetch', label: 'Web fetch' },
-            { key: 'doom_loop', label: 'Loop prevention' },
+            { key: 'websearch', label: 'Web & code search' },
           ];
           const chipStyle: Record<PermissionLevel, string> = {
             allow: 'bg-success/15 text-success',
-            ask: 'bg-accent/15 text-accent',
+            ask: 'bg-orange-500/15 text-orange-500',
             deny: 'bg-destructive/15 text-destructive',
           };
           const dotStyle: Record<PermissionLevel, string> = {
             allow: 'bg-success',
-            ask: 'bg-accent',
+            ask: 'bg-orange-500',
             deny: 'bg-destructive',
           };
           return (
@@ -330,31 +332,104 @@ export default function RoutineDetail() {
                 <div className="px-3.5 py-2.5 flex gap-2 flex-wrap items-center">
                   {rows.map(({ key, label }) => {
                     const raw = perms[key];
-                    const level: PermissionLevel =
-                      typeof raw === 'string' ? (raw as PermissionLevel) : 'ask';
+                    const hasExceptions = typeof raw === 'object' && raw !== null;
+                    const level: PermissionLevel = hasExceptions
+                      ? (((raw as Record<string, string>)['*'] as PermissionLevel) ?? 'allow')
+                      : typeof raw === 'string'
+                        ? (raw as PermissionLevel)
+                        : 'allow';
+                    const exceptionRules = hasExceptions
+                      ? Object.entries(raw as Record<string, PermissionLevel>).filter(
+                          ([k]) => k !== '*'
+                        )
+                      : [];
                     return (
                       <span
                         key={key}
                         className={classNames(
                           'inline-flex items-center gap-1.5 font-sans text-xs font-medium py-1 px-2.5 rounded-md',
-                          chipStyle[level]
+                          hasExceptions
+                            ? 'bg-blue-500/15 text-blue-600 cursor-pointer select-none'
+                            : chipStyle[level]
                         )}
+                        onClick={
+                          hasExceptions
+                            ? () => setExpandedPerm(expandedPerm === key ? null : (key as string))
+                            : undefined
+                        }
                       >
                         <span
                           className={classNames(
                             'w-1.5 h-1.5 rounded-full flex-shrink-0',
-                            dotStyle[level]
+                            hasExceptions ? 'bg-blue-500' : dotStyle[level]
                           )}
                         />
                         {label}
+                        {hasExceptions && (
+                          <span className="text-micro bg-blue-500/20 text-blue-600 font-semibold rounded-full px-1.5 py-0.5 leading-none">
+                            {exceptionRules.length}
+                          </span>
+                        )}
                       </span>
                     );
                   })}
                 </div>
+                {expandedPerm &&
+                  (() => {
+                    const raw = perms[expandedPerm];
+                    if (typeof raw !== 'object' || raw === null) {
+                      return null;
+                    }
+                    const rules = Object.entries(raw as Record<string, PermissionLevel>).filter(
+                      ([k]) => k !== '*'
+                    );
+                    return (
+                      <div className="border-t border-border px-3.5 py-2.5 flex flex-col gap-1.5">
+                        {rules.map(([pattern, lvl]) => (
+                          <div key={pattern} className="flex items-center gap-2">
+                            <span
+                              className={classNames(
+                                'w-1.5 h-1.5 rounded-full flex-shrink-0',
+                                dotStyle[lvl]
+                              )}
+                            />
+                            <span className="font-mono text-xs text-fg-dim">{pattern}</span>
+                            <span
+                              className={classNames('ml-auto text-xs font-medium', {
+                                'text-success': lvl === 'allow',
+                                'text-orange-500': lvl === 'ask',
+                                'text-destructive': lvl === 'deny',
+                              })}
+                            >
+                              {lvl}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
               </div>
             </div>
           );
         })()}
+
+        {/* Connected Apps */}
+        {routine.connected_apps?.gmail && (
+          <div>
+            <SectionLabel>Connected Apps</SectionLabel>
+            <div className={trigCardClasses}>
+              <div className="px-3.5 py-2.5 flex gap-2 flex-wrap items-center">
+                <span className="inline-flex items-center gap-1.5 font-sans text-xs font-medium py-1 px-2.5 rounded-md bg-red-100 text-red-600">
+                  <svg viewBox="0 0 20 20" width="12" height="12" fill="currentColor">
+                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0 0 16 4H4a2 2 0 0 0-1.997 1.884z" />
+                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8.118z" />
+                  </svg>
+                  Gmail
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Triggers */}
         <div className="mt-4">

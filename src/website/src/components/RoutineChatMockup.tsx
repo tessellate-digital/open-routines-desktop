@@ -152,12 +152,57 @@ function NewsSummaryChat() {
   );
 }
 
-type RoutineId = 1 | 2 | 3;
+function InvoiceTrackerChat() {
+  return (
+    <>
+      <TriggerEvent label="Gmail · subject:invoice · 47 new threads" />
+      <UserPrompt>
+        Search Gmail for this year&apos;s invoices, download the PDFs, classify each one, and update
+        my invoices spreadsheet.
+      </UserPrompt>
+      <AIBlock
+        tools={[
+          { call: 'gmail_search', detail: 'subject:invoice after:2026/01/01 — 47 results' },
+          { call: 'gmail_get_attachment', detail: '× 18 PDFs downloaded' },
+          { call: 'read_file', detail: 'parsing PDFs with pdftotext' },
+        ]}
+      >
+        <p>
+          Found <strong>18 invoices</strong> in your Gmail inbox. 29 emails were shipping
+          notifications or order confirmations — skipped.
+        </p>
+        <div className="text-fg-muted space-y-1 mt-2">
+          <p>
+            <strong className="text-foreground">SaaS subscriptions</strong> — Figma, Linear, Vercel
+            · <strong>€640.00</strong>
+          </p>
+          <p>
+            <strong className="text-foreground">Cloud infra</strong> — AWS, Hetzner ·{' '}
+            <strong>€1,180.40</strong>
+          </p>
+          <p>
+            <strong className="text-foreground">Other</strong> — 9 vendors ·{' '}
+            <strong>€870.19</strong>
+          </p>
+        </div>
+      </AIBlock>
+      <AIBlock tools={[{ call: 'write_file', detail: 'Documents/Invoices/Invoices_2026.xlsx' }]}>
+        <p>
+          Spreadsheet updated — 18 rows, colour-coded by category.{' '}
+          <strong>Grand total: €2,690.59</strong>
+        </p>
+      </AIBlock>
+    </>
+  );
+}
+
+type RoutineId = 1 | 2 | 3 | 4;
 
 const CHAT_HEADERS: Record<RoutineId, { triggerType: string; triggerLabel: string }> = {
   1: { triggerType: 'watcher', triggerLabel: '~/Documents/Invoices/**' },
   2: { triggerType: 'watcher', triggerLabel: 'services/*/openapi.yaml' },
   3: { triggerType: 'cron', triggerLabel: '0 7 * * 1-5' },
+  4: { triggerType: 'gmail', triggerLabel: 'subject:invoice' },
 };
 
 export function RoutineChatMockup({
@@ -172,7 +217,7 @@ export function RoutineChatMockup({
   const header = CHAT_HEADERS[routineId];
 
   return (
-    <div className="route-fade">
+    <div>
       {onBack && (
         <button
           onClick={onBack}
@@ -207,6 +252,7 @@ export function RoutineChatMockup({
       {routineId === 1 && <ExpenseManagerChat />}
       {routineId === 2 && <DocDriftChat />}
       {routineId === 3 && <NewsSummaryChat />}
+      {routineId === 4 && <InvoiceTrackerChat />}
     </div>
   );
 }
