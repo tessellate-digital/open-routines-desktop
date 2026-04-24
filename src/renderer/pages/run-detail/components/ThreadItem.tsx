@@ -15,6 +15,7 @@ interface ThreadItemProps {
   toggledTools: Set<number>;
   onToggleTool: (idx: number) => void;
   onReply?: (text: string) => void;
+  onPermissionRespond?: (permissionId: string, response: 'once' | 'always' | 'reject') => void;
 }
 
 export const ThreadItem = memo(function ThreadItem({
@@ -26,6 +27,7 @@ export const ThreadItem = memo(function ThreadItem({
   toggledTools,
   onToggleTool,
   onReply,
+  onPermissionRespond,
 }: ThreadItemProps) {
   const segments = useMemo(
     () => (isLast && isStreaming ? liveSegments : parseSegments(run.stdout || [])),
@@ -44,6 +46,7 @@ export const ThreadItem = memo(function ThreadItem({
         onToggleTool={onToggleTool}
         isStreaming={isLast && isStreaming}
         onReply={isLast ? onReply : undefined}
+        onPermissionRespond={isLast ? onPermissionRespond : undefined}
       />
       {!isLast && <div className="divider" />}
     </div>

@@ -36,7 +36,6 @@ import { db } from '../database';
 import * as runStreamStore from './runStreamStore';
 import type { StreamEvent } from './runStreamStore';
 import { logger } from '../util/logger';
-import { showPermissionDialog } from './permissionBridge';
 
 // ─── Internal types ───────────────────────────────────────────────────────────
 
@@ -87,6 +86,12 @@ const sessionToClient = new Map<string, unknown>();
 const questionToBaseUrl = new Map<string, string>();
 
 /**
+ * Maps permission IDs to the context needed to respond (baseUrl + sessionId).
+ * Used by answerPermission() to route the reply to the correct server.
+ */
+const permissionToContext = new Map<string, { baseUrl: string; sessionId: string }>();
+
+/**
  * Tracks permission IDs for which a dialog has already been shown, so that
  * subsequent `permission.updated` events for the same permission don't re-prompt.
  */
@@ -94,9 +99,9 @@ const handledPermissionIds = new Set<string>();
 
 /**
  * Tracks whether a session.error event was seen for a given sessionId.
- * Outlives the subscriber (which is removed on session.idle) so it can be
- * read in the executor's finally block after waitForDrain resolves.
- * Cleaned up in unsubscribeRun() and closeServerRelay().
+ * Outlives the subscriber so it can be read in the executor's finally block
+ * after waitForDrain resolves.  Cleaned up in unsubscribeRun() and
+ * closeServerRelay().
  */
 const sessionErrorFlags = new Map<string, boolean>();
 
@@ -349,6 +354,7 @@ async function runRelayLoop(client: unknown, relay: ServerRelay): Promise<void> 
           break;
         }
 
+        case 'permission.asked':
         case 'permission.updated': {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const props = payload.properties as any;
@@ -359,7 +365,7 @@ async function runRelayLoop(client: unknown, relay: ServerRelay): Promise<void> 
             break;
           }
 
-          // Only prompt once per permission ID (permission.updated may fire multiple times)
+          // Only prompt once per permission ID (events may fire multiple times)
           if (handledPermissionIds.has(permId)) {
             break;
           }
@@ -369,31 +375,27 @@ async function runRelayLoop(client: unknown, relay: ServerRelay): Promise<void> 
             break;
           }
 
-          const permTitle = (props?.title ?? '') as string;
-          const rawPattern = props?.pattern;
-          const permPattern = Array.isArray(rawPattern)
-            ? (rawPattern as string[]).join(', ')
-            : ((rawPattern ?? '') as string);
-          const permType = (props?.type ?? 'bash') as string;
-          const baseUrl = subscriber.baseUrl;
+          // permission.asked uses `permission` + `patterns` (array)
+          // permission.updated uses `type` + `pattern` (string or array)
+          const permType = (props?.permission ?? props?.type ?? 'bash') as string;
+          const rawPattern = props?.patterns ?? props?.pattern;
+          const patterns = Array.isArray(rawPattern)
+            ? (rawPattern as string[])
+            : rawPattern
+              ? [rawPattern as string]
+              : [];
+          const metadata = props?.metadata ?? {};
 
           handledPermissionIds.add(permId);
 
-          // Fire-and-forget: show native dialog without blocking the relay loop
-          showPermissionDialog({
-            title: permTitle,
-            detail: permPattern,
-            permissionType: permType,
-          })
-            .then((response) => {
-              return respondToPermission(baseUrl, sid, permId, response);
-            })
-            .catch((err) => {
-              logger.error('[relay] permission.updated handler error:', err);
-              handledPermissionIds.delete(permId);
-            });
+          // Store context so answerPermission() can route the response
+          permissionToContext.set(permId, { baseUrl: subscriber.baseUrl, sessionId: sid });
 
-          // Permission events are NOT pushed to the run stream
+          // Push to the run stream so the frontend can render inline UI
+          runStreamStore.push(subscriber.runId, {
+            type: 'permission',
+            data: JSON.stringify({ id: permId, permission: permType, patterns, metadata }),
+          });
           break;
         }
 
@@ -435,11 +437,12 @@ async function runRelayLoop(client: unknown, relay: ServerRelay): Promise<void> 
             break;
           }
 
-          // Session is done — resolve the drain promise, then remove the
-          // subscriber; the relay loop continues for any remaining sessions.
+          // Session went idle — resolve the drain promise so waitForDrain()
+          // unblocks.  Do NOT remove the subscriber here: the executor may
+          // send continuation prompts on the same session (e.g. after a
+          // tool-call denial).  Cleanup is done by unsubscribeRun() in the
+          // executor's finally block.
           subscriber.resolveDrained();
-          relay.subscribers.delete(sid);
-          sessionToClient.delete(sid);
           break;
         }
 
@@ -539,8 +542,8 @@ export function subscribeRun(
 /**
  * Remove a run's subscription from its server relay.
  *
- * Safe to call after the run ends or if `session.idle` was already received
- * (which removes the subscriber internally — this call is then a no-op).
+ * Safe to call after the run ends — this is the authoritative cleanup for
+ * the subscriber.  If already called for this session, it is a no-op.
  *
  * @param sessionId The SDK session ID to stop relaying.
  */
@@ -622,6 +625,29 @@ export function waitForDrain(sessionId: string): Promise<void> {
 }
 
 /**
+ * Reset the drain promise for a session so that a subsequent `waitForDrain()`
+ * call will block until the next `session.idle` event.  Call this before
+ * sending a continuation prompt on a session that has already gone idle.
+ */
+export function resetDrain(sessionId: string): void {
+  const client = sessionToClient.get(sessionId);
+  if (!client) {
+    return;
+  }
+  const relay = serverRelays.get(client);
+  const subscriber = relay?.subscribers.get(sessionId);
+  if (!subscriber) {
+    return;
+  }
+
+  let resolve!: () => void;
+  subscriber.drained = new Promise<void>((r) => {
+    resolve = r;
+  });
+  subscriber.resolveDrained = resolve;
+}
+
+/**
  * Send a reply to an opencode question request.
  * `answers` is an array of per-question answers; each answer is an array of
  * selected option labels (matching the QuestionAnswer SDK type).
@@ -652,12 +678,33 @@ export async function answerQuestion(questionId: string, answers: string[][]): P
 }
 
 /**
+ * Respond to a pending permission request from the frontend.
+ *
+ * @param permissionId  The permission ID from the `permission.asked` event.
+ * @param response      "once" | "always" | "reject"
+ */
+export async function answerPermission(
+  permissionId: string,
+  response: 'once' | 'always' | 'reject'
+): Promise<void> {
+  const ctx = permissionToContext.get(permissionId);
+  if (!ctx) {
+    throw new Error(
+      `No server found for permission ${permissionId} — it may have already been answered`
+    );
+  }
+
+  await respondToPermission(ctx.baseUrl, ctx.sessionId, permissionId, response);
+  permissionToContext.delete(permissionId);
+}
+
+/**
  * Returns true if a `session.error` event was received for the given session
  * during its lifetime.
  *
  * Safe to call after `waitForDrain` resolves — the flag is stored in a
- * module-level map that outlives the subscriber (which is removed on
- * `session.idle`).  The flag is cleaned up in `unsubscribeRun`.
+ * module-level map that outlives the subscriber.  The flag is cleaned up
+ * in `unsubscribeRun`.
  *
  * @param sessionId The SDK session ID to check.
  */

@@ -95,10 +95,10 @@ describe('regenerateOpencodeConfig', () => {
       expect(getAgent()).toMatchObject({ description: 'Daily sync', mode: 'primary' });
     });
 
-    it('sets prompt from routine prompt', () => {
+    it('starts the prompt with the routine prompt', () => {
       mockAll.mockReturnValue([makeRow({ prompt: 'Run the test suite' })]);
       regenerateOpencodeConfig();
-      expect(getAgent().prompt).toBe('Run the test suite');
+      expect(getAgent().prompt as string).toContain('Run the test suite');
     });
 
     it('includes model as a plain provider/model string when set', () => {
@@ -130,25 +130,74 @@ describe('regenerateOpencodeConfig', () => {
     it('includes permission block when permissions are set', () => {
       mockAll.mockReturnValue([makeRow({ permissions: '{"edit":"allow","bash":"deny"}' })]);
       regenerateOpencodeConfig();
-      expect(getAgent().permission).toEqual({ edit: 'allow', bash: 'deny' });
+      expect(getAgent().permission).toMatchObject({ edit: 'allow', bash: 'deny' });
     });
 
-    it('omits permission block when permissions object is empty', () => {
+    it('still injects external_directory: "allow" when permissions object is empty', () => {
       mockAll.mockReturnValue([makeRow({ permissions: '{}' })]);
       regenerateOpencodeConfig();
-      expect(getAgent()).not.toHaveProperty('permission');
+      expect(getAgent().permission).toEqual({ external_directory: 'allow' });
     });
 
-    it('omits permission block when permissions JSON is malformed', () => {
+    it('still injects external_directory: "allow" when permissions JSON is malformed', () => {
       mockAll.mockReturnValue([makeRow({ permissions: 'not-valid-json' })]);
       regenerateOpencodeConfig();
-      expect(getAgent()).not.toHaveProperty('permission');
+      expect(getAgent().permission).toEqual({ external_directory: 'allow' });
     });
 
-    it('preserves doom_loop permission level', () => {
-      mockAll.mockReturnValue([makeRow({ permissions: '{"doom_loop":"ask"}' })]);
+    it('always injects external_directory: "allow" when other permissions exist', () => {
+      mockAll.mockReturnValue([makeRow({ permissions: '{"bash":"deny"}' })]);
       regenerateOpencodeConfig();
-      expect(getAgent().permission).toMatchObject({ doom_loop: 'ask' });
+      expect((getAgent().permission as Record<string, unknown>).external_directory).toBe('allow');
+    });
+
+    it('skips external_directory from user-provided permissions (it is always injected)', () => {
+      // User sets external_directory: "deny" — it must be overridden to "allow"
+      mockAll.mockReturnValue([
+        makeRow({ permissions: '{"bash":"allow","external_directory":"deny"}' }),
+      ]);
+      regenerateOpencodeConfig();
+      expect((getAgent().permission as Record<string, unknown>).external_directory).toBe('allow');
+    });
+
+    it('skips doom_loop from the serialized output (it is a managed key)', () => {
+      mockAll.mockReturnValue([makeRow({ permissions: '{"doom_loop":"ask","bash":"allow"}' })]);
+      regenerateOpencodeConfig();
+      expect(getAgent().permission as Record<string, unknown>).not.toHaveProperty('doom_loop');
+    });
+
+    it('flattens a wildcard-only object { "*": "deny" } to the string "deny"', () => {
+      // webfetch is not a granular key, so { "*": "deny" } → "deny"
+      mockAll.mockReturnValue([makeRow({ permissions: '{"webfetch":{"*":"deny"}}' })]);
+      regenerateOpencodeConfig();
+      expect((getAgent().permission as Record<string, unknown>).webfetch).toBe('deny');
+    });
+
+    it('keeps object format for granular keys with specific pattern rules', () => {
+      // bash is a granular key with a non-"*" rule — object format preserved
+      mockAll.mockReturnValue([makeRow({ permissions: '{"bash":{"npm*":"allow","rm*":"deny"}}' })]);
+      regenerateOpencodeConfig();
+      expect((getAgent().permission as Record<string, unknown>).bash).toEqual({
+        'npm*': 'allow',
+        'rm*': 'deny',
+      });
+    });
+
+    it('flattens a granular key with only a "*" default to a string', () => {
+      // bash with only "*" key — no specific rules, flatten to string
+      mockAll.mockReturnValue([makeRow({ permissions: '{"bash":{"*":"ask"}}' })]);
+      regenerateOpencodeConfig();
+      expect((getAgent().permission as Record<string, unknown>).bash).toBe('ask');
+    });
+  });
+
+  describe('prompt injection', () => {
+    it('appends the denied-tool graceful-continuation instruction to the prompt', () => {
+      mockAll.mockReturnValue([makeRow({ prompt: 'Run the test suite' })]);
+      regenerateOpencodeConfig();
+      expect(getAgent().prompt as string).toContain(
+        'If a tool call is denied or fails due to a permission rule'
+      );
     });
   });
 });

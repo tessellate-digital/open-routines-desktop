@@ -11,8 +11,15 @@ type ToolSegment = {
 };
 type ErrorSegment = { kind: 'error'; content: string };
 type StepSegment = { kind: 'step'; label: string };
+type PermissionSegment = {
+  kind: 'permission';
+  id: string;
+  permission: string;
+  patterns: string[];
+  responded: 'once' | 'always' | 'reject' | null;
+};
 
-export type Segment = TextSegment | ToolSegment | ErrorSegment | StepSegment;
+export type Segment = TextSegment | ToolSegment | ErrorSegment | StepSegment | PermissionSegment;
 
 interface RunStore {
   thread: Run[];
@@ -29,6 +36,8 @@ interface RunStore {
   appendToolResult: (result: string) => void;
   appendError: (content: string) => void;
   appendStep: () => void;
+  appendPermission: (id: string, permission: string, patterns: string[]) => void;
+  updatePermissionResponse: (id: string, response: 'once' | 'always' | 'reject') => void;
 
   updateRunStatus: (
     runId: string,
@@ -97,6 +106,22 @@ export const useRunStore = create<RunStore>((set, get) => ({
     set((state) => ({
       liveSegments: [...state.liveSegments, { kind: 'error', content }],
     })),
+
+  appendPermission: (id, permission, patterns) =>
+    set((state) => ({
+      liveSegments: [
+        ...state.liveSegments,
+        { kind: 'permission', id, permission, patterns, responded: null },
+      ],
+    })),
+
+  updatePermissionResponse: (id, response) =>
+    set((state) => {
+      const segments = state.liveSegments.map((seg) =>
+        seg.kind === 'permission' && seg.id === id ? { ...seg, responded: response } : seg
+      );
+      return { liveSegments: segments };
+    }),
 
   appendStep: () =>
     set((state) => {

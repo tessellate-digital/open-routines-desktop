@@ -9,6 +9,7 @@ interface AssistantCardProps {
   onToggleTool: (idx: number) => void;
   isStreaming?: boolean;
   onReply?: (text: string) => void;
+  onPermissionRespond?: (permissionId: string, response: 'once' | 'always' | 'reject') => void;
 }
 
 export const AssistantCard = memo(function AssistantCard({
@@ -17,6 +18,7 @@ export const AssistantCard = memo(function AssistantCard({
   onToggleTool,
   isStreaming,
   onReply,
+  onPermissionRespond,
 }: AssistantCardProps) {
   const hasContent = segments.length > 0;
   if (!hasContent && !isStreaming) {
@@ -39,6 +41,7 @@ export const AssistantCard = memo(function AssistantCard({
             toggledTools={toggledTools}
             onToggleTool={onToggleTool}
             onReply={onReply}
+            onPermissionRespond={onPermissionRespond}
           />
         )}
       </div>

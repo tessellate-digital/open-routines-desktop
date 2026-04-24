@@ -99,6 +99,7 @@ export function useRunStream(
     onStderr?: (data: string) => void;
     onStdout?: (data: string) => void;
     onQuestion?: (questionId: string) => void;
+    onPermission?: (data: string) => void;
     onDone?: (data: string) => void;
     /** Called before the stream reconnects — clear live state so replayed events rebuild it. */
     onReconnect?: () => void;
@@ -143,6 +144,7 @@ export function useRunStream(
         stderr: 'onStderr',
         stdout: 'onStdout',
         question: 'onQuestion',
+        permission: 'onPermission',
       };
 
       for (const [eventType, handlerKey] of Object.entries(eventMap)) {

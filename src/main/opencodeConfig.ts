@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import { config } from './config';
 import { db } from '../backend/database';
 import type { RoutineRow } from '../backend/types';
+import { logger } from '../backend/util/logger';
 
 interface AgentDefinition {
   description?: string;
@@ -10,20 +11,18 @@ interface AgentDefinition {
   model?: string;
   temperature?: number;
   prompt?: string;
-  permission?: {
-    edit?: 'ask' | 'allow' | 'deny';
-    bash?: 'ask' | 'allow' | 'deny' | Record<string, 'ask' | 'allow' | 'deny'>;
-    webfetch?: 'ask' | 'allow' | 'deny';
-    doom_loop?: 'ask' | 'allow' | 'deny';
-    external_directory?: 'ask' | 'allow' | 'deny';
-  };
+  permission?: Record<string, 'ask' | 'allow' | 'deny' | Record<string, 'ask' | 'allow' | 'deny'>>;
 }
 
 function buildAgentDefinition(routine: RoutineRow): AgentDefinition {
   const def: AgentDefinition = {
     description: routine.name,
     mode: 'primary',
-    prompt: routine.prompt,
+    prompt: [
+      routine.prompt,
+      '',
+      'If a tool call is denied or fails due to a permission rule, continue working with the information you do have. Do not stop or abort — complete the task to the best of your ability with the tools and data available to you.',
+    ].join('\n'),
   };
 
   // model must be the plain "provider/model" string — NOT an object
@@ -38,12 +37,59 @@ function buildAgentDefinition(routine: RoutineRow): AgentDefinition {
   let permissions: AgentDefinition['permission'] = {};
   try {
     permissions = JSON.parse(routine.permissions || '{}') as AgentDefinition['permission'];
-  } catch {
-    /* ignore malformed */
+  } catch (e) {
+    logger.warn(`[opencodeConfig] Failed to parse permissions for routine ${routine.id}:`, e);
   }
 
+  logger.debug(`[opencodeConfig] Routine ${routine.id} raw permissions:`, routine.permissions);
+  logger.debug(
+    `[opencodeConfig] Routine ${routine.id} parsed permissions:`,
+    JSON.stringify(permissions)
+  );
+
+  // Permissions come in two flavours:
+  //   - Flat (webfetch, websearch, …): always a simple "allow"|"ask"|"deny" string.
+  //   - Granular (read, edit, bash): can be a simple string OR an object with
+  //     pattern rules, e.g. { "*": "deny", "~/projects/**": "allow" }.
+  //     When the object only contains a "*" key (no specific rules), flatten it
+  //     back to a simple string so OpenCode gets the cleanest config possible.
+  const GRANULAR_KEYS = new Set(['read', 'edit', 'bash']);
+  const MANAGED_KEYS = new Set(['external_directory', 'doom_loop']);
+
   if (permissions && Object.keys(permissions).length > 0) {
-    def.permission = permissions;
+    const serialized: Record<
+      string,
+      'ask' | 'allow' | 'deny' | Record<string, 'ask' | 'allow' | 'deny'>
+    > = {};
+    for (const [key, val] of Object.entries(permissions)) {
+      if (MANAGED_KEYS.has(key)) {
+        continue;
+      }
+
+      if (typeof val === 'string') {
+        serialized[key] = val;
+      } else if (typeof val === 'object' && val !== null) {
+        const entries = Object.entries(val);
+        const hasRules = entries.some(([k]) => k !== '*');
+
+        if (GRANULAR_KEYS.has(key) && hasRules) {
+          // Has specific pattern rules — keep the object format
+          serialized[key] = val as Record<string, 'ask' | 'allow' | 'deny'>;
+        } else {
+          // Either a flat-only key, or a granular key with only a "*" default — flatten
+          serialized[key] =
+            ((val as Record<string, string>)['*'] as 'ask' | 'allow' | 'deny') ?? 'ask';
+        }
+      }
+    }
+    serialized['external_directory'] = 'allow';
+    def.permission = serialized;
+    logger.debug(
+      `[opencodeConfig] Routine ${routine.id} serialized permissions:`,
+      JSON.stringify(serialized)
+    );
+  } else {
+    def.permission = { external_directory: 'allow' };
   }
 
   return def;
@@ -66,5 +112,8 @@ export function regenerateOpencodeConfig(): void {
     agent,
   };
 
-  fs.writeFileSync(config.opencodeConfigPath, JSON.stringify(configObj, null, 2) + '\n');
+  const configJson = JSON.stringify(configObj, null, 2) + '\n';
+  logger.debug(`[opencodeConfig] Writing config to ${config.opencodeConfigPath}`);
+  logger.debug(`[opencodeConfig] Full config:`, configJson);
+  fs.writeFileSync(config.opencodeConfigPath, configJson);
 }

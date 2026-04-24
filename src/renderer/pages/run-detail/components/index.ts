@@ -5,6 +5,7 @@ export { AgentText } from './AgentText';
 export { ErrorBubble } from './ErrorBubble';
 export { StepDivider } from './StepDivider';
 export { PromptContext } from './PromptContext';
+export { PermissionCard } from './PermissionCard';
 export { SegmentList } from './SegmentList';
 export { AssistantCard } from './AssistantCard';
 export { ThreadItem } from './ThreadItem';

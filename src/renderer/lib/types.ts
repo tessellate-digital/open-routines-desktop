@@ -2,12 +2,16 @@
 
 export type PermissionLevel = 'allow' | 'ask' | 'deny';
 
+/** A permission can be a flat level or an object with granular pattern rules. */
+export type PermissionValue = PermissionLevel | Record<string, PermissionLevel>;
+
 export interface RoutinePermissions {
-  edit?: PermissionLevel;
-  bash?: PermissionLevel | Record<string, PermissionLevel>;
-  webfetch?: PermissionLevel;
-  doom_loop?: PermissionLevel;
-  external_directory?: PermissionLevel;
+  read?: PermissionValue;
+  edit?: PermissionValue;
+  bash?: PermissionValue;
+  webfetch?: PermissionValue;
+  websearch?: PermissionValue;
+  [key: string]: PermissionValue | undefined;
 }
 
 export interface Routine {

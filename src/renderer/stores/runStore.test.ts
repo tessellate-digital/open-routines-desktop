@@ -117,6 +117,62 @@ describe('runStore', () => {
     });
   });
 
+  describe('appendPermission', () => {
+    it('adds a permission segment with responded: null', () => {
+      useRunStore.getState().appendPermission('perm-1', 'bash', ['*.sh']);
+      const segments = useRunStore.getState().liveSegments;
+      expect(segments).toHaveLength(1);
+      expect(segments[0]).toEqual({
+        kind: 'permission',
+        id: 'perm-1',
+        permission: 'bash',
+        patterns: ['*.sh'],
+        responded: null,
+      });
+    });
+
+    it('allows multiple permission segments', () => {
+      useRunStore.getState().appendPermission('perm-1', 'read', []);
+      useRunStore.getState().appendPermission('perm-2', 'edit', ['~/src/**']);
+      expect(useRunStore.getState().liveSegments).toHaveLength(2);
+    });
+
+    it('stores an empty patterns array when none given', () => {
+      useRunStore.getState().appendPermission('perm-1', 'webfetch', []);
+      const seg = useRunStore.getState().liveSegments[0];
+      expect(seg.kind === 'permission' && seg.patterns).toEqual([]);
+    });
+  });
+
+  describe('updatePermissionResponse', () => {
+    it('sets responded on the matching permission segment', () => {
+      useRunStore.getState().appendPermission('perm-1', 'bash', []);
+      useRunStore.getState().updatePermissionResponse('perm-1', 'once');
+      const seg = useRunStore.getState().liveSegments[0];
+      expect(seg.kind === 'permission' && seg.responded).toBe('once');
+    });
+
+    it('supports "always" and "reject" response values', () => {
+      useRunStore.getState().appendPermission('perm-a', 'edit', []);
+      useRunStore.getState().appendPermission('perm-b', 'read', []);
+      useRunStore.getState().updatePermissionResponse('perm-a', 'always');
+      useRunStore.getState().updatePermissionResponse('perm-b', 'reject');
+
+      const [a, b] = useRunStore.getState().liveSegments;
+      expect(a.kind === 'permission' && a.responded).toBe('always');
+      expect(b.kind === 'permission' && b.responded).toBe('reject');
+    });
+
+    it('does not affect other segments when id does not match', () => {
+      useRunStore.getState().appendPermission('perm-1', 'bash', []);
+      useRunStore.getState().appendPermission('perm-2', 'edit', []);
+      useRunStore.getState().updatePermissionResponse('perm-1', 'once');
+
+      const [, seg2] = useRunStore.getState().liveSegments;
+      expect(seg2.kind === 'permission' && seg2.responded).toBeNull();
+    });
+  });
+
   describe('appendStep', () => {
     it('does nothing when segments empty', () => {
       useRunStore.getState().appendStep();
@@ -244,6 +300,22 @@ describe('runStore', () => {
 
       useRunStore.getState().clearLiveSegments();
       expect(useRunStore.getState().liveSegments).toHaveLength(0);
+    });
+  });
+
+  describe('finalizeStream – permission segments', () => {
+    it('excludes permission segments from the finalized stdout', () => {
+      const run = mockRun({ id: 'run-1', status: 'running' });
+      useRunStore.getState().setThread([run]);
+      useRunStore.getState().appendText('hello');
+      useRunStore.getState().appendPermission('perm-1', 'bash', ['*.sh']);
+
+      useRunStore.getState().finalizeStream();
+
+      const finalRun = useRunStore.getState().thread[0];
+      const types = finalRun.stdout.map((e) => e.type);
+      expect(types).toContain('text');
+      expect(types).not.toContain('permission');
     });
   });
 
