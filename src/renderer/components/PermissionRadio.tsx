@@ -11,8 +11,8 @@ const OPTIONS: { value: PermissionLevel; label: string; dot: string; activeBg: s
   {
     value: 'ask',
     label: 'Ask',
-    dot: 'bg-accent',
-    activeBg: 'bg-accent/20 text-accent shadow-sm',
+    dot: 'bg-orange-500',
+    activeBg: 'bg-orange-500/20 text-orange-500 shadow-sm',
   },
   {
     value: 'deny',

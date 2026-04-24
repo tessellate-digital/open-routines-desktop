@@ -41,6 +41,28 @@ export function registerIpcHandlers(): void {
     return 'reject';
   });
 
+  ipcMain.handle('dialog:alert', async (_event, message: string) => {
+    const win = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0] ?? null;
+    await dialog.showMessageBox(win!, {
+      type: 'warning',
+      message,
+      buttons: ['OK'],
+      defaultId: 0,
+    });
+  });
+
+  ipcMain.handle('dialog:confirm', async (_event, message: string) => {
+    const win = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0] ?? null;
+    const result = await dialog.showMessageBox(win!, {
+      type: 'warning',
+      message,
+      buttons: ['Cancel', 'OK'],
+      defaultId: 1,
+      cancelId: 0,
+    });
+    return result.response === 1;
+  });
+
   ipcMain.handle('shell:openExternal', (_event, url: string) => {
     shell.openExternal(url);
   });

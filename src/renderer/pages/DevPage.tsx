@@ -83,7 +83,9 @@ export default function DevPage() {
 
   const handleDelete = async (triggerId: string, routineId: string) => {
     if (
-      !confirm('Delete this trigger? If no other triggers remain, the routine will be disabled.')
+      !(await window.electronAPI?.confirm(
+        'Delete this trigger? If no other triggers remain, the routine will be disabled.'
+      ))
     ) {
       return;
     }
@@ -96,7 +98,7 @@ export default function DevPage() {
       }
       await load();
     } catch (e) {
-      alert('Error: ' + (e instanceof Error ? e.message : 'Unknown'));
+      await window.electronAPI?.alert('Error: ' + (e instanceof Error ? e.message : 'Unknown'));
     } finally {
       setDeleting((s) => {
         const n = new Set(s);

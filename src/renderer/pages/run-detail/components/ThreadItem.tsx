@@ -16,6 +16,7 @@ interface ThreadItemProps {
   onToggleTool: (idx: number) => void;
   onReply?: (text: string) => void;
   onPermissionRespond?: (permissionId: string, response: 'once' | 'always' | 'reject') => void;
+  onAddToPrompt?: (text: string) => Promise<void>;
 }
 
 export const ThreadItem = memo(function ThreadItem({
@@ -28,6 +29,7 @@ export const ThreadItem = memo(function ThreadItem({
   onToggleTool,
   onReply,
   onPermissionRespond,
+  onAddToPrompt,
 }: ThreadItemProps) {
   const segments = useMemo(
     () => (isLast && isStreaming ? liveSegments : parseSegments(run.stdout || [])),
@@ -39,7 +41,16 @@ export const ThreadItem = memo(function ThreadItem({
       {isFirst &&
         typeof run.metadata?.prompt_context === 'string' &&
         run.metadata.prompt_context && <PromptContext context={run.metadata.prompt_context} />}
-      {run.display_prompt && <UserBubble text={run.display_prompt} />}
+      {run.display_prompt && (
+        <UserBubble
+          text={run.display_prompt}
+          onAddToPrompt={
+            !isFirst && onAddToPrompt
+              ? () => onAddToPrompt(run.prompt ?? run.display_prompt ?? '')
+              : undefined
+          }
+        />
+      )}
       <AssistantCard
         segments={segments}
         toggledTools={toggledTools}

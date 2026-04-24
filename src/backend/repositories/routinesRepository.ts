@@ -25,8 +25,8 @@ export const routinesRepository = {
     const now = new Date().toISOString();
     db.prepare(
       `
-      INSERT INTO routines (id, name, description, prompt, model, repository, branch, agent, env_vars, enabled, run_mode, permissions, temperature, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO routines (id, name, description, prompt, model, repository, branch, agent, env_vars, enabled, run_mode, permissions, temperature, connected_apps, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `
     ).run(
       id,
@@ -42,6 +42,7 @@ export const routinesRepository = {
       data.run_mode,
       JSON.stringify(data.permissions ?? {}),
       data.temperature ?? null,
+      JSON.stringify(data.connected_apps ?? {}),
       now,
       now
     );
@@ -99,6 +100,10 @@ export const routinesRepository = {
     if (data.temperature !== undefined) {
       updates.push('temperature = ?');
       values.push(data.temperature);
+    }
+    if (data.connected_apps !== undefined) {
+      updates.push('connected_apps = ?');
+      values.push(JSON.stringify(data.connected_apps));
     }
 
     if (updates.length > 0) {

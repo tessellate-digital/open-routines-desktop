@@ -59,8 +59,8 @@ describe('PermissionRadio', () => {
     it('applies the blue active class to the Ask button when value is "ask"', () => {
       render(<PermissionRadio value="ask" />);
       const [, ask] = buttons();
-      expect(ask.className).toContain('bg-accent/20');
-      expect(ask.className).toContain('text-accent');
+      expect(ask.className).toContain('bg-orange-500/20');
+      expect(ask.className).toContain('text-orange-500');
     });
 
     it('applies the red active class to the Deny button when value is "deny"', () => {
@@ -73,7 +73,7 @@ describe('PermissionRadio', () => {
     it('does not apply the active class to inactive options', () => {
       render(<PermissionRadio value="allow" />);
       const [, ask, deny] = buttons();
-      expect(ask.className).not.toContain('bg-accent/20');
+      expect(ask.className).not.toContain('bg-orange-500/20');
       expect(deny.className).not.toContain('bg-destructive/20');
     });
   });
@@ -100,7 +100,7 @@ describe('PermissionRadio', () => {
     it('active option still shows its colour in readOnly mode', () => {
       render(<PermissionRadio value="ask" readOnly />);
       const [, ask] = buttons();
-      expect(ask.className).toContain('bg-accent/20');
+      expect(ask.className).toContain('bg-orange-500/20');
     });
   });
 

@@ -34,13 +34,13 @@ export function AppWindow({
       >
         <div className="md:flex md:h-full relative z-1">
           {/* Sidebar — desktop only */}
-          <div className="hidden md:block group-hover/hero:opacity-20 transition-opacity duration-300">
+          <div className="hidden md:block">
             <Sidebar active={active} onNavigate={onNavigate} />
           </div>
 
           <div className="md:flex-1 md:flex flex-col min-w-0 md:overflow-hidden">
             {/* ContextToolbar — desktop only */}
-            <div className="hidden md:flex items-center gap-2.5 px-5 h-11 bg-transparent backdrop-blur-[20px] shrink-0 group-hover/hero:opacity-20 transition-opacity duration-300">
+            <div className="hidden md:flex items-center gap-2.5 px-5 h-11 bg-transparent backdrop-blur-[20px] shrink-0">
               {/* Traffic lights */}
               <div className="flex gap-1.5 mr-1">
                 <span className="w-3 h-3 rounded-full" style={{ background: '#ff5f57' }} />

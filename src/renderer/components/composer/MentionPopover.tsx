@@ -1,15 +1,22 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, type CSSProperties } from 'react';
 import type { MentionAction } from '../../lib/mentions/mentionRegistry';
 import './MentionPopover.css';
 
 interface MentionPopoverProps {
   groups: { group: string; items: MentionAction[] }[];
   activeIndex: number;
+  caretPos?: { top: number; left: number } | null;
   onSelect: (action: MentionAction) => void;
   onDismiss: () => void;
 }
 
-export function MentionPopover({ groups, activeIndex, onSelect, onDismiss }: MentionPopoverProps) {
+export function MentionPopover({
+  groups,
+  activeIndex,
+  caretPos,
+  onSelect,
+  onDismiss,
+}: MentionPopoverProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -26,8 +33,18 @@ export function MentionPopover({ groups, activeIndex, onSelect, onDismiss }: Men
 
   let flatIdx = 0;
 
+  const style: CSSProperties | undefined = caretPos
+    ? {
+        position: 'fixed',
+        top: caretPos.top,
+        left: caretPos.left,
+        transform: 'translateY(calc(-100% - 8px))',
+        bottom: 'auto',
+      }
+    : undefined;
+
   return (
-    <div ref={containerRef} className="mention-popover">
+    <div ref={containerRef} className="mention-popover" style={style}>
       {isEmpty ? (
         <div className="mention-popover-empty">No matching actions</div>
       ) : (

@@ -53,15 +53,9 @@ export default function RunDetail() {
   const composerRef = useRef<ComposerInputHandle>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollAfterReply = useRef(false);
-
-  const isNearBottom = useCallback(() => {
-    const scroller = document.querySelector('.scroller');
-    if (!scroller) {
-      return true;
-    }
-    const { scrollTop, scrollHeight, clientHeight } = scroller;
-    return scrollHeight - scrollTop - clientHeight < 300;
-  }, []);
+  // True once the user has manually scrolled up — suppresses auto-scroll until
+  // they return to the bottom themselves.
+  const userScrolledUp = useRef(false);
 
   const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
     const scroller = document.querySelector('.scroller');
@@ -73,6 +67,29 @@ export default function RunDetail() {
     } else {
       scroller.scrollTo({ top: scroller.scrollHeight, behavior });
     }
+  }, []);
+
+  // Attach a scroll listener to detect when the user scrolls up or returns to bottom.
+  useEffect(() => {
+    const scroller = document.querySelector('.scroller');
+    if (!scroller) {
+      return;
+    }
+
+    const NEAR_BOTTOM_PX = 80;
+
+    const onScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = scroller;
+      const distFromBottom = scrollHeight - scrollTop - clientHeight;
+      if (distFromBottom <= NEAR_BOTTOM_PX) {
+        userScrolledUp.current = false;
+      } else {
+        userScrolledUp.current = true;
+      }
+    };
+
+    scroller.addEventListener('scroll', onScroll, { passive: true });
+    return () => scroller.removeEventListener('scroll', onScroll);
   }, []);
 
   const load = useCallback(async () => {
@@ -108,15 +125,16 @@ export default function RunDetail() {
   useEffect(() => {
     if (scrollAfterReply.current) {
       scrollAfterReply.current = false;
+      userScrolledUp.current = false;
       scrollToBottom();
     }
   }, [thread.length, scrollToBottom]);
 
   useEffect(() => {
-    if (isStreaming && isNearBottom()) {
+    if (isStreaming && !userScrolledUp.current) {
       scrollToBottom('instant');
     }
-  }, [liveSegments, isStreaming, isNearBottom, scrollToBottom]);
+  }, [liveSegments, isStreaming, scrollToBottom]);
 
   const latestRunId = thread[thread.length - 1]?.id;
 
@@ -211,7 +229,7 @@ export default function RunDetail() {
         setOrbExiting(false);
       }, 300);
     } catch (e) {
-      alert('Error: ' + (e instanceof Error ? e.message : 'Unknown'));
+      await window.electronAPI?.alert('Error: ' + (e instanceof Error ? e.message : 'Unknown'));
     }
   };
 
@@ -235,7 +253,7 @@ export default function RunDetail() {
       scrollAfterReply.current = true;
       addReplyRun(run_id, prompt, displayPrompt, currentRun.routine_name, currentRun.routine_id);
     } catch (err) {
-      alert('Error: ' + (err instanceof Error ? err.message : 'Unknown'));
+      await window.electronAPI?.alert('Error: ' + (err instanceof Error ? err.message : 'Unknown'));
     } finally {
       setReplying(false);
     }
@@ -252,7 +270,9 @@ export default function RunDetail() {
         await api.answerQuestion(run.id, pendingQuestionId, text);
         setPendingQuestionId(null);
       } catch (err) {
-        alert('Error: ' + (err instanceof Error ? err.message : 'Unknown'));
+        await window.electronAPI?.alert(
+          'Error: ' + (err instanceof Error ? err.message : 'Unknown')
+        );
       } finally {
         setReplying(false);
       }
@@ -270,7 +290,9 @@ export default function RunDetail() {
         await api.answerPermission(run.id, permissionId, response);
         updatePermissionResponse(permissionId, response);
       } catch (err) {
-        alert('Error: ' + (err instanceof Error ? err.message : 'Unknown'));
+        await window.electronAPI?.alert(
+          'Error: ' + (err instanceof Error ? err.message : 'Unknown')
+        );
       }
     },
     [thread, updatePermissionResponse]
@@ -290,6 +312,20 @@ export default function RunDetail() {
   const handleComposerChange = (text: string) => {
     setReplyText(text);
   };
+
+  const handleAddToPrompt = useCallback(
+    async (text: string) => {
+      const run = thread[0];
+      if (!run?.routine_id) {
+        return;
+      }
+      const routine = await api.getRoutine(run.routine_id);
+      const existing = routine.prompt?.trimEnd() ?? '';
+      const updated = existing ? `${existing}\n\n${text.trim()}` : text.trim();
+      await api.updateRoutine(run.routine_id, { prompt: updated });
+    },
+    [thread]
+  );
 
   const mention = useMentionPopover(composerRef);
 
@@ -368,6 +404,7 @@ export default function RunDetail() {
               onToggleTool={(idx) => handleToggleTool(run.id, idx, isLast && isStreaming)}
               onReply={handleQuestionReply}
               onPermissionRespond={handlePermissionRespond}
+              onAddToPrompt={handleAddToPrompt}
             />
           );
         })}
@@ -397,6 +434,7 @@ export default function RunDetail() {
             <MentionPopover
               groups={mention.filteredGroups}
               activeIndex={mention.activeIndex}
+              caretPos={mention.caretPos}
               onSelect={mention.handleSelect}
               onDismiss={mention.dismiss}
             />

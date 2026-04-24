@@ -7,23 +7,35 @@ export interface ComposerInputHandle {
   insertChip(displayText: string, rawValue: string, actionId: string): void;
   focus(): void;
   clear(): void;
+  setText(text: string): void;
 }
 
 interface ComposerInputProps {
   placeholder?: string;
   disabled?: boolean;
+  defaultValue?: string;
+  className?: string;
   onChange?: (text: string) => void;
   onKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void;
   onInput?: (e: React.FormEvent<HTMLDivElement>) => void;
 }
 
 const ComposerInput = forwardRef<ComposerInputHandle, ComposerInputProps>(
-  ({ placeholder, disabled, onChange, onKeyDown, onInput }, ref) => {
+  ({ placeholder, disabled, defaultValue, className, onChange, onKeyDown, onInput }, ref) => {
     const divRef = useRef<HTMLDivElement>(null);
     const onChangeRef = useRef(onChange);
     useEffect(() => {
       onChangeRef.current = onChange;
     }, [onChange]);
+
+    // Set initial text content once on mount if defaultValue is provided
+    useEffect(() => {
+      if (defaultValue && divRef.current && !divRef.current.textContent) {
+        divRef.current.textContent = defaultValue;
+      }
+      // Intentionally only runs on mount
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     useImperativeHandle(ref, () => ({
       getPlainText() {
@@ -159,6 +171,13 @@ const ComposerInput = forwardRef<ComposerInputHandle, ComposerInputProps>(
           onChangeRef.current?.('');
         }
       },
+
+      setText(text: string) {
+        if (divRef.current) {
+          divRef.current.textContent = text;
+          onChangeRef.current?.(text);
+        }
+      },
     }));
 
     const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
@@ -191,7 +210,7 @@ const ComposerInput = forwardRef<ComposerInputHandle, ComposerInputProps>(
         suppressContentEditableWarning
         data-placeholder={placeholder}
         aria-disabled={disabled}
-        className="composer-editable"
+        className={['composer-editable', className].filter(Boolean).join(' ')}
         onInput={handleInput}
         onKeyDown={onKeyDown}
         onPaste={handlePaste}

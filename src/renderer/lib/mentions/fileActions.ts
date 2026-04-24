@@ -5,10 +5,10 @@ export const fileActions: MentionAction[] = [
     id: 'file-browse',
     label: 'Browse files',
     group: 'Files',
-    description: 'Pick a file from your system',
-    keywords: ['file', 'path', 'browse', 'open', 'attach'],
+    description: 'Pick a file or folder from your system',
+    keywords: ['file', 'folder', 'directory', 'path', 'browse', 'open', 'attach'],
     onSelect: async () => {
-      const path = await window.electronAPI?.selectFile();
+      const path = await window.electronAPI?.selectPath();
       return path ?? null;
     },
     renderer: (value: unknown) => {

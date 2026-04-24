@@ -38,6 +38,7 @@ export function useMentionPopover(inputRef: RefObject<ComposerInputHandle | null
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [activeIndex, setActiveIndex] = useState(0);
+  const [caretPos, setCaretPos] = useState<{ top: number; left: number } | null>(null);
 
   const filteredActions = filterActions(mentionActions, query);
   const filteredGroups = groupActions(filteredActions);
@@ -48,9 +49,15 @@ export function useMentionPopover(inputRef: RefObject<ComposerInputHandle | null
       setQuery(q);
       setActiveIndex(0);
       setOpen(true);
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount > 0) {
+        const rect = sel.getRangeAt(0).getBoundingClientRect();
+        setCaretPos({ top: rect.top, left: rect.left });
+      }
     } else {
       setOpen(false);
       setQuery('');
+      setCaretPos(null);
     }
   }, []);
 
@@ -104,6 +111,7 @@ export function useMentionPopover(inputRef: RefObject<ComposerInputHandle | null
     filteredGroups,
     filteredActions,
     activeIndex,
+    caretPos,
     onKeyDown,
     handleSelect,
     dismiss,

@@ -1,61 +1,31 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { AppWindow } from './AppWindow';
-import { RoutinesListMockup } from './RoutinesListMockup';
 import { RoutineChatMockup } from './RoutineChatMockup';
 
-type RoutineId = 1 | 2 | 3;
-const ROUTINE_IDS: RoutineId[] = [1, 2, 3];
-
-type Route = { page: 'routines' } | { page: 'routine-chat'; routineId: RoutineId };
+type RoutineId = 1 | 2 | 3 | 4;
+const ROUTINE_IDS: RoutineId[] = [4, 1, 2, 3];
 
 const ROUTINE_NAMES: Record<RoutineId, string> = {
   1: 'Expense manager',
   2: 'Doc drift check',
   3: 'News summary',
+  4: 'Invoice tracker',
 };
 
-const HOVER_DURATION = 900;
-const CHAT_DURATION = 2800;
-const RETURN_PAUSE = 700;
-const INITIAL_DELAY = 1200;
-const RESUME_DELAY = 1500;
+const CHAT_DURATION = 5600;
+const EXIT_DURATION = 300;
+const CHAT_TRANSITION = 500;
+const INITIAL_DELAY = 800;
 
 function after(ms: number, fn: () => void): ReturnType<typeof setTimeout> {
   return setTimeout(fn, ms);
 }
 
 export function InteractiveMockup() {
-  const [history, setHistory] = useState<Route[]>([{ page: 'routines' }]);
-  const [index, setIndex] = useState(0);
-  const [autoHovered, setAutoHovered] = useState<RoutineId | null>(null);
+  const [routineIdx, setRoutineIdx] = useState(0);
+  const [exiting, setExiting] = useState(false);
 
-  const route = history[index];
-
-  const navigate = useCallback(
-    (page: string) => {
-      const match = page.match(/^routine-chat\/(\d+)$/);
-      if (!match) {
-        return;
-      }
-      const routineId = Number(match[1]) as RoutineId;
-      const next: Route = { page: 'routine-chat', routineId };
-      setHistory((prev) => [...prev.slice(0, index + 1), next]);
-      setIndex((i) => i + 1);
-    },
-    [index]
-  );
-
-  const goBack = useCallback(() => {
-    if (index > 0) {
-      setIndex((i) => i - 1);
-    }
-  }, [index]);
-
-  const navigateRef = useRef(navigate);
-  navigateRef.current = navigate;
-  const goBackRef = useRef(goBack);
-  goBackRef.current = goBack;
-  const userInteractingRef = useRef(false);
+  const routineId = ROUTINE_IDS[routineIdx];
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const clearTimers = useCallback(() => {
@@ -69,43 +39,33 @@ export function InteractiveMockup() {
       const acc: ReturnType<typeof setTimeout>[] = [];
       let t = initialDelay;
 
-      for (const id of ROUTINE_IDS) {
-        const hoverT = after(t, () => {
-          if (userInteractingRef.current) {
-            return;
-          }
-          setAutoHovered(id);
-        });
-        acc.push(hoverT);
-        t += HOVER_DURATION;
+      for (let i = 0; i < ROUTINE_IDS.length; i++) {
+        const idx = i;
 
-        const clickT = after(t, () => {
-          if (userInteractingRef.current) {
-            return;
-          }
-          setAutoHovered(null);
-          navigateRef.current(`routine-chat/${id}`);
-        });
-        acc.push(clickT);
+        // Show this slide
+        acc.push(
+          after(t, () => {
+            setExiting(false);
+            setRoutineIdx(idx);
+          })
+        );
         t += CHAT_DURATION;
 
-        const backT = after(t, () => {
-          if (userInteractingRef.current) {
-            return;
-          }
-          goBackRef.current();
-        });
-        acc.push(backT);
-        t += RETURN_PAUSE;
+        // Start exit animation
+        acc.push(
+          after(t, () => {
+            setExiting(true);
+          })
+        );
+        t += EXIT_DURATION + (CHAT_TRANSITION - EXIT_DURATION);
       }
 
-      const loopT = after(t, () => {
-        if (userInteractingRef.current) {
-          return;
-        }
-        startAutoplay();
-      });
-      acc.push(loopT);
+      // Loop
+      acc.push(
+        after(t, () => {
+          startAutoplay();
+        })
+      );
 
       timersRef.current = acc;
     },
@@ -117,42 +77,14 @@ export function InteractiveMockup() {
     return clearTimers;
   }, [startAutoplay, clearTimers]);
 
-  const handleMouseEnter = useCallback(() => {
-    userInteractingRef.current = true;
-    clearTimers();
-    setAutoHovered(null);
-  }, [clearTimers]);
-
-  const handleMouseLeave = useCallback(() => {
-    userInteractingRef.current = false;
-    setHistory([{ page: 'routines' }]);
-    setIndex(0);
-    startAutoplay(RESUME_DELAY);
-  }, [startAutoplay]);
-
-  const breadcrumbs: { label: string; onClick?: () => void }[] =
-    route.page === 'routines'
-      ? [{ label: 'Routines' }]
-      : [{ label: 'Routines', onClick: goBack }, { label: ROUTINE_NAMES[route.routineId] }];
+  const breadcrumbs = [{ label: 'Routines' }, { label: ROUTINE_NAMES[routineId] }];
 
   return (
-    <div className="group/hero" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
-      <AppWindow
-        active="routines"
-        breadcrumbs={breadcrumbs}
-        onNavigate={navigate}
-        onBack={index > 0 ? goBack : undefined}
-        height={620}
-      >
-        {route.page === 'routines' ? (
-          <RoutinesListMockup onNavigate={navigate} autoHovered={autoHovered} />
-        ) : (
-          <RoutineChatMockup
-            routineId={route.routineId}
-            name={ROUTINE_NAMES[route.routineId]}
-            onBack={goBack}
-          />
-        )}
+    <div>
+      <AppWindow active="routines" breadcrumbs={breadcrumbs} height={620}>
+        <div key={`chat-${routineId}`} className={exiting ? 'mockup-slide-exit' : 'mockup-slide'}>
+          <RoutineChatMockup routineId={routineId} name={ROUTINE_NAMES[routineId]} />
+        </div>
       </AppWindow>
     </div>
   );

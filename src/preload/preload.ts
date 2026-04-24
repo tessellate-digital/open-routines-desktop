@@ -8,5 +8,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   selectFile: (): Promise<string | null> => ipcRenderer.invoke('dialog:openFile'),
   selectPath: (): Promise<string | null> => ipcRenderer.invoke('dialog:openPath'),
   openExternal: (url: string): Promise<void> => ipcRenderer.invoke('shell:openExternal', url),
+  alert: (message: string): Promise<void> => ipcRenderer.invoke('dialog:alert', message),
+  confirm: (message: string): Promise<boolean> => ipcRenderer.invoke('dialog:confirm', message),
   platform: process.platform,
 });

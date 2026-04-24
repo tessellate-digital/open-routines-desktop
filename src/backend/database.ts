@@ -70,6 +70,9 @@ export function initDb(): void {
   if (!routineColumns.includes('temperature')) {
     db.exec('ALTER TABLE routines ADD COLUMN temperature REAL DEFAULT NULL');
   }
+  if (!routineColumns.includes('connected_apps')) {
+    db.exec("ALTER TABLE routines ADD COLUMN connected_apps TEXT NOT NULL DEFAULT '{}'");
+  }
   // Migration: denormalize stats onto routines table
   if (!routineColumns.includes('last_run_status')) {
     db.exec('ALTER TABLE routines ADD COLUMN last_run_status TEXT DEFAULT NULL');

@@ -2,6 +2,14 @@ import { StatusBadge, TriggerChip, ChevronIcon } from './shared';
 
 const HERO_ROUTINES = [
   {
+    id: 4 as const,
+    name: 'Invoice tracker',
+    model: 'claude-sonnet-4-6',
+    triggerType: 'gmail',
+    triggerLabel: 'subject:invoice',
+    status: 'success',
+  },
+  {
     id: 1 as const,
     name: 'Expense manager',
     model: 'claude-sonnet-4-6',
@@ -27,7 +35,7 @@ const HERO_ROUTINES = [
   },
 ];
 
-type RoutineId = 1 | 2 | 3;
+type RoutineId = 1 | 2 | 3 | 4;
 
 export function RoutinesListMockup({
   onNavigate,
@@ -37,7 +45,7 @@ export function RoutinesListMockup({
   autoHovered?: RoutineId | null;
 }) {
   return (
-    <div className="route-fade">
+    <div>
       <div className="flex items-end justify-between gap-4 mb-[22px]">
         <div>
           <h1 className="m-0 mb-1 text-heading tracking-title font-semibold">Routines</h1>

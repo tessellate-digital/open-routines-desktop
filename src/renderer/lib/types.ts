@@ -27,6 +27,7 @@ export interface Routine {
   enabled: boolean;
   run_mode: 'background' | 'foreground';
   permissions: RoutinePermissions;
+  connected_apps: Record<string, boolean>;
   temperature: number | null;
   created_at: string;
   updated_at: string;
