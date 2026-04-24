@@ -288,4 +288,26 @@ router.post(
   }
 );
 
+// Respond to a pending permission request raised by the opencode server.
+router.post(
+  '/:id/answer-permission',
+  zValidator(
+    'json',
+    z.object({
+      permissionId: z.string().min(1),
+      response: z.enum(['once', 'always', 'reject']),
+    })
+  ),
+  async (c) => {
+    const { permissionId, response } = c.req.valid('json');
+    try {
+      await relay.answerPermission(permissionId, response);
+      return c.json({ ok: true }, 200);
+    } catch (err) {
+      logger.error(`answer-permission error for ${permissionId}:`, err);
+      return c.json({ detail: err instanceof Error ? err.message : 'Unknown error' }, 500);
+    }
+  }
+);
+
 export default router;

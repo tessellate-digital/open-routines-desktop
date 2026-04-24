@@ -321,12 +321,24 @@ export class Executor {
 
       if (!sessionId) {
         // Create a new SDK session
+        logger.debug(`[executor] Run ${runId}: creating new SDK session...`);
         const createResult = await client.session.create();
+        logger.debug(
+          `[executor] Run ${runId}: session.create() raw result:`,
+          JSON.stringify(createResult, null, 2)
+        );
         const session = createResult?.data ?? createResult;
+        logger.debug(
+          `[executor] Run ${runId}: unwrapped session object:`,
+          JSON.stringify(session, null, 2)
+        );
         sessionId = (session?.id ?? session?.sessionID ?? null) as string | null;
         if (!sessionId) {
-          throw new Error('SDK session.create() returned no session ID');
+          throw new Error(
+            `SDK session.create() returned no session ID. Raw result: ${JSON.stringify(createResult)}`
+          );
         }
+        logger.debug(`[executor] Run ${runId}: got session ID: ${sessionId}`);
       }
 
       // Persist session_id as soon as it is known (defensive: may already be set)
@@ -355,6 +367,10 @@ export class Executor {
         parts: [{ type: 'text', text: fullPrompt }],
         agent: routine.id,
       };
+
+      logger.debug(
+        `[executor] Run ${runId}: sending prompt with agent="${routine.id}", session="${sessionId}"`
+      );
 
       // Send the prompt — non-blocking; the LLM response arrives via the event relay
       let result = await client.session.prompt({
@@ -420,6 +436,55 @@ export class Executor {
 
         logger.debug(
           `[executor] Run ${runId} recovered prompt() result:`,
+          JSON.stringify(promptResult, null, 2)
+        );
+      }
+
+      // ── Continuation loop ─────────────────────────────────────────────
+      // When prompt() returns with finish reason "tool-calls", the model made
+      // tool calls (some may have been denied) but never got a follow-up turn
+      // to produce a text response. Send a continuation prompt so the model
+      // can summarise results and finish naturally.
+      const MAX_CONTINUATIONS = 5;
+      for (let cont = 0; cont < MAX_CONTINUATIONS; cont++) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const finishReason = (promptResult as any)?.info?.finish;
+        if (finishReason !== 'tool-calls') {
+          break;
+        }
+
+        // Check cancellation before continuing
+        const contRow = db.prepare('SELECT status FROM runs WHERE id = ?').get(runId) as
+          | { status: string }
+          | undefined;
+        if (contRow?.status === 'cancelled') {
+          break;
+        }
+
+        logger.debug(
+          `[executor] Run ${runId}: finish reason is "tool-calls", sending continuation ${cont + 1}/${MAX_CONTINUATIONS}`
+        );
+
+        // Reset the drain promise so waitForDrain in the finally block will
+        // wait for the new session.idle from this continuation prompt.
+        relay.resetDrain(sessionId);
+
+        const contResult = await client.session.prompt({
+          path: { id: sessionId },
+          body: {
+            parts: [
+              {
+                type: 'text',
+                text: 'Continue. If any tool calls were denied, complete the task with the information and tools available to you.',
+              },
+            ],
+            agent: routine.id,
+          },
+        });
+        promptResult = contResult?.data ?? contResult;
+
+        logger.debug(
+          `[executor] Run ${runId} continuation ${cont + 1} result:`,
           JSON.stringify(promptResult, null, 2)
         );
       }

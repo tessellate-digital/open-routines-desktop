@@ -133,6 +133,11 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ questionId, answer }),
     }),
+  answerPermission: (runId: string, permissionId: string, response: 'once' | 'always' | 'reject') =>
+    request<{ ok: boolean }>(`/runs/${runId}/answer-permission`, {
+      method: 'POST',
+      body: JSON.stringify({ permissionId, response }),
+    }),
 
   // Settings
   getSettings: () => request<Setting[]>('/settings'),
@@ -171,4 +176,11 @@ export const api = {
       method: 'POST',
       body: '{}',
     }),
+
+  // Gmail OAuth
+  gmailAuthorize: () =>
+    request<{ url: string }>('/auth/gmail/authorize', { method: 'POST', body: '{}' }),
+  gmailStatus: () => request<{ connected: boolean; email?: string }>('/auth/gmail/status'),
+  gmailDisconnect: () =>
+    request<{ ok: boolean }>('/auth/gmail/disconnect', { method: 'POST', body: '{}' }),
 };
