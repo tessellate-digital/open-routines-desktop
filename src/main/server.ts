@@ -7,6 +7,7 @@ import * as fs from 'fs';
 import { config } from './config';
 import { regenerateOpencodeConfig } from './opencodeConfig';
 import { initDb, db } from '../backend/database';
+import { settingsRepository } from '../backend/repositories/settingsRepository';
 import { schedulerService } from '../backend/services/scheduler';
 import { eventBus } from '../backend/services/eventBus';
 import {
@@ -81,10 +82,7 @@ app.get('/api/events', async (c) => {
 // Build env that includes stored settings (API keys etc.)
 function buildGlobalEnv(): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = { ...process.env };
-  const rows = db.prepare('SELECT key, value FROM settings').all() as Array<{
-    key: string;
-    value: string;
-  }>;
+  const rows = settingsRepository.findAll();
   for (const row of rows) {
     env[row.key] = row.value;
   }
