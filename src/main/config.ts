@@ -13,8 +13,16 @@ const home = app.getPath('home');
 // Passed to `opencode serve` via OPENCODE_CONFIG env var — never touches the user's
 // own ~/.config/opencode.
 // Agent definitions are populated later by regenerateOpencodeConfig() once the DB is ready.
-const opencodeConfigPath = path.join(userData, 'opencode-bin', 'opencode.json');
-fs.mkdirSync(path.dirname(opencodeConfigPath), { recursive: true });
+const opencodeBinDir = path.join(userData, 'opencode-bin');
+const opencodeConfigPath = path.join(opencodeBinDir, 'opencode.json');
+const skillsDir = path.join(opencodeBinDir, 'skills');
+const uvDataDir = path.join(userData, 'uv');
+// Isolated HOME for opencode processes — prevents global opencode config from leaking in
+const opencodeHomeDir = path.join(userData, 'opencode-home');
+fs.mkdirSync(opencodeBinDir, { recursive: true });
+fs.mkdirSync(skillsDir, { recursive: true });
+fs.mkdirSync(uvDataDir, { recursive: true });
+fs.mkdirSync(opencodeHomeDir, { recursive: true });
 fs.writeFileSync(
   opencodeConfigPath,
   JSON.stringify({ $schema: 'https://opencode.ai/config.json', agent: {} }, null, 2) + '\n'
@@ -27,6 +35,9 @@ export const config = {
   maxConcurrentRuns: 5,
   opencodePath: process.env.OPENCODE_PATH ?? getOpencodePath(),
   opencodeConfigPath,
+  skillsDir,
+  uvDataDir,
+  opencodeHomeDir,
   opencodeModel: process.env.OPENCODE_MODEL ?? '',
   port: 0, // OS-assigned
 

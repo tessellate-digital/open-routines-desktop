@@ -100,6 +100,24 @@ Backend tests mock `better-sqlite3` (it's a native module compiled for Electron'
 - **Tailwind**: use CSS `@apply` for reusable patterns — do not export TS class-name strings.
 - **Model strings**: format is `providerID/modelID` (e.g. `anthropic/claude-opus-4-5`). Empty string means "let server pick default". See `executor.ts:parseModelString`.
 
+## Process isolation (scope pollution rule)
+
+The `opencode serve` processes spawned by this app must be **fully isolated** from the user's global environment. The user may have their own opencode installation with MCPs, skills, and agent configs — none of that must leak into the app's agents.
+
+**How isolation is enforced** (see `opencodeServerPool.ts:spawnAndWaitForServer`):
+
+| Env var set on child process | Purpose |
+|---|---|
+| `OPENCODE_CONFIG` | Points to the app-managed `opencode.json` — the only config opencode should load |
+| `HOME` | Redirected to `config.opencodeHomeDir` (an empty dir inside `userData`) so opencode cannot discover the user's global config at `~/Library/Application Support/opencode/` |
+| `GIT_CONFIG_GLOBAL` | Explicitly re-points to the real `~/.gitconfig` so git identity still works despite the redirected HOME |
+| `UV_*` | Scoped to `config.uvDataDir` so Python tooling is isolated too |
+
+**Rules for future changes:**
+- Never remove or weaken the `HOME` override — it is the primary guard against global config leakage.
+- If new tools/runtimes are added (e.g. a Node global config), scope their data dirs inside `config.userData` and override their env vars in the same block.
+- Never write to paths outside `userData` from the main process. The app must leave the user's home directory entirely untouched.
+
 ## Child Intent Nodes
 
 - [`src/backend/AGENTS.md`](src/backend/AGENTS.md) — services, repositories, routes, conventions
