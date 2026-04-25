@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "rm -rf docs/* && vite-react-ssg build",
+    "build": "rm -rf docs/* && vite-react-ssg build && node scripts/normalize-ssg-hash.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -20,7 +20,6 @@
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react-swc": "^3.0.0",
     "tailwindcss": "^4.1.7",
-    "terser": "^5.0.0",
     "typescript": "^5.7.0",
     "vite": "^6.3.0"
   }

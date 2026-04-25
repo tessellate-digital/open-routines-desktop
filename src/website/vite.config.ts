@@ -14,16 +14,14 @@ export default defineConfig({
     outDir: '../../docs',
     emptyOutDir: true,
     target: 'esnext',
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        passes: 2,
-      },
+    minify: 'esbuild',
+    esbuildOptions: {
+      drop: ['console'],
     },
     modulePreload: { polyfill: false },
     cssCodeSplit: true,
     rollupOptions: {
+      treeshake: 'recommended',
       output: {
         manualChunks(id) {
           if (
