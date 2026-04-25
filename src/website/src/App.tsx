@@ -1,3 +1,4 @@
+import { Head } from 'vite-react-ssg';
 import { AppWindow } from './components/AppWindow';
 import { InteractiveMockup } from './components/InteractiveMockup';
 import { SettingsMockup } from './components/SettingsMockup';
@@ -8,6 +9,30 @@ import { PromptMockup } from './components/PromptMockup';
 export function App() {
   return (
     <div className="min-h-screen bg-canvas relative">
+      <Head>
+        <link rel="canonical" href="https://open-routines.com/" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://open-routines.com/" />
+        <meta
+          property="og:title"
+          content="Open Routines — Local AI Workflow Automation for macOS"
+        />
+        <meta
+          property="og:description"
+          content="Free, open-source macOS app to automate AI workflows. Bring your own API key — no cloud lock-in, no subscription."
+        />
+        <meta property="og:image" content="https://open-routines.com/og-image.jpg" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta
+          name="twitter:title"
+          content="Open Routines — Local AI Workflow Automation for macOS"
+        />
+        <meta
+          name="twitter:description"
+          content="Free, open-source macOS app to automate AI workflows. Bring your own API key — no cloud lock-in, no subscription."
+        />
+        <meta name="twitter:image" content="https://open-routines.com/og-image.jpg" />
+      </Head>
       <div className="relative z-10">
         {/* ── HERO + MOCKUP wrapped with orbs ── */}
         <div className="relative overflow-hidden">
