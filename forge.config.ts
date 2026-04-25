@@ -28,7 +28,7 @@ const config: ForgeConfig = {
         },
       }),
   },
-  makers: [new MakerZIP({}, ['darwin', 'linux']), new MakerDMG({})],
+  makers: [new MakerZIP({}, ['darwin', 'linux']), new MakerDMG({ name: 'Open-Routines', icon: './resources/icon.icns' })],
   plugins: [
     new VitePlugin({
       build: [

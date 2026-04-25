@@ -43,7 +43,7 @@ export function App() {
           </p>
           <div className="mt-8 flex items-center justify-center gap-3">
             <a
-              href="https://github.com/tessellate-digital/open-routines-desktop/releases"
+              href="https://github.com/tessellate-digital/open-routines-desktop/releases/latest/download/Open-Routines.dmg"
               className="btn primary"
             >
               Download for macOS
@@ -280,7 +280,7 @@ export function App() {
             </h2>
             <div className="relative mt-7 flex flex-wrap items-center justify-center gap-3">
               <a
-                href="https://github.com/tessellate-digital/open-routines-desktop/releases"
+                href="https://github.com/tessellate-digital/open-routines-desktop/releases/latest/download/Open-Routines.dmg"
                 className="rounded-lg bg-white px-5 py-2.5 text-[14px] font-semibold shadow-md text-accent"
               >
                 Download for macOS
@@ -304,7 +304,7 @@ export function App() {
               GitHub
             </a>
             <a
-              href="https://github.com/tessellate-digital/open-routines-desktop/releases"
+              href="https://github.com/tessellate-digital/open-routines-desktop/releases/latest/download/Open-Routines.dmg"
               className="hover:text-foreground"
             >
               Releases
