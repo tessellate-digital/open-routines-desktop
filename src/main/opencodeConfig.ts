@@ -61,6 +61,13 @@ function buildAgentDefinition(routine: RoutineRow): AgentDefinition {
   const GRANULAR_KEYS = new Set(['read', 'edit', 'bash']);
   const MANAGED_KEYS = new Set(['external_directory', 'doom_loop']);
 
+  let connectedApps: Record<string, boolean> = {};
+  try {
+    connectedApps = JSON.parse(routine.connected_apps || '{}');
+  } catch {
+    /* ignore */
+  }
+
   if (permissions && Object.keys(permissions).length > 0) {
     const serialized: Record<
       string,
@@ -123,14 +130,6 @@ function buildAgentDefinition(routine: RoutineRow): AgentDefinition {
       }
     }
 
-    // If Gmail is enabled, grant access to the Gmail API and skill
-    let connectedApps: Record<string, boolean> = {};
-    try {
-      connectedApps = JSON.parse(routine.connected_apps || '{}');
-    } catch {
-      /* ignore */
-    }
-
     if (connectedApps.gmail) {
       // Allow bash curl for authenticated Gmail API calls (WebFetch can't set headers)
       const currentBash = serialized.bash;
@@ -144,6 +143,10 @@ function buildAgentDefinition(routine: RoutineRow): AgentDefinition {
       serialized['skill'] = { '*': 'deny', gmail: 'allow' };
     }
 
+    if (connectedApps.notion) {
+      serialized['mcp__notion'] = 'allow';
+    }
+
     serialized['external_directory'] = 'allow';
     def.permission = serialized;
     logger.debug(
@@ -151,7 +154,14 @@ function buildAgentDefinition(routine: RoutineRow): AgentDefinition {
       JSON.stringify(serialized)
     );
   } else {
-    def.permission = { external_directory: 'allow' };
+    const elsePerm: Record<string, unknown> = { external_directory: 'allow' };
+    if (connectedApps.notion) {
+      elsePerm['mcp__notion'] = 'allow';
+    }
+    if (connectedApps.gmail) {
+      elsePerm['skill'] = { '*': 'deny', gmail: 'allow' };
+    }
+    def.permission = elsePerm as typeof def.permission;
   }
 
   return def;
@@ -169,10 +179,16 @@ export function regenerateOpencodeConfig(): void {
     agent[row.id] = buildAgentDefinition(row);
   }
 
-  const configObj = {
+  const configObj: Record<string, unknown> = {
     $schema: 'https://opencode.ai/config.json',
     skills: { paths: [config.skillsDir] },
     agent,
+    mcp: {
+      notion: {
+        type: 'remote',
+        url: 'https://mcp.notion.com/mcp',
+      },
+    },
   };
 
   const configJson = JSON.stringify(configObj, null, 2) + '\n';

@@ -32,6 +32,7 @@ function makeRow(overrides: Partial<RoutineRow> = {}): RoutineRow {
     enabled: 1,
     run_mode: 'background',
     permissions: '{}',
+    connected_apps: '{}',
     temperature: null,
     last_run_status: null,
     triggers_count: 0,
@@ -197,6 +198,59 @@ describe('regenerateOpencodeConfig', () => {
       regenerateOpencodeConfig();
       expect(getAgent().prompt as string).toContain(
         'If a tool call is denied or fails due to a permission rule'
+      );
+    });
+  });
+
+  describe('Notion MCP server', () => {
+    it('always includes the notion MCP server in the config', () => {
+      mockAll.mockReturnValue([]);
+      regenerateOpencodeConfig();
+      const mcp = getWrittenConfig().mcp as Record<string, unknown>;
+      expect(mcp).toHaveProperty('notion');
+    });
+
+    it('notion MCP entry uses the remote type and correct URL', () => {
+      mockAll.mockReturnValue([]);
+      regenerateOpencodeConfig();
+      const mcp = getWrittenConfig().mcp as Record<string, unknown>;
+      expect(mcp.notion).toMatchObject({ type: 'remote', url: 'https://mcp.notion.com/mcp' });
+    });
+  });
+
+  describe('Notion connected-app scoping', () => {
+    function getPermission(id = 'r1'): Record<string, unknown> {
+      return (getAgent(id).permission ?? {}) as Record<string, unknown>;
+    }
+
+    it('grants mcp__notion: allow in permission block when connected_apps.notion is true', () => {
+      mockAll.mockReturnValue([makeRow({ connected_apps: '{"notion":true}' })]);
+      regenerateOpencodeConfig();
+      expect(getPermission()).toMatchObject({ mcp__notion: 'allow' });
+    });
+
+    it('does not grant mcp__notion when connected_apps.notion is false', () => {
+      mockAll.mockReturnValue([makeRow({ connected_apps: '{"notion":false}' })]);
+      regenerateOpencodeConfig();
+      expect(getPermission()).not.toHaveProperty('mcp__notion');
+    });
+
+    it('does not grant mcp__notion when connected_apps is empty', () => {
+      mockAll.mockReturnValue([makeRow({ connected_apps: '{}' })]);
+      regenerateOpencodeConfig();
+      expect(getPermission()).not.toHaveProperty('mcp__notion');
+    });
+
+    it('grants mcp__notion on one routine but not another', () => {
+      mockAll.mockReturnValue([
+        makeRow({ id: 'r1', connected_apps: '{"notion":true}' }),
+        makeRow({ id: 'r2', connected_apps: '{}' }),
+      ]);
+      regenerateOpencodeConfig();
+      const agent = getWrittenConfig().agent as Record<string, Record<string, unknown>>;
+      expect(agent.r1.permission as Record<string, unknown>).toHaveProperty('mcp__notion', 'allow');
+      expect((agent.r2.permission as Record<string, unknown>) ?? {}).not.toHaveProperty(
+        'mcp__notion'
       );
     });
   });

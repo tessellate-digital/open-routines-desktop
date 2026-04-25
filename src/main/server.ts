@@ -25,6 +25,7 @@ import settingsRouter from '../backend/routes/settings';
 import copilotAuthRouter from '../backend/routes/copilotAuth';
 import gmailAuthRouter from '../backend/routes/gmailAuth';
 import gmailRouter from '../backend/routes/gmail';
+import notionMcpRouter from '../backend/routes/notionMcp';
 
 const app = new Hono();
 
@@ -40,6 +41,7 @@ app.route('/api/settings', settingsRouter);
 app.route('/api/auth/github-copilot', copilotAuthRouter);
 app.route('/api/auth/gmail', gmailAuthRouter);
 app.route('/api/gmail', gmailRouter);
+app.route('/api/mcp/notion', notionMcpRouter);
 
 // Reset all data
 app.post('/api/reset', (c) => {

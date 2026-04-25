@@ -9,6 +9,7 @@ import { PageHeader } from '../components/PageHeader';
 import { SectionLabel } from '../components/SectionLabel';
 import { EventChip } from '../components/EventChip';
 import type { Routine, Trigger, Run, RoutinePermissions, PermissionLevel } from '../lib/types';
+import { findActionById } from '../lib/mentions/mentionRegistry';
 import { useHostMounts } from '../contexts/HostMountsContext';
 import { usePageContext } from '../contexts/PageContext';
 
@@ -256,7 +257,19 @@ export default function RoutineDetail() {
         <div className={detailCardClasses}>
           <div className={detailLabelClasses}>Prompt</div>
           <div className="font-mono text-body-sm leading-prose whitespace-pre-wrap mt-1">
-            {routine.prompt}
+            {routine.prompt.split(/(@customTag:[^(]+\([^)]*\))/).map((part, i) => {
+              const m = part.match(/^@customTag:([^(]+)\(([^)]*)\)$/);
+              if (m) {
+                const action = findActionById(m[1]);
+                const label = action ? action.renderer(m[2]) : m[1];
+                return (
+                  <span key={i} className="mention-chip">
+                    {label}
+                  </span>
+                );
+              }
+              return part;
+            })}
           </div>
         </div>
 

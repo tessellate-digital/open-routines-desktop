@@ -2,8 +2,8 @@ import { AppWindow } from './components/AppWindow';
 import { InteractiveMockup } from './components/InteractiveMockup';
 import { SettingsMockup } from './components/SettingsMockup';
 import { PermissionsMockup } from './components/PermissionsMockup';
-import { RoutineChatMockup } from './components/RoutineChatMockup';
 import { ChatMockup } from './components/ChatMockup';
+import { PromptMockup } from './components/PromptMockup';
 
 export function App() {
   return (
@@ -80,22 +80,48 @@ export function App() {
                   </span>
                 </h2>
                 <p className="mt-4 max-w-md text-[15px] leading-relaxed text-muted-foreground">
-                  No vendor lock-in. Use Claude, GPT-4o, or any model you can run locally via
-                  Ollama. Bring your own API keys — your compute, fully under your control.
+                  No vendor lock-in. Use GitHub Copilot, OpenAI, or any model you can run locally.
+                  Your keys, your compute.
                 </p>
-                <div className="mt-6 space-y-2 text-body-sm text-muted-foreground">
-                  <div className="flex items-start gap-2">
-                    <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-foreground/40" />
-                    <span>Anthropic, OpenAI, and more.</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-foreground/40" />
-                    <span>Local models via Ollama.</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-foreground/40" />
-                    <span>Self-hostable. No telemetry.</span>
-                  </div>
+                <div className="mt-6 flex flex-wrap items-center gap-2">
+                  {[
+                    'GitHub Copilot',
+                    'Anthropic',
+                    'OpenAI',
+                    'OpenRouter',
+                    'Google Vertex',
+                    'Amazon Bedrock',
+                    'DeepSeek',
+                    'Groq',
+                    'Ollama',
+                    'xAI',
+                  ].map((name) => (
+                    <span
+                      key={name}
+                      className="inline-flex items-center rounded-full border border-accent/30 bg-canvas px-3 py-1.5 text-[12px] font-medium text-foreground/70"
+                    >
+                      {name}
+                    </span>
+                  ))}
+                  {[
+                    'Together AI',
+                    'Fireworks AI',
+                    'Cerebras',
+                    'Hugging Face',
+                    'Azure OpenAI',
+                    'Nvidia',
+                    'Deep Infra',
+                    'Scaleway',
+                    'Vercel AI',
+                  ].map((name) => (
+                    <span
+                      key={name}
+                      className="hidden md:inline-flex items-center rounded-full border border-accent/30 bg-canvas px-3 py-1.5 text-[12px] font-medium text-foreground/70"
+                    >
+                      {name}
+                    </span>
+                  ))}
+                  <span className="text-[12px] text-fg-dim font-medium">and more</span>
                 </div>
               </div>
 
@@ -126,30 +152,9 @@ export function App() {
                   </span>
                 </h2>
                 <p className="mt-4 max-w-md text-[15px] leading-relaxed text-muted-foreground">
-                  Schedule on a cron, watch a folder, or trigger on demand. Every routine carries
-                  its own permission set — grant or restrict access to files, the shell, and the
-                  network independently.
+                  On schedule, when files change, or on demand. Every routine carries its own
+                  permission set.
                 </p>
-                <p className="mt-3 max-w-md text-[15px] leading-relaxed text-muted-foreground">
-                  Set anything sensitive to{' '}
-                  <span className="font-mono text-xs text-foreground">ask</span> and it will prompt
-                  you before acting. It won&apos;t delete your hard drive if it doesn&apos;t have
-                  shell access.
-                </p>
-                <div className="mt-6 space-y-2 text-body-sm text-muted-foreground">
-                  <div className="flex items-start gap-2">
-                    <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-foreground/40" />
-                    <span>Cron, file watcher, or manual trigger.</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-foreground/40" />
-                    <span>Per-routine permissions, not per-app.</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-foreground/40" />
-                    <span>Allow, ask, or deny — no silent escalation.</span>
-                  </div>
-                </div>
               </div>
 
               <AppWindow
@@ -174,28 +179,50 @@ export function App() {
                   Integrations
                 </div>
                 <h2 className="text-balance text-[34px] font-semibold leading-tight tracking-tight md:text-[44px]">
-                  Hello{' '}
-                  <span className="serif italic" style={{ color: '#ec4899' }}>
-                    world.
-                  </span>
+                  Hello <span className="serif italic gradient-shimmer">world.</span>
                 </h2>
                 <p className="mt-4 max-w-md text-[15px] leading-relaxed text-muted-foreground">
-                  Routines aren&apos;t limited to your file system. Connect Gmail and let routines
-                  search your inbox, pull attachments, and act on what they find.
+                  Routines go beyond your file system. Connect your favourite tools and let routines
+                  work across them.
                 </p>
-                <div className="mt-6 space-y-2 text-body-sm text-muted-foreground">
-                  <div className="flex items-start gap-2">
-                    <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-foreground/40" />
-                    <span>Gmail — search, read, download attachments.</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-foreground/40" />
-                    <span>OAuth-secured, no credentials stored.</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-foreground/40" />
-                    <span>More integrations on the way.</span>
-                  </div>
+                <div className="mt-6 flex items-center gap-3 text-muted-foreground text-body-sm">
+                  <span className="flex items-center justify-center w-8 h-8 rounded-lg border border-muted bg-canvas">
+                    <svg viewBox="0 0 256 193" width="18" height="18" fill="none">
+                      <path
+                        fill="#4285F4"
+                        d="M58.182 192.05V93.14L0 49.504v125.091c0 9.658 7.825 17.455 17.455 17.455z"
+                      />
+                      <path
+                        fill="#34A853"
+                        d="M197.818 192.05h40.727c9.659 0 17.455-7.826 17.455-17.455V49.505l-58.182 43.635z"
+                      />
+                      <path
+                        fill="#EA4335"
+                        d="M58.182 93.14V17.504L128 69.868l69.818-52.364V93.14L128 145.504z"
+                      />
+                      <path
+                        fill="#FBBC04"
+                        d="M197.818 17.504V93.14L256 49.504V26.231c0-21.585-24.64-33.89-41.89-20.945z"
+                      />
+                      <path
+                        fill="#C5221F"
+                        d="M0 49.504l58.182 43.636V17.504L41.89 5.286C24.61-7.66 0 4.646 0 26.23z"
+                      />
+                    </svg>
+                  </span>
+                  <span className="flex items-center justify-center w-8 h-8 rounded-lg border border-muted bg-canvas">
+                    <svg viewBox="0 0 256 268" width="18" height="18" fill="none">
+                      <path
+                        fill="#FFF"
+                        d="M16.092 11.538L164.09.608c18.179-1.56 22.85-.508 34.28 7.801l47.243 33.282C253.406 47.414 256 48.975 256 55.207v182.527c0 11.439-4.155 18.205-18.696 19.24L65.44 267.378c-10.913.517-16.11-1.043-21.825-8.327L8.826 213.814C2.586 205.487 0 199.254 0 191.97V29.726c0-9.352 4.155-17.153 16.092-18.188"
+                      />
+                      <path
+                        fill="#000"
+                        d="M164.09.608L16.092 11.538C4.155 12.573 0 20.374 0 29.726v162.245c0 7.284 2.585 13.516 8.826 21.843l34.789 45.237c5.715 7.284 10.912 8.844 21.825 8.327l171.864-10.404c14.532-1.035 18.696-7.801 18.696-19.24V55.207c0-5.911-2.336-7.614-9.21-12.66l-1.185-.856L198.37 8.409C186.94.1 182.27-.952 164.09.608M69.327 52.22c-14.033.945-17.216 1.159-25.186-5.323L23.876 30.778c-2.06-2.086-1.026-4.69 4.163-5.207l142.274-10.395c11.947-1.043 18.17 3.12 22.842 6.758l24.401 17.68c1.043.525 3.638 3.637.517 3.637L71.146 52.095zm-16.36 183.954V81.222c0-6.767 2.077-9.887 8.3-10.413L230.02 60.93c5.724-.517 8.31 3.12 8.31 9.879v153.917c0 6.767-1.044 12.49-10.387 13.008l-161.487 9.361c-9.343.517-13.489-2.594-13.489-10.921M212.377 89.53c1.034 4.681 0 9.362-4.681 9.897l-7.783 1.542v114.404c-6.758 3.637-12.981 5.715-18.18 5.715-8.308 0-10.386-2.604-16.609-10.396l-50.898-80.079v77.476l16.1 3.646s0 9.362-12.989 9.362l-35.814 2.077c-1.043-2.086 0-7.284 3.63-8.318l9.351-2.595V109.823l-12.98-1.052c-1.044-4.68 1.55-11.439 8.826-11.965l38.426-2.585 52.958 81.113v-71.76l-13.498-1.552c-1.043-5.733 3.111-9.896 8.3-10.404z"
+                      />
+                    </svg>
+                  </span>
+                  <span className="text-fg-dim">... and more (soon)</span>
                 </div>
               </div>
 
@@ -204,10 +231,10 @@ export function App() {
                 <AppWindow
                   active="routines"
                   breadcrumbs={[{ label: 'Routines' }, { label: 'Invoice tracker' }]}
-                  height={580}
+                  height={520}
                   scrollable={false}
                 >
-                  <RoutineChatMockup routineId={4} name="Invoice tracker" />
+                  <PromptMockup />
                 </AppWindow>
               </div>
             </div>

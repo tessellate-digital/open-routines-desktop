@@ -94,6 +94,7 @@ function makeRoutine(overrides: Record<string, unknown> = {}) {
     enabled: 1,
     run_mode: 'background',
     permissions: '{}',
+    connected_apps: '{}',
     temperature: null,
     last_run_status: null,
     triggers_count: 0,
@@ -474,5 +475,74 @@ describe('continuation loop', () => {
 
     expect(mockSessionPrompt).toHaveBeenCalledOnce();
     expect(vi.mocked(relay.resetDrain)).not.toHaveBeenCalled();
+  });
+});
+
+// ── connected_apps prompt hints ───────────────────────────────────────────────
+
+describe('connected_apps prompt hints', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockSessionCreate.mockResolvedValue({ data: { id: 'sess-1' } });
+    mockSessionPrompt.mockResolvedValue({ data: { info: { id: 'msg-1' } } });
+    mockAcquireContext.mockResolvedValue({
+      client: { session: { create: mockSessionCreate, prompt: mockSessionPrompt } },
+      baseUrl: 'http://localhost:1234',
+      release: vi.fn(),
+    });
+  });
+
+  function getPromptText(): string {
+    const body = mockSessionPrompt.mock.calls[0][0].body as Record<string, unknown>;
+    const parts = body.parts as Array<{ type: string; text: string }>;
+    return parts[0].text;
+  }
+
+  it('includes Notion hint when connected_apps.notion is true', async () => {
+    await new Executor().startRun(
+      'run-1',
+      makeRoutine({ connected_apps: '{"notion":true}' }),
+      'Update my Notion page'
+    );
+    expect(getPromptText()).toContain('Notion');
+    expect(getPromptText()).toContain('MCP');
+  });
+
+  it('does not include Notion hint when connected_apps.notion is false', async () => {
+    await new Executor().startRun(
+      'run-1',
+      makeRoutine({ connected_apps: '{"notion":false}' }),
+      'Do stuff'
+    );
+    expect(getPromptText()).not.toContain('Notion tools are available via MCP');
+  });
+
+  it('does not include Notion hint when connected_apps is empty', async () => {
+    await new Executor().startRun('run-1', makeRoutine({ connected_apps: '{}' }), 'Do stuff');
+    expect(getPromptText()).not.toContain('Notion tools are available via MCP');
+  });
+
+  it('includes Gmail hint when connected_apps.gmail is true', async () => {
+    process.env.OPEN_ROUTINES_API_PORT = '3333';
+    await new Executor().startRun(
+      'run-1',
+      makeRoutine({ connected_apps: '{"gmail":true}' }),
+      'Search my inbox'
+    );
+    expect(getPromptText()).toContain('Gmail');
+    delete process.env.OPEN_ROUTINES_API_PORT;
+  });
+
+  it('can include both Gmail and Notion hints together', async () => {
+    process.env.OPEN_ROUTINES_API_PORT = '3333';
+    await new Executor().startRun(
+      'run-1',
+      makeRoutine({ connected_apps: '{"gmail":true,"notion":true}' }),
+      'Do multi-app task'
+    );
+    const text = getPromptText();
+    expect(text).toContain('Gmail');
+    expect(text).toContain('Notion');
+    delete process.env.OPEN_ROUTINES_API_PORT;
   });
 });

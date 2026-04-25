@@ -1,13 +1,13 @@
 @reference "tailwindcss";
 
 .mention-popover {
-  @apply absolute w-72 max-h-80 overflow-y-auto;
-  @apply bg-[var(--surface-2)] border border-[var(--border-hi)] rounded-xl;
-  @apply backdrop-blur-xl p-1.5 z-50;
+  @apply absolute w-80 max-h-96 overflow-y-auto;
+  @apply bg-[var(--surface-2)] border border-[var(--border)] rounded-xl;
+  @apply backdrop-blur-xl py-1 z-50;
   bottom: calc(100% + 10px);
   box-shadow:
-    0 8px 32px rgba(20, 20, 30, 0.14),
-    0 2px 8px rgba(20, 20, 30, 0.08);
+    0 8px 32px rgba(20, 20, 30, 0.12),
+    0 2px 8px rgba(20, 20, 30, 0.06);
 }
 
 [data-theme='dark'] .mention-popover {
@@ -17,34 +17,45 @@
 }
 
 .mention-popover-group {
-  @apply font-mono text-[10px] font-semibold uppercase tracking-wide;
-  @apply text-[var(--fg-dim)] px-2.5 pt-1.5 pb-1;
+  @apply flex items-center gap-2.5;
+  @apply text-[13px] font-semibold;
+  @apply text-[var(--fg-dim)] px-3 pt-2.5 pb-1;
+}
+
+.mention-popover-group-icon {
+  @apply leading-none shrink-0 w-5 flex items-center justify-center;
+}
+
+.mention-popover-group-divider {
+  @apply border-t border-[var(--border)] mt-1;
 }
 
 .mention-popover-item {
-  @apply flex flex-col items-start w-full;
-  @apply py-2 px-2.5 rounded-lg border-none bg-transparent;
-  @apply cursor-pointer text-left gap-0.5;
-  @apply transition-colors duration-100 ease-out;
+  @apply flex items-center gap-2.5 w-full;
+  @apply py-1.5 px-3 border-none bg-transparent;
+  @apply cursor-pointer text-left;
+  @apply transition-colors duration-75 ease-out;
+  @apply rounded-none;
 }
 
 .mention-popover-item:hover,
 .mention-popover-item.active {
-  @apply bg-[color-mix(in_srgb,var(--accent)_10%,transparent)];
+  @apply bg-[var(--surface-3,rgba(0,0,0,0.04))];
+}
+
+[data-theme='dark'] .mention-popover-item:hover,
+[data-theme='dark'] .mention-popover-item.active {
+  @apply bg-[rgba(255,255,255,0.06)];
+}
+
+.mention-popover-item-icon {
+  @apply text-[14px] leading-none shrink-0 w-5 text-center text-[#ec4899];
 }
 
 .mention-popover-item-label {
-  @apply text-[13px] font-medium text-[var(--fg)] leading-snug;
-}
-
-.mention-popover-item.active .mention-popover-item-label {
-  @apply text-[var(--accent)];
-}
-
-.mention-popover-item-desc {
-  @apply text-[11.5px] text-[var(--fg-dim)] leading-snug;
+  @apply text-[13px] font-normal text-[var(--fg)] leading-snug;
 }
 
 .mention-popover-empty {
-  @apply py-3 px-2.5 text-[13px] text-[var(--fg-dim)] text-center;
+  @apply py-3 px-3 text-[13px] text-[var(--fg-dim)] text-center;
 }

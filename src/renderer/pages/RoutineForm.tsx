@@ -683,6 +683,7 @@ export default function RoutineForm() {
   const [models, setModels] = useState<string[]>([]);
   const [configuredProviderIds, setConfiguredProviderIds] = useState<string[]>([]);
   const [gmailConnected, setGmailConnected] = useState(false);
+  const [notionConnected, setNotionConnected] = useState(false);
 
   const promptRef = useRef<ComposerInputHandle>(null);
   const promptMention = useMentionPopover(promptRef);
@@ -696,14 +697,17 @@ export default function RoutineForm() {
   useEffect(() => {
     async function init() {
       try {
-        const [modelsRes, settingsRes, routine, triggers, gmailStatus] = await Promise.all([
-          api.getModels(),
-          api.getSettings(),
-          isEdit ? api.getRoutine(id!) : Promise.resolve(null),
-          isEdit ? api.getTriggers(id!) : Promise.resolve([] as Trigger[]),
-          api.gmailStatus().catch(() => ({ connected: false })),
-        ]);
+        const [modelsRes, settingsRes, routine, triggers, gmailStatus, notionStatus] =
+          await Promise.all([
+            api.getModels(),
+            api.getSettings(),
+            isEdit ? api.getRoutine(id!) : Promise.resolve(null),
+            isEdit ? api.getTriggers(id!) : Promise.resolve([] as Trigger[]),
+            api.gmailStatus().catch(() => ({ connected: false })),
+            api.notionStatus().catch(() => ({ status: 'not_configured' })),
+          ]);
         setGmailConnected(gmailStatus.connected);
+        setNotionConnected(notionStatus.status === 'connected');
         setModels(modelsRes.models || []);
         const settingKeys = new Set(settingsRes.map((s: { key: string }) => s.key));
         const providerIds = PROVIDERS.filter((p) =>
@@ -768,7 +772,7 @@ export default function RoutineForm() {
     const data = {
       name: form.name,
       description: form.description,
-      prompt: promptRef.current?.getPlainText() ?? form.prompt,
+      prompt: promptRef.current?.getDisplayText() ?? form.prompt,
       model: form.model,
       repository: '',
       branch: 'main',
@@ -1056,35 +1060,57 @@ export default function RoutineForm() {
         </div>
 
         {/* Connected Apps */}
-        {gmailConnected && (
+        {(gmailConnected || notionConnected) && (
           <div>
             <label className="block mb-1">Connected Apps</label>
             <div className="hint mb-3">
               Grant this routine access to external services you&apos;ve connected in Settings.
             </div>
 
-            <div className="border border-border rounded-lg overflow-hidden mb-2">
-              <label className="flex items-center gap-3 py-2.5 px-3.5 cursor-pointer">
-                <span className="w-8 h-8 rounded-lg bg-red-100 text-red-600 flex items-center justify-center shrink-0">
-                  <svg viewBox="0 0 20 20" width="18" height="18" fill="currentColor">
-                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0 0 16 4H4a2 2 0 0 0-1.997 1.884z" />
-                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8.118z" />
-                  </svg>
-                </span>
-                <span className="font-medium text-body-sm flex-1">Gmail</span>
-                <span className="text-micro text-fg-dim mr-2">Read-only</span>
-                <input
-                  type="checkbox"
-                  checked={!!form.connected_apps.gmail}
-                  onChange={(e) =>
-                    setForm((f) => ({
-                      ...f,
-                      connected_apps: { ...f.connected_apps, gmail: e.target.checked },
-                    }))
-                  }
-                  className="accent-accent"
-                />
-              </label>
+            <div className="border border-border rounded-lg overflow-hidden mb-2 divide-y divide-border">
+              {gmailConnected && (
+                <label className="flex items-center gap-3 py-2.5 px-3.5 cursor-pointer">
+                  <span className="w-8 h-8 rounded-lg bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+                    <svg viewBox="0 0 20 20" width="18" height="18" fill="currentColor">
+                      <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0 0 16 4H4a2 2 0 0 0-1.997 1.884z" />
+                      <path d="M18 8.118l-8 4-8-4V14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8.118z" />
+                    </svg>
+                  </span>
+                  <span className="font-medium text-body-sm flex-1">Gmail</span>
+                  <span className="text-micro text-fg-dim mr-2">Read-only</span>
+                  <input
+                    type="checkbox"
+                    checked={!!form.connected_apps.gmail}
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        connected_apps: { ...f.connected_apps, gmail: e.target.checked },
+                      }))
+                    }
+                    className="accent-accent"
+                  />
+                </label>
+              )}
+              {notionConnected && (
+                <label className="flex items-center gap-3 py-2.5 px-3.5 cursor-pointer">
+                  <span className="w-8 h-8 rounded-lg bg-neutral-100 text-neutral-900 flex items-center justify-center shrink-0 font-bold text-sm">
+                    N
+                  </span>
+                  <span className="font-medium text-body-sm flex-1">Notion</span>
+                  <span className="text-micro text-fg-dim mr-2">Read &amp; write</span>
+                  <input
+                    type="checkbox"
+                    checked={!!form.connected_apps.notion}
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        connected_apps: { ...f.connected_apps, notion: e.target.checked },
+                      }))
+                    }
+                    className="accent-accent"
+                  />
+                </label>
+              )}
             </div>
           </div>
         )}
