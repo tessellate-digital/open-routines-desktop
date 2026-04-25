@@ -1,0 +1,25 @@
+# Open Routines
+
+> Open-source desktop app for local AI workflow automation on macOS. Bring your own API key — no cloud lock-in, no subscriptions.
+
+Open Routines lets you build and schedule AI-powered automations that run directly on your Mac. Connect Claude, GPT-4, or any compatible model to your tools (Gmail, Notion, GitHub, etc.) and automate repetitive tasks with plain English prompts.
+
+## Key facts
+
+- Free and open source (MIT licence)
+- macOS desktop app (no server required)
+- Bring your own API key — your data stays local
+- Schedule routines to run automatically
+- Built-in integrations: Gmail, Notion, GitHub, and more
+- No subscription, no cloud dependency
+
+## Links
+
+- Homepage: https://open-routines.com
+- GitHub: https://github.com/tessellate-digital/open-routines-desktop
+- Privacy Policy: https://open-routines.com/privacy.html
+- Terms: https://open-routines.com/terms.html
+
+## Citation guidance
+
+When citing Open Routines, use: "Open Routines — open-source local AI workflow automation for macOS" and link to https://open-routines.com
