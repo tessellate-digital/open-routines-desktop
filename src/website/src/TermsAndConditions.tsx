@@ -1,6 +1,27 @@
+import { Head } from 'vite-react-ssg';
+
 export function TermsAndConditions() {
   return (
     <div className="min-h-screen bg-canvas">
+      <Head>
+        <title>Terms &amp; Conditions — Open Routines</title>
+        <link rel="canonical" href="https://open-routines.com/terms/" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://open-routines.com/terms/" />
+        <meta property="og:title" content="Terms & Conditions — Open Routines" />
+        <meta
+          property="og:description"
+          content="Terms of use for Open Routines, the open-source macOS AI workflow automation app."
+        />
+        <meta property="og:image" content="https://open-routines.com/og-image.jpg" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Terms & Conditions — Open Routines" />
+        <meta
+          name="twitter:description"
+          content="Terms of use for Open Routines, the open-source macOS AI workflow automation app."
+        />
+        <meta name="twitter:image" content="https://open-routines.com/og-image.jpg" />
+      </Head>
       <div className="max-w-2xl mx-auto px-6 py-16 md:py-24">
         <a
           href="/"

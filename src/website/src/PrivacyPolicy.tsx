@@ -1,6 +1,27 @@
+import { Head } from 'vite-react-ssg';
+
 export function PrivacyPolicy() {
   return (
     <div className="min-h-screen bg-canvas">
+      <Head>
+        <title>Privacy Policy — Open Routines</title>
+        <link rel="canonical" href="https://open-routines.com/privacy/" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://open-routines.com/privacy/" />
+        <meta property="og:title" content="Privacy Policy — Open Routines" />
+        <meta
+          property="og:description"
+          content="How Open Routines handles your data. Local-first, no telemetry, no servers."
+        />
+        <meta property="og:image" content="https://open-routines.com/og-image.jpg" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Privacy Policy — Open Routines" />
+        <meta
+          name="twitter:description"
+          content="How Open Routines handles your data. Local-first, no telemetry, no servers."
+        />
+        <meta name="twitter:image" content="https://open-routines.com/og-image.jpg" />
+      </Head>
       <div className="max-w-2xl mx-auto px-6 py-16 md:py-24">
         <a
           href="/"
