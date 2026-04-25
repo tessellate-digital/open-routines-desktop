@@ -213,7 +213,7 @@ export function App() {
         <section className="relative overflow-hidden border-t border-muted bg-surface/60">
           <div className="pointer-events-none absolute inset-0" aria-hidden="true">
             <div
-              className="absolute w-[1400px] h-[1000px] -top-[60%] -right-[25%] rounded-full"
+              className="absolute w-350 h-250 -top-[60%] -right-[25%] rounded-full"
               style={{
                 background: 'radial-gradient(ellipse, rgba(236,72,153,0.25) 0%, transparent 65%)',
               }}
