@@ -17,6 +17,9 @@ jobs:
           node-version: 20
           cache: npm
 
+      - name: Install tailwindcss at root for CSS resolution
+        run: npm install tailwindcss --no-save --ignore-scripts
+
       - name: Install website dependencies
         run: npm ci
         working-directory: src/website
