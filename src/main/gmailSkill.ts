@@ -1,8 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { app } from 'electron';
+import { config } from './config';
 
-const SKILL_DIR = path.join(app.getPath('home'), '.config', 'opencode', 'skills', 'gmail');
+const SKILL_DIR = path.join(config.skillsDir, 'gmail');
 const SKILL_PATH = path.join(SKILL_DIR, 'SKILL.md');
 
 /**

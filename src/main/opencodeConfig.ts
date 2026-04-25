@@ -3,6 +3,7 @@ import { config } from './config';
 import { db } from '../backend/database';
 import type { RoutineRow } from '../backend/types';
 import { logger } from '../backend/util/logger';
+import { formatToolInventoryBlock } from './toolInventory';
 
 interface AgentDefinition {
   description?: string;
@@ -22,7 +23,11 @@ function buildAgentDefinition(routine: RoutineRow): AgentDefinition {
       routine.prompt,
       '',
       'If a tool call is denied or fails due to a permission rule, continue working with the information you do have. Do not stop or abort — complete the task to the best of your ability with the tools and data available to you.',
-    ].join('\n'),
+      '',
+      formatToolInventoryBlock(),
+    ]
+      .filter(Boolean)
+      .join('\n'),
   };
 
   // model must be the plain "provider/model" string — NOT an object
@@ -166,6 +171,7 @@ export function regenerateOpencodeConfig(): void {
 
   const configObj = {
     $schema: 'https://opencode.ai/config.json',
+    skills: { paths: [config.skillsDir] },
     agent,
   };
 

@@ -116,6 +116,17 @@ function spawnAndWaitForServer(
         .filter(Boolean)
         .join(':'),
       OPENCODE_CONFIG: appConfig.opencodeConfigPath,
+      // Redirect HOME so opencode cannot discover the user's global opencode config
+      // (e.g. ~/Library/Application Support/opencode/ on macOS). The isolated dir is empty,
+      // so only the app-managed opencode.json is loaded.
+      HOME: appConfig.opencodeHomeDir,
+      // Preserve git identity explicitly since HOME no longer points to the real home dir
+      GIT_CONFIG_GLOBAL: path.join(env.HOME ?? '', '.gitconfig'),
+      // Scope all uv data (Python installs, tools, cache) inside the app's userData
+      UV_DATA_DIR: appConfig.uvDataDir,
+      UV_CACHE_DIR: path.join(appConfig.uvDataDir, 'cache'),
+      UV_PYTHON_INSTALL_DIR: path.join(appConfig.uvDataDir, 'python'),
+      UV_TOOL_DIR: path.join(appConfig.uvDataDir, 'tools'),
     };
 
     const proc = spawn(

@@ -7,6 +7,7 @@ import { startFileWatcher, stopFileWatcher, setFileWatcherPort } from './fileWat
 import { disposeAll as disposeServerPool } from '../backend/services/opencodeServerPool';
 import { isOpencodeInstalled, installOpencode } from './opencode-installer';
 import { writeGmailSkill } from './gmailSkill';
+import { detectTools } from './toolInventory';
 
 // Set the dock icon at module load time — before app.whenReady() — so macOS never
 // gets a chance to show the Electron default icon during launch or quit.
@@ -93,6 +94,8 @@ app.whenReady().then(async () => {
   } else {
     console.log('[main] opencode found');
   }
+
+  await detectTools();
 
   // Start the embedded Hono server
   const port = await startServer();
