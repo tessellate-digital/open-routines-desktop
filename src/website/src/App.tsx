@@ -309,6 +309,12 @@ export function App() {
             >
               Releases
             </a>
+            <a href="./privacy.html" className="hover:text-foreground">
+              Privacy
+            </a>
+            <a href="./terms.html" className="hover:text-foreground">
+              Terms
+            </a>
           </div>
         </footer>
       </div>
