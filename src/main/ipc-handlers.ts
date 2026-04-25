@@ -64,7 +64,15 @@ export function registerIpcHandlers(): void {
   });
 
   ipcMain.handle('shell:openExternal', (_event, url: string) => {
-    shell.openExternal(url);
+    let parsed: URL;
+    try {
+      parsed = new URL(url);
+    } catch {
+      return;
+    }
+    if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
+      shell.openExternal(url);
+    }
   });
 
   ipcMain.handle('dialog:openDirectory', async () => {
