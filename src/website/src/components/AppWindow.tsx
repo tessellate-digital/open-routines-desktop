@@ -23,7 +23,9 @@ export function AppWindow({
   onBack?: () => void;
 }) {
   return (
-    <div className="rounded-xl overflow-hidden border border-muted shadow-md md:border-border-strong md:shadow-lg">
+    <div className="rounded-xl overflow-hidden border border-muted shadow-md md:border-border-strong md:shadow-lg relative max-h-[500px] md:max-h-none">
+      {/* Mobile fade-out */}
+      <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-canvas to-transparent z-10 md:hidden" />
       <div
         className="relative bg-canvas md:bg-[radial-gradient(900px_600px_at_0%_100%,rgba(168,85,247,0.18)_0%,transparent_60%),radial-gradient(800px_500px_at_30%_0%,rgba(79,70,229,0.14)_0%,transparent_60%),radial-gradient(600px_400px_at_100%_80%,rgba(236,72,153,0.12)_0%,transparent_60%)] md:bg-surface app-window-chrome"
         style={

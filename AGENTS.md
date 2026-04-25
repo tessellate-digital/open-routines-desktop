@@ -118,6 +118,81 @@ The `opencode serve` processes spawned by this app must be **fully isolated** fr
 - If new tools/runtimes are added (e.g. a Node global config), scope their data dirs inside `config.userData` and override their env vars in the same block.
 - Never write to paths outside `userData` from the main process. The app must leave the user's home directory entirely untouched.
 
+## Adding a new integration (connected app)
+
+Follow these steps in order. Use the Notion integration as the reference implementation.
+
+### 1. OpenCode config — `src/main/opencodeConfig.ts`
+- In `regenerateOpencodeConfig()`, always include the MCP server in the config object:
+  ```ts
+  mcp: { myapp: { type: 'remote', url: 'https://mcp.myapp.com/mcp' } }
+  ```
+- In `buildAgentDefinition()`, grant the `mcp__myapp` permission only when the routine has `connected_apps.myapp`:
+  ```ts
+  if (connectedApps.myapp) serialized['mcp__myapp'] = 'allow';
+  ```
+
+### 2. Backend route — `src/backend/routes/myappMcp.ts`
+Three endpoints proxying to the OpenCode SDK via `acquireContext`:
+- `GET /status` — calls `client.mcp.status()`, returns `{ status, error? }`
+- `POST /authenticate` — calls `client.mcp.auth.authenticate()`, triggers OAuth in the browser
+- `POST /disconnect` — calls `client.mcp.auth.remove()`
+
+### 3. Mount the router — `src/main/server.ts`
+```ts
+import myappMcpRouter from '../backend/routes/myappMcp';
+app.route('/api/mcp/myapp', myappMcpRouter);
+```
+
+### 4. API client — `src/renderer/lib/api.ts`
+Add three methods: `myappStatus()`, `myappAuthenticate()`, `myappDisconnect()`.
+
+### 5. Settings UI — `src/renderer/pages/settings/ConnectedAppsSettings.tsx`
+Add a `MyAppIntegration` component following the `GmailIntegration` / `NotionIntegration` pattern:
+- States: `idle | loading | authorizing | connected`
+- Poll `api.myappStatus()` while authorizing
+- Connect / Disconnect buttons
+
+### 6. Routine form toggle — `src/renderer/pages/RoutineForm.tsx`
+- Fetch `api.myappStatus()` on init, store in `myappConnected` state
+- Add a checkbox row in the Connected Apps section (gated on `myappConnected`), wired to `form.connected_apps.myapp`
+
+### 7. Executor prompt hint — `src/backend/services/executor.ts`
+After the existing connected-apps block (~line 218), add:
+```ts
+if (connectedApps.myapp) {
+  lines.push('Connected apps: MyApp. Tools available via MCP — describe what they do.');
+}
+```
+
+### 8. Mention actions (@ summon) — `src/renderer/lib/mentions/myappActions.ts`
+Create the file exporting a `myappActions: MentionAction[]` array. Each action represents one thing the user can summon with `@`. Each entry needs:
+- `id` — stable, unique string (e.g. `'myapp-search'`)
+- `label` — shown in the popover (e.g. `'Search workspace'`)
+- `group` — must match the brand name exactly as it appears in `groupIconComponents` (e.g. `'MyApp'`)
+- `icon` — a Heroicon via `createElement` (20/solid), will be rendered in pink
+- `keywords` — array of strings used for fuzzy filtering when the user types after `@`
+- `onSelect: async () => '<action-id>'` — returns the serialised value stored in the chip
+- `renderer(value)` — short display string shown inside the chip (e.g. `'MyApp: Search'`)
+- `feedRenderer(value)` — plain-text fallback used in the agent feed (e.g. `'[MyApp: Search workspace]'`)
+
+The chip is serialised in the prompt as `@customTag:action-id(value)`. The executor receives this as part of the prompt string and the agent interprets it.
+
+### 9. Register actions — `src/renderer/lib/mentions/mentionRegistry.ts`
+Import and spread `myappActions` into the `mentionActions` array at the bottom of the file.
+
+### 10. Brand icon in the @ popover — `src/renderer/components/composer/MentionPopover.tsx`
+- Add an inline SVG component for the brand logo at the top of the file. Make sure the `viewBox` matches the coordinate space of the path data (not always `0 0 24 24`).
+- Add it to the `groupIconComponents` record, keyed by the exact `group` string used in the actions file.
+- The icon renders at 16×16 in the group header. Item icons (Heroicons) are styled pink via `.mention-popover-item-icon`.
+
+### 11. Website — `src/website/src/`
+If the integration is publicly launched, update:
+- The "Hello world" section copy and provider pills in `App.tsx`
+- The `SettingsMockup.tsx` if it features this provider
+
+---
+
 ## Child Intent Nodes
 
 - [`src/backend/AGENTS.md`](src/backend/AGENTS.md) — services, repositories, routes, conventions

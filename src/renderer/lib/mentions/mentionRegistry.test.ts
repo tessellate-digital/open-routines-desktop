@@ -130,3 +130,90 @@ describe('fileActions renderers', () => {
     expect(mentionActions.length).toBeGreaterThan(0);
   });
 });
+
+describe('Gmail actions', () => {
+  const gmailIds = ['gmail-search', 'gmail-read', 'gmail-unread', 'gmail-labels'];
+
+  it.each(gmailIds)('action %s is registered', (id) => {
+    expect(findActionById(id)).toBeDefined();
+  });
+
+  it.each(gmailIds)('action %s belongs to Gmail group', (id) => {
+    expect(findActionById(id)?.group).toBe('Gmail');
+  });
+
+  it.each(gmailIds)('action %s has a label', (id) => {
+    expect(findActionById(id)?.label).toBeTruthy();
+  });
+
+  it.each(gmailIds)('action %s has keywords including "gmail"', (id) => {
+    expect(findActionById(id)?.keywords).toContain('gmail');
+  });
+
+  it.each(gmailIds)('action %s renderer returns a non-empty string', async (id) => {
+    const action = findActionById(id)!;
+    const value = await action.onSelect();
+    expect(action.renderer(value)).toBeTruthy();
+  });
+
+  it('gmail-search is found when filtering by "search"', () => {
+    const results = filterActions(mentionActions, 'search');
+    expect(results.some((a) => a.id === 'gmail-search')).toBe(true);
+  });
+
+  it('gmail actions are grouped together', () => {
+    const groups = groupActions(mentionActions.filter((a) => a.group === 'Gmail'));
+    expect(groups).toHaveLength(1);
+    expect(groups[0].group).toBe('Gmail');
+    expect(groups[0].items.length).toBeGreaterThanOrEqual(4);
+  });
+});
+
+describe('Notion actions', () => {
+  const notionIds = [
+    'notion-search',
+    'notion-read',
+    'notion-create',
+    'notion-update',
+    'notion-query',
+    'notion-create-database',
+    'notion-append',
+    'notion-list-comments',
+    'notion-create-comment',
+  ];
+
+  it.each(notionIds)('action %s is registered', (id) => {
+    expect(findActionById(id)).toBeDefined();
+  });
+
+  it.each(notionIds)('action %s belongs to Notion group', (id) => {
+    expect(findActionById(id)?.group).toBe('Notion');
+  });
+
+  it.each(notionIds)('action %s has keywords including "notion"', (id) => {
+    expect(findActionById(id)?.keywords).toContain('notion');
+  });
+
+  it.each(notionIds)('action %s renderer returns a non-empty string', async (id) => {
+    const action = findActionById(id)!;
+    const value = await action.onSelect();
+    expect(action.renderer(value)).toBeTruthy();
+  });
+
+  it('notion actions are grouped together', () => {
+    const groups = groupActions(mentionActions.filter((a) => a.group === 'Notion'));
+    expect(groups).toHaveLength(1);
+    expect(groups[0].group).toBe('Notion');
+    expect(groups[0].items.length).toBeGreaterThanOrEqual(9);
+  });
+
+  it('notion-search is found when filtering by "notion"', () => {
+    const results = filterActions(mentionActions, 'notion');
+    expect(results.some((a) => a.group === 'Notion')).toBe(true);
+  });
+
+  it('notion-query is found when filtering by "database"', () => {
+    const results = filterActions(mentionActions, 'database');
+    expect(results.some((a) => a.id === 'notion-query')).toBe(true);
+  });
+});

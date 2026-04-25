@@ -223,6 +223,11 @@ export class Executor {
         );
       }
     }
+    if (connectedApps.notion) {
+      lines.push(
+        'Connected apps: Notion (read & write). Notion tools are available via MCP. Use them to search, read, create, and update Notion pages and databases.'
+      );
+    }
 
     lines.push(''); // blank line before user prompt
 

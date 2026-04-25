@@ -183,4 +183,11 @@ export const api = {
   gmailStatus: () => request<{ connected: boolean; email?: string }>('/auth/gmail/status'),
   gmailDisconnect: () =>
     request<{ ok: boolean }>('/auth/gmail/disconnect', { method: 'POST', body: '{}' }),
+
+  // Notion MCP
+  notionStatus: () => request<{ status: string; error?: string }>('/mcp/notion/status'),
+  notionAuthenticate: () =>
+    request<{ ok: boolean }>('/mcp/notion/authenticate', { method: 'POST', body: '{}' }),
+  notionDisconnect: () =>
+    request<{ ok: boolean }>('/mcp/notion/disconnect', { method: 'POST', body: '{}' }),
 };

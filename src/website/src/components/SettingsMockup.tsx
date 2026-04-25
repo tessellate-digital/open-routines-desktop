@@ -19,21 +19,18 @@ export function SettingsMockup() {
         <div className="flex items-start justify-between mb-4">
           <div>
             <div className="text-section font-semibold mb-[3px]">Providers</div>
-            <div className="font-mono text-xs text-fg-muted leading-body">
-              API keys stored here are injected into every routine run.
-            </div>
           </div>
           <button className="btn primary">Add provider</button>
         </div>
 
         <div className="grid gap-2">
-          {/* Anthropic */}
+          {/* GitHub Copilot */}
           <div className="border border-border rounded-md bg-surface-hi overflow-hidden">
             <div className="flex items-center gap-3 px-4 py-3">
               <div className="flex-1">
-                <div className="font-semibold text-label">Anthropic</div>
+                <div className="font-semibold text-label">GitHub Copilot</div>
                 <div className="font-mono text-code text-fg-dim mt-[2px]">
-                  Claude models via API key
+                  Claude, GPT, and Gemini models
                 </div>
               </div>
               <span className="inline-flex items-center gap-1.5 text-caption-sm font-medium text-success">
@@ -44,7 +41,7 @@ export function SettingsMockup() {
             </div>
             <div className="border-t border-border">
               <div className="flex items-center justify-between px-4 py-2 text-xs">
-                <span className="font-mono text-muted-foreground">ANTHROPIC_API_KEY</span>
+                <span className="font-mono text-muted-foreground">GITHUB_TOKEN</span>
                 <span className="font-mono">••••••••</span>
               </div>
             </div>
@@ -88,8 +85,8 @@ export function SettingsMockup() {
         </div>
         <div className="bg-surface-2 border border-border rounded-lg shadow-md overflow-hidden">
           {[
-            { provider: 'anthropic', model: 'claude-sonnet-4-6' },
-            { provider: 'anthropic', model: 'claude-haiku-4-5' },
+            { provider: 'copilot', model: 'claude-sonnet-4-6' },
+            { provider: 'copilot', model: 'claude-haiku-4-5' },
             { provider: 'openai', model: 'gpt-4o' },
           ].map((m, i, arr) => (
             <div

@@ -1,11 +1,13 @@
+import { createElement } from 'react';
+import { FolderIcon } from '@heroicons/react/20/solid';
 import type { MentionAction } from './mentionRegistry';
 
 export const fileActions: MentionAction[] = [
   {
     id: 'file-browse',
-    label: 'Browse files',
+    label: 'Browse',
     group: 'Files',
-    description: 'Pick a file or folder from your system',
+    icon: createElement(FolderIcon, { width: 16, height: 16 }),
     keywords: ['file', 'folder', 'directory', 'path', 'browse', 'open', 'attach'],
     onSelect: async () => {
       const path = await window.electronAPI?.selectPath();

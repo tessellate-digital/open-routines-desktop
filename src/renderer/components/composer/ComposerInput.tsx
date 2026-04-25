@@ -1,4 +1,5 @@
 import { forwardRef, useImperativeHandle, useRef, useEffect } from 'react';
+import { findActionById } from '../../lib/mentions/mentionRegistry';
 import './ComposerInput.css';
 
 export interface ComposerInputHandle {
@@ -149,6 +150,15 @@ const ComposerInput = forwardRef<ComposerInputHandle, ComposerInputProps>(
 
         deleteRange.insertNode(chip);
 
+        const prev = chip.previousSibling;
+        if (prev && prev.nodeType === Node.TEXT_NODE) {
+          prev.textContent = (prev.textContent ?? '').replace(/\s+$/, '');
+        }
+        const next = chip.nextSibling;
+        if (next && next.nodeType === Node.TEXT_NODE) {
+          next.textContent = (next.textContent ?? '').replace(/^\s+/, '');
+        }
+
         const space = document.createTextNode('\u00a0');
         chip.after(space);
 
@@ -174,7 +184,37 @@ const ComposerInput = forwardRef<ComposerInputHandle, ComposerInputProps>(
 
       setText(text: string) {
         if (divRef.current) {
-          divRef.current.textContent = text;
+          const div = divRef.current;
+          div.innerHTML = '';
+
+          const TAG_RE = /@customTag:([^(]+)\(([^)]*)\)/g;
+          let lastIdx = 0;
+          let match: RegExpExecArray | null;
+
+          while ((match = TAG_RE.exec(text)) !== null) {
+            if (match.index > lastIdx) {
+              div.appendChild(document.createTextNode(text.slice(lastIdx, match.index)));
+            }
+            const actionId = match[1];
+            const value = match[2];
+            const action = findActionById(actionId);
+
+            const chip = document.createElement('span');
+            chip.contentEditable = 'false';
+            chip.dataset.mentionValue = value;
+            chip.dataset.mentionAction = actionId;
+            chip.className = 'mention-chip';
+            chip.textContent = action ? action.renderer(value) : actionId;
+            div.appendChild(chip);
+            div.appendChild(document.createTextNode('\u00a0'));
+
+            lastIdx = match.index + match[0].length;
+          }
+
+          if (lastIdx < text.length) {
+            div.appendChild(document.createTextNode(text.slice(lastIdx)));
+          }
+
           onChangeRef.current?.(text);
         }
       },
