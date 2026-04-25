@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { app, BrowserWindow, nativeImage } from 'electron';
+import { app, BrowserWindow, nativeImage, session } from 'electron';
 import * as path from 'path';
 import { startServer } from './server';
 import { registerIpcHandlers, setServerPort } from './ipc-handlers';
@@ -42,8 +42,18 @@ function createWindow(serverPort: number): void {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
+      sandbox: true,
     },
   });
+
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    const allowed = MAIN_WINDOW_VITE_DEV_SERVER_URL ?? 'file://';
+    if (!url.startsWith(allowed)) {
+      event.preventDefault();
+    }
+  });
+
+  mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
 
   // In production hold the window hidden for 1 s so the app has time to settle
   // before appearing — avoids a jarring flash of half-loaded UI on fast machines.
@@ -75,6 +85,20 @@ declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string | undefined;
 declare const MAIN_WINDOW_VITE_NAME: string;
 
 app.whenReady().then(async () => {
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    const isDev = !!MAIN_WINDOW_VITE_DEV_SERVER_URL;
+    const scriptSrc = isDev ? "script-src 'self' 'unsafe-inline'" : "script-src 'self'";
+    const connectExtras = isDev ? ' ws://localhost:* ws://127.0.0.1:*' : '';
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [
+          `default-src 'self'; ${scriptSrc}; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; connect-src 'self' http://localhost:* http://127.0.0.1:*${connectExtras}; img-src 'self' data:; font-src 'self' data: https://fonts.gstatic.com`,
+        ],
+      },
+    });
+  });
+
   registerIpcHandlers();
 
   // Check if opencode is installed; install if needed
