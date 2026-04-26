@@ -207,14 +207,9 @@ function spawnAndWaitForServer(
   });
 }
 
-/**
- * Dynamically import the ESM-only @opencode-ai/sdk and call createOpencodeClient.
- * Using Function() wrapper to avoid TypeScript's static module resolution for
- * "moduleResolution": "node" which cannot resolve ESM-only packages.
- */
 async function createClient(baseUrl: string): Promise<unknown> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const sdk = await (Function('m', 'return import(m)')('@opencode-ai/sdk') as Promise<any>);
+  const sdk: any = await import('@opencode-ai/sdk');
   return sdk.createOpencodeClient({ baseUrl }) as unknown;
 }
 
