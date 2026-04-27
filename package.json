@@ -1,6 +1,7 @@
 {
   "name": "open-routines-desktop",
-  "version": "0.1.0",
+  "productName": "Open Routines",
+  "version": "0.0.1",
   "private": true,
   "description": "Open Routines — Desktop App",
   "main": ".vite/build/index.js",

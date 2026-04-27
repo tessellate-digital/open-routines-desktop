@@ -24,4 +24,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
   downloadUpdate: (): Promise<void> => ipcRenderer.invoke('update:download'),
   installUpdate: (): Promise<void> => ipcRenderer.invoke('update:install'),
+  onNavigate: (callback: (route: string) => void) => {
+    ipcRenderer.on('navigate', (_event, route) => callback(route));
+  },
 });
