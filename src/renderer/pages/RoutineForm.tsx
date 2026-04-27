@@ -737,9 +737,6 @@ export default function RoutineForm() {
             },
             connected_apps: routine.connected_apps ?? {},
           });
-          // Initialize the prompt composer with the loaded text
-          // (runs after state update, ref may not be attached yet — use setTimeout)
-          setTimeout(() => promptRef.current?.setText(routine.prompt ?? ''), 0);
         }
         if (triggers && triggers.length > 0) {
           setExistingTriggers(triggers);
@@ -757,6 +754,15 @@ export default function RoutineForm() {
     }
     init();
   }, [id, isEdit, setPageTitle]);
+
+  // Set the prompt text once after loading completes and the ComposerInput is mounted
+  const promptInitializedRef = useRef(false);
+  useEffect(() => {
+    if (!loading && isEdit && form.prompt && !promptInitializedRef.current) {
+      promptInitializedRef.current = true;
+      promptRef.current?.setText(form.prompt);
+    }
+  }, [loading, isEdit, form.prompt]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
