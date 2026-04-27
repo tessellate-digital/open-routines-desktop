@@ -8,6 +8,7 @@ import { disposeAll as disposeServerPool } from '../backend/services/opencodeSer
 import { isOpencodeInstalled, installOpencode } from './opencode-installer';
 import { writeGmailSkill } from './gmailSkill';
 import { detectTools } from './toolInventory';
+import { initAutoUpdater } from './autoUpdater';
 
 // Set the dock icon at module load time — before app.whenReady() — so macOS never
 // gets a chance to show the Electron default icon during launch or quit.
@@ -129,6 +130,9 @@ app.whenReady().then(async () => {
   setFileWatcherPort(port);
 
   createWindow(port);
+  if (mainWindow) {
+    initAutoUpdater(mainWindow);
+  }
 
   startFileWatcher();
 
