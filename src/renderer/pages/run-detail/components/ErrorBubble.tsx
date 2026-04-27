@@ -1,4 +1,6 @@
-export function ErrorBubble({ content }: { content: string }) {
+import { memo } from 'react';
+
+export const ErrorBubble = memo(function ErrorBubble({ content }: { content: string }) {
   return (
     <div
       className="py-2.5 px-[14px] rounded-[10px] text-destructive text-body-sm font-mono whitespace-pre-wrap"
@@ -10,4 +12,4 @@ export function ErrorBubble({ content }: { content: string }) {
       {content}
     </div>
   );
-}
+});

@@ -9,3 +9,4 @@ export { PermissionCard } from './PermissionCard';
 export { SegmentList } from './SegmentList';
 export { AssistantCard } from './AssistantCard';
 export { ThreadItem } from './ThreadItem';
+export { ChatComposer } from './ChatComposer';

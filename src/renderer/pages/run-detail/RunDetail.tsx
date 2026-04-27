@@ -1,29 +1,35 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import classNames from 'classnames';
 import { BackLink } from '../../components/BackLink';
 import { PageHeader } from '../../components/PageHeader';
 import { api } from '../../lib/api';
 import { useRunStream } from '../../hooks/useSSE';
 import { StatusBadge } from '../../components/RunsTable';
 import { duration } from '../../lib/utils';
-import { useRunStore } from '../../stores/runStore';
+import { useRunStore, type Segment } from '../../stores/runStore';
 import { TodoBox } from '../../components/TodoBox';
 import { usePageContext } from '../../contexts/PageContext';
-import { ComposerInput, MentionPopover, type ComposerInputHandle } from '../../components/composer';
+import { MentionPopover, type ComposerInputHandle } from '../../components/composer';
 import { useMentionPopover } from '../../hooks/composer';
 import { ThreadItem } from './components';
+import { ChatComposer } from './components/ChatComposer';
 import { parseSegments, extractTodos } from './utils';
 import './RunDetail.style.css';
+
+const EMPTY_SEGMENTS: Segment[] = [];
+const EMPTY_TOGGLED = new Set<number>();
 
 export default function RunDetail() {
   const { id } = useParams<{ id: string }>();
 
+  // Granular state selectors — only re-render when these specific values change
+  const thread = useRunStore((s) => s.thread);
+  const liveSegments = useRunStore((s) => s.liveSegments);
+  const isStreaming = useRunStore((s) => s.isStreaming);
+  const toggledTools = useRunStore((s) => s.toggledTools);
+
+  // Actions are stable references in Zustand — no reactive subscription needed
   const {
-    thread,
-    liveSegments,
-    isStreaming,
-    toggledTools,
     setThread,
     setStreaming,
     clearLiveSegments,
@@ -40,7 +46,7 @@ export default function RunDetail() {
     toggleLiveTool,
     addReplyRun,
     reset,
-  } = useRunStore();
+  } = useRunStore.getState();
 
   const { setPageTitle } = usePageContext();
   const [loading, setLoading] = useState(true);
@@ -56,6 +62,7 @@ export default function RunDetail() {
   // True once the user has manually scrolled up — suppresses auto-scroll until
   // they return to the bottom themselves.
   const userScrolledUp = useRef(false);
+  const scrollRAF = useRef(0);
 
   const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
     const scroller = document.querySelector('.scroller');
@@ -132,8 +139,12 @@ export default function RunDetail() {
 
   useEffect(() => {
     if (isStreaming && !userScrolledUp.current) {
-      scrollToBottom('instant');
+      cancelAnimationFrame(scrollRAF.current);
+      scrollRAF.current = requestAnimationFrame(() => {
+        scrollToBottom('instant');
+      });
     }
+    return () => cancelAnimationFrame(scrollRAF.current);
   }, [liveSegments, isStreaming, scrollToBottom]);
 
   const latestRunId = thread[thread.length - 1]?.id;
@@ -391,7 +402,7 @@ export default function RunDetail() {
       <div className="grid gap-[18px] pb-10">
         {thread.map((run, ti) => {
           const isLast = ti === thread.length - 1;
-          const runToggled = toggledTools[run.id] ?? new Set<number>();
+          const runToggled = toggledTools[run.id] ?? EMPTY_TOGGLED;
           return (
             <ThreadItem
               key={run.id}
@@ -399,9 +410,9 @@ export default function RunDetail() {
               isFirst={ti === 0}
               isLast={isLast}
               isStreaming={isStreaming}
-              liveSegments={liveSegments}
+              liveSegments={isLast ? liveSegments : EMPTY_SEGMENTS}
               toggledTools={runToggled}
-              onToggleTool={(idx) => handleToggleTool(run.id, idx, isLast && isStreaming)}
+              onToggleTool={handleToggleTool}
               onReply={handleQuestionReply}
               onPermissionRespond={handlePermissionRespond}
               onAddToPrompt={handleAddToPrompt}
@@ -439,56 +450,29 @@ export default function RunDetail() {
               onDismiss={mention.dismiss}
             />
           )}
-          <div
-            className={classNames('chat-composer', { thinking: showThinking })}
-            onClick={showThinking ? handleCancel : undefined}
-          >
-            {showThinking ? (
-              <>
-                <div
-                  className={classNames(
-                    'flex items-center justify-center w-[42px] h-[42px] rounded-full bg-[rgba(200,59,59,0.12)] shrink-0',
-                    { 'orb-exit': orbExiting }
-                  )}
-                >
-                  <svg viewBox="0 0 16 16" width="14" height="14" fill="var(--status-failed)">
-                    <rect x="3" y="3" width="10" height="10" rx="2" />
-                  </svg>
-                </div>
-              </>
-            ) : (
-              <div className={classNames('composer-input', { 'fade-in': !showThinking })}>
-                <ComposerInput
-                  ref={composerRef}
-                  placeholder={
-                    currentRun.status === 'lost'
-                      ? 'Cannot reply — run was lost'
-                      : 'Follow up, add context, or ask a question…'
-                  }
-                  disabled={inputDisabled}
-                  onChange={handleComposerChange}
-                  onInput={mention.onInput}
-                  onKeyDown={(e) => {
-                    mention.onKeyDown(e);
-                    if (!e.defaultPrevented && e.key === 'Enter' && !e.shiftKey && canReply) {
-                      e.preventDefault();
-                      handleReply(e);
-                    }
-                  }}
-                />
-                <button
-                  className={classNames('btn primary rounded-full py-[9px] px-[18px] shrink-0', {
-                    'opacity-100': replyText.trim() && !inputDisabled,
-                    'opacity-45': !replyText.trim() || inputDisabled,
-                  })}
-                  onClick={(e) => handleReply(e)}
-                  disabled={inputDisabled || !replyText.trim()}
-                >
-                  Send
-                </button>
-              </div>
-            )}
-          </div>
+          <ChatComposer
+            isThinking={isStreaming}
+            orbExiting={orbExiting}
+            onCancel={handleCancel}
+            composerRef={composerRef}
+            placeholder={
+              currentRun.status === 'lost'
+                ? 'Cannot reply — run was lost'
+                : 'Follow up, add context, or ask a question…'
+            }
+            disabled={inputDisabled}
+            replyText={replyText}
+            onChange={handleComposerChange}
+            onInput={mention.onInput}
+            onKeyDown={(e) => {
+              mention.onKeyDown(e);
+              if (!e.defaultPrevented && e.key === 'Enter' && !e.shiftKey && canReply) {
+                e.preventDefault();
+                handleReply(e);
+              }
+            }}
+            onSubmit={handleReply}
+          />
         </div>
       </div>
       <div ref={bottomRef} />
