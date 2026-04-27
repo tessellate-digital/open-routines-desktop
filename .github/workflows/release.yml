@@ -55,9 +55,28 @@ jobs:
           GMAIL_CLIENT_SECRET: ${{ secrets.GMAIL_CLIENT_SECRET }}
         run: npm run make
 
+      - name: Generate update metadata
+        run: |
+          VERSION="${{ github.event.release.tag_name }}"
+          VERSION="${VERSION#v}"
+          ZIP_FILE=$(find out/make -name "*.zip" -type f | head -1)
+          ZIP_NAME=$(basename "$ZIP_FILE")
+          ZIP_SIZE=$(stat -f%z "$ZIP_FILE")
+          ZIP_SHA512=$(shasum -a 512 "$ZIP_FILE" | awk '{print $1}' | xxd -r -p | base64)
+          cat > out/make/latest-mac.yml <<EOF
+          version: ${VERSION}
+          files:
+            - url: ${ZIP_NAME}
+              sha512: ${ZIP_SHA512}
+              size: ${ZIP_SIZE}
+          path: ${ZIP_NAME}
+          sha512: ${ZIP_SHA512}
+          releaseDate: $(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
+          EOF
+
       - name: Upload artifacts to release
         run: |
-          find out/make -type f \( -name "*.dmg" -o -name "*.zip" \) | while read file; do
+          find out/make -type f \( -name "*.dmg" -o -name "*.zip" -o -name "*.yml" \) | while read file; do
             gh release upload "${{ github.event.release.tag_name }}" "$file" --clobber
           done
         env:

@@ -4,6 +4,15 @@
   "private": true,
   "description": "Open Routines — Desktop App",
   "main": ".vite/build/index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tessellate-digital/open-routines-desktop.git"
+  },
+  "publish": {
+    "provider": "github",
+    "owner": "tessellate-digital",
+    "repo": "open-routines-desktop"
+  },
   "scripts": {
     "start": "electron-forge start",
     "website": "cd src/website && npm run dev",
@@ -31,6 +40,7 @@
     "chokidar": "^4.0.0",
     "classnames": "^2.5.1",
     "dotenv": "^17.4.2",
+    "electron-updater": "^6.8.3",
     "googleapis": "^171.4.0",
     "hono": "^4.6.0",
     "node-cron": "^3.0.0",
