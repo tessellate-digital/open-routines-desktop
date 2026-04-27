@@ -89,6 +89,46 @@ export function App() {
         </div>
         {/* end hero orb wrapper */}
 
+        {/* ── WHAT IT DOES SECTION ── */}
+        <section className="border-y border-muted bg-surface/40">
+          <div className="max-w-[1280px] mx-auto px-6 py-12 md:py-20">
+            <div className="max-w-3xl mx-auto">
+              <h2 className="text-[28px] font-semibold leading-tight tracking-tight md:text-[36px] text-center mb-8">
+                What is Open Routines?
+              </h2>
+              <div className="space-y-4 text-[15px] leading-relaxed text-muted-foreground md:text-[16px]">
+                <p>
+                  Open Routines is a free, open-source desktop application for macOS that lets you
+                  create repeatable AI workflows (called routines) that run on your schedule and
+                  handle repetitive tasks automatically.
+                </p>
+                <p>
+                  You describe what you want done in plain language. Open Routines executes it for
+                  you. A cron job fires every weekday morning and drops a digest of your open pull
+                  requests in your inbox. A folder watcher picks up a new invoice PDF the moment it
+                  lands and adds a row to your spreadsheet. A Gmail trigger scans your inbox for
+                  this year&apos;s invoices, pulls the PDFs, and builds you a colour-coded expense
+                  report.
+                </p>
+                <p>
+                  The app runs entirely on your machine using your own API keys. There&apos;s no
+                  cloud dependency, no subscription, and no vendor lock-in. Each routine has its own
+                  permission set, so you control exactly what it can read, write, execute, and
+                  access.
+                </p>
+                <p>
+                  Open Routines can connect to external services to extend what your routines can
+                  do. We take your privacy seriously. Read our{' '}
+                  <a href="/privacy" className="text-accent hover:underline">
+                    Privacy Policy
+                  </a>{' '}
+                  to learn how we handle your data.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* ── OPEN SECTION ── */}
         <section className="relative overflow-hidden border-y border-muted bg-surface/60">
           <div className="pointer-events-none absolute inset-0" aria-hidden="true">
