@@ -19,27 +19,7 @@ export function Layout() {
   }, []);
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!e.metaKey && !e.ctrlKey) {
-        return;
-      }
-      switch (e.key) {
-        case 'n':
-          e.preventDefault();
-          navigate('/routines/new');
-          break;
-        case '2':
-          e.preventDefault();
-          navigate('/runs');
-          break;
-        case ',':
-          e.preventDefault();
-          navigate('/settings');
-          break;
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.electronAPI?.onNavigate((route) => navigate(route));
   }, [navigate]);
 
   return (

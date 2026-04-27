@@ -23,6 +23,7 @@ interface ElectronAPI {
   onUpdateDownloaded(callback: () => void): void;
   downloadUpdate(): Promise<void>;
   installUpdate(): Promise<void>;
+  onNavigate(callback: (route: string) => void): void;
 }
 
 interface Window {

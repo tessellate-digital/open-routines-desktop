@@ -55,6 +55,17 @@ jobs:
           GMAIL_CLIENT_SECRET: ${{ secrets.GMAIL_CLIENT_SECRET }}
         run: npm run make
 
+      - name: Sanitize artifact filenames
+        run: |
+          find out/make -type f \( -name "*.dmg" -o -name "*.zip" \) | while IFS= read -r file; do
+            dir=$(dirname "$file")
+            base=$(basename "$file")
+            sanitized=$(echo "$base" | tr ' ' '-')
+            if [ "$base" != "$sanitized" ]; then
+              mv "$file" "$dir/$sanitized"
+            fi
+          done
+
       - name: Generate update metadata
         run: |
           VERSION="${{ github.event.release.tag_name }}"
@@ -76,7 +87,7 @@ jobs:
 
       - name: Upload artifacts to release
         run: |
-          find out/make -type f \( -name "*.dmg" -o -name "*.zip" -o -name "*.yml" \) | while read file; do
+          find out/make -type f \( -name "*.dmg" -o -name "*.zip" -o -name "*.yml" \) -print0 | while IFS= read -r -d '' file; do
             gh release upload "${{ github.event.release.tag_name }}" "$file" --clobber
           done
         env:
