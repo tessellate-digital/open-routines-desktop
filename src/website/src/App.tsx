@@ -408,10 +408,10 @@ export function App() {
               Releases
             </a>
             <a href="/privacy" className="hover:text-foreground">
-              Privacy
+              Privacy Policy
             </a>
             <a href="/terms" className="hover:text-foreground">
-              Terms
+              Terms of Service
             </a>
           </div>
         </footer>
