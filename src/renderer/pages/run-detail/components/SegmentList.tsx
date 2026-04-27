@@ -42,12 +42,13 @@ export const SegmentList = memo(function SegmentList({
             return <StepDivider key={idx} />;
           }
           if (seg.kind === 'tool') {
-            const open = seg.open || toggledTools.has(idx);
             return (
               <ToolRow
                 key={idx}
-                seg={{ ...seg, open }}
-                onToggle={() => onToggleTool(idx)}
+                seg={seg}
+                open={seg.open || toggledTools.has(idx)}
+                idx={idx}
+                onToggle={onToggleTool}
                 onReply={onReply}
               />
             );

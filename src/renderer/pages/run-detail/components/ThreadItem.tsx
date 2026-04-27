@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react';
+import { memo, useMemo, useCallback } from 'react';
 import type { Run } from '../../../lib/types';
 import type { Segment } from '../../../stores/runStore';
 import { parseSegments } from '../utils';
@@ -13,7 +13,7 @@ interface ThreadItemProps {
   isStreaming: boolean;
   liveSegments: Segment[];
   toggledTools: Set<number>;
-  onToggleTool: (idx: number) => void;
+  onToggleTool: (runId: string, idx: number, isLive: boolean) => void;
   onReply?: (text: string) => void;
   onPermissionRespond?: (permissionId: string, response: 'once' | 'always' | 'reject') => void;
   onAddToPrompt?: (text: string) => Promise<void>;
@@ -36,6 +36,11 @@ export const ThreadItem = memo(function ThreadItem({
     [isLast, isStreaming, liveSegments, run.stdout]
   );
 
+  const handleToggle = useCallback(
+    (idx: number) => onToggleTool(run.id, idx, isLast && isStreaming),
+    [onToggleTool, run.id, isLast, isStreaming]
+  );
+
   return (
     <div>
       {isFirst &&
@@ -54,7 +59,7 @@ export const ThreadItem = memo(function ThreadItem({
       <AssistantCard
         segments={segments}
         toggledTools={toggledTools}
-        onToggleTool={onToggleTool}
+        onToggleTool={handleToggle}
         isStreaming={isLast && isStreaming}
         onReply={isLast ? onReply : undefined}
         onPermissionRespond={isLast ? onPermissionRespond : undefined}

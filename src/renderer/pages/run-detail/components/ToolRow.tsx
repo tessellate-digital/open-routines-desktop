@@ -1,14 +1,19 @@
+import { memo, useCallback } from 'react';
 import classNames from 'classnames';
 import type { Segment } from '../../../stores/runStore';
 import { QuestionsCard } from './QuestionsCard';
 
 interface ToolRowProps {
   seg: Segment & { kind: 'tool' };
-  onToggle: () => void;
+  open: boolean;
+  idx: number;
+  onToggle: (idx: number) => void;
   onReply?: (text: string) => void;
 }
 
-export function ToolRow({ seg, onToggle, onReply }: ToolRowProps) {
+export const ToolRow = memo(function ToolRow({ seg, open, idx, onToggle, onReply }: ToolRowProps) {
+  const handleToggle = useCallback(() => onToggle(idx), [onToggle, idx]);
+
   if (seg.name === 'skill') {
     let skillName = seg.args;
     try {
@@ -45,16 +50,14 @@ export function ToolRow({ seg, onToggle, onReply }: ToolRowProps) {
     return (
       <div className="mb-3">
         <button
-          onClick={onToggle}
+          onClick={handleToggle}
           className="inline-flex items-center gap-[5px] bg-transparent border-none py-0.5 px-0 font-mono text-caption text-muted-foreground cursor-pointer max-w-full"
         >
-          <span className="text-micro-xs opacity-70 shrink-0">{seg.open ? '▼' : '›'}</span>
+          <span className="text-micro-xs opacity-70 shrink-0">{open ? '▼' : '›'}</span>
           <span className="font-medium shrink-0">bash</span>
-          {!seg.open && summary && (
-            <span className="opacity-50 font-normal truncate">{summary}</span>
-          )}
+          {!open && summary && <span className="opacity-50 font-normal truncate">{summary}</span>}
         </button>
-        {seg.open && (
+        {open && (
           <div className="mt-1 bg-surface-hi border border-border rounded-lg py-3 px-[14px] font-mono text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed">
             {seg.args && <div className={classNames({ 'mb-2': seg.result })}>{seg.args}</div>}
             {seg.result && <div className="text-fg-dim">{seg.result}</div>}
@@ -78,13 +81,13 @@ export function ToolRow({ seg, onToggle, onReply }: ToolRowProps) {
   return (
     <div className="mb-3">
       <button
-        onClick={onToggle}
+        onClick={handleToggle}
         className="inline-flex items-center gap-[5px] bg-transparent border-none py-0.5 px-0 font-mono text-caption text-muted-foreground cursor-pointer"
       >
-        <span className="text-micro-xs opacity-70">{seg.open ? '▼' : '›'}</span>
+        <span className="text-micro-xs opacity-70">{open ? '▼' : '›'}</span>
         <span className="font-medium">{seg.name}</span>
       </button>
-      {seg.open && (
+      {open && (
         <div className="mt-1 bg-surface-hi border border-border rounded-lg py-3 px-[14px] font-mono text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed">
           {seg.args && <div className={classNames({ 'mb-2': seg.result })}>{seg.args}</div>}
           {seg.result && <div className="text-fg-dim">{seg.result}</div>}
@@ -92,4 +95,4 @@ export function ToolRow({ seg, onToggle, onReply }: ToolRowProps) {
       )}
     </div>
   );
-}
+});

@@ -1,7 +1,14 @@
 @reference "tailwindcss";
 
+/* ── Wrapper for input pill + stop orb ── */
+.composer-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* ── Input pill ── */
 .chat-composer {
-  @apply w-full max-w-[700px] flex items-center gap-2.5;
+  @apply w-full flex items-center gap-2.5;
   @apply bg-[var(--surface-2)] border border-[var(--border-hi)] rounded-full;
   @apply pl-5 pr-1.5 py-1.5 outline-none overflow-hidden;
   @apply backdrop-blur-xl;
@@ -10,8 +17,8 @@
     0 2px 8px rgba(20, 20, 30, 0.06),
     0 1px 0 rgba(255, 255, 255, 0.5) inset;
   transition:
-    max-width 380ms cubic-bezier(0.22, 0.61, 0.36, 1),
-    padding 380ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    opacity 280ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    transform 380ms cubic-bezier(0.22, 0.61, 0.36, 1),
     border-color 280ms ease,
     box-shadow 280ms ease;
 }
@@ -46,43 +53,79 @@
   @apply opacity-50;
 }
 
-.chat-composer .composer-input {
-  @apply contents;
+/* Pill fades + visually contracts toward center — compositor only (opacity + transform) */
+.chat-composer.is-thinking {
+  opacity: 0;
+  transform: scaleX(0.08);
+  pointer-events: none;
 }
 
-.chat-composer .composer-input.fade-in {
-  animation: fadeIn 300ms ease forwards;
-}
-
-.chat-composer.thinking {
-  @apply bg-[var(--surface-2)] cursor-pointer p-[7px] max-w-14 justify-center mx-auto;
-  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+/* ── Stop orb ── */
+.stop-orb {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.5);
+  opacity: 0;
+  pointer-events: none;
+  width: 56px;
+  height: 56px;
+  border-radius: 9999px;
+  background: var(--surface-2);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
   box-shadow:
     0 8px 32px rgba(20, 20, 30, 0.1),
     0 0 0 3px color-mix(in srgb, var(--accent) 10%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition:
+    opacity 280ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    transform 350ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    box-shadow 280ms ease;
 }
 
-.chat-composer.thinking:hover {
+[data-theme='dark'] .stop-orb {
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    0 0 0 3px color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.stop-orb.is-visible {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+  pointer-events: auto;
+}
+
+.stop-orb:hover {
   box-shadow:
     0 8px 32px rgba(20, 20, 30, 0.14),
     0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
 }
 
-.chat-composer.thinking:focus-within {
-  @apply shadow-inherit;
+.stop-orb-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 9999px;
+  background: rgba(200, 59, 59, 0.12);
 }
 
-.orb-exit {
+.stop-orb.orb-exit {
   animation: orb-exit 280ms cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
 }
 
 @keyframes orb-exit {
   from {
     opacity: 1;
-    transform: scale(1);
+    transform: translate(-50%, -50%) scale(1);
   }
   to {
     opacity: 0;
-    transform: scale(0.5);
+    transform: translate(-50%, -50%) scale(0.5);
   }
 }

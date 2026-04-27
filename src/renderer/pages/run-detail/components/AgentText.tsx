@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { tryParseQuestions } from '../utils';
@@ -8,7 +9,7 @@ interface AgentTextProps {
   onReply?: (text: string) => void;
 }
 
-export function AgentText({ content, onReply }: AgentTextProps) {
+export const AgentText = memo(function AgentText({ content, onReply }: AgentTextProps) {
   if (!content.trim()) {
     return null;
   }
@@ -21,4 +22,4 @@ export function AgentText({ content, onReply }: AgentTextProps) {
       <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
     </div>
   );
-}
+});
