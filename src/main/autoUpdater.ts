@@ -56,6 +56,10 @@ export function initAutoUpdater(window: BrowserWindow): void {
   });
 
   console.log(`[autoUpdater] App version: ${app.getVersion()}`);
+  checkForUpdates();
+}
+
+export function checkForUpdates(): void {
   autoUpdater.checkForUpdates().catch((err) => {
     console.error('[autoUpdater] Check failed:', err.message);
   });

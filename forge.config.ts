@@ -12,7 +12,7 @@ const config: ForgeConfig = {
     extendInfo: {
       CFBundleIconFile: 'icon',
     },
-    extraResource: ['resources/icon.icns'],
+    extraResource: ['resources/icon.icns', 'resources/app-update.yml'],
     osxSign: {
       optionsForFile: () => ({
         entitlements: './entitlements.plist',

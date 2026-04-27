@@ -1,4 +1,5 @@
 import { app, Menu, shell, BrowserWindow } from 'electron';
+import { checkForUpdates } from './autoUpdater';
 
 export function buildAppMenu(window: BrowserWindow): void {
   const isMac = process.platform === 'darwin';
@@ -14,6 +15,10 @@ export function buildAppMenu(window: BrowserWindow): void {
             label: app.name,
             submenu: [
               { role: 'about' as const },
+              {
+                label: 'Check for Updates…',
+                click: () => checkForUpdates(),
+              },
               { type: 'separator' as const },
               {
                 label: 'Settings',

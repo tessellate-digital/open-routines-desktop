@@ -43,7 +43,7 @@ export function UpdateBanner() {
   };
 
   return (
-    <div className="bg-indigo-600 text-white px-4 py-2 flex items-center justify-between text-sm">
+    <div className="bg-indigo-600 text-white pr-4 py-2 pl-24 flex items-center justify-between text-sm app-drag">
       <div className="flex items-center gap-3">
         <ArrowDownTrayIcon className="w-4 h-4" />
         {state === 'available' && <span>Version {version} is available</span>}
