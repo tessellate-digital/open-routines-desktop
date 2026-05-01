@@ -34,6 +34,33 @@ export function App() {
         <meta name="twitter:image" content="https://open-routines.com/og-image.jpg" />
       </Head>
       <div className="relative z-10">
+        {/* ── NAV ── */}
+        <nav className="max-w-[1280px] mx-auto px-6 flex items-center justify-between py-4">
+          <a href="/" className="text-[15px] font-semibold text-foreground">
+            Open Routines
+          </a>
+          <div className="flex items-center gap-5 text-caption-sm text-muted-foreground">
+            <a
+              href="https://github.com/tessellate-digital/open-routines-desktop"
+              className="hover:text-foreground"
+            >
+              GitHub
+            </a>
+            <a
+              href="https://github.com/tessellate-digital/open-routines-desktop/releases/latest/download/Open-Routines.dmg"
+              className="hover:text-foreground"
+            >
+              Releases
+            </a>
+            <a href="/privacy" className="hover:text-foreground">
+              Privacy Policy
+            </a>
+            <a href="/terms" className="hover:text-foreground">
+              Terms
+            </a>
+          </div>
+        </nav>
+
         {/* ── HERO + MOCKUP wrapped with orbs ── */}
         <div className="relative overflow-hidden">
           <div className="pointer-events-none absolute inset-0" aria-hidden="true">
@@ -394,25 +421,8 @@ export function App() {
         </section>
 
         <footer className="border-t border-muted">
-          <div className="max-w-[1280px] mx-auto px-6 flex items-center justify-center gap-5 py-8 text-caption-sm text-muted-foreground">
-            <a
-              href="https://github.com/tessellate-digital/open-routines-desktop"
-              className="hover:text-foreground"
-            >
-              GitHub
-            </a>
-            <a
-              href="https://github.com/tessellate-digital/open-routines-desktop/releases/latest/download/Open-Routines.dmg"
-              className="hover:text-foreground"
-            >
-              Releases
-            </a>
-            <a href="/privacy" className="hover:text-foreground">
-              Privacy Policy
-            </a>
-            <a href="/terms" className="hover:text-foreground">
-              Terms of Service
-            </a>
+          <div className="max-w-[1280px] mx-auto px-6 py-6 text-center text-caption-sm text-muted-foreground">
+            Open Routines
           </div>
         </footer>
       </div>
