@@ -52,7 +52,15 @@ export function initAutoUpdater(window: BrowserWindow): void {
   });
 
   ipcMain.handle('update:install', () => {
-    autoUpdater.quitAndInstall();
+    console.log('[autoUpdater] quitAndInstall requested');
+    setImmediate(() => {
+      try {
+        console.log('[autoUpdater] Calling quitAndInstall…');
+        autoUpdater.quitAndInstall(false, true);
+      } catch (err) {
+        console.error('[autoUpdater] quitAndInstall failed:', err);
+      }
+    });
   });
 
   console.log(`[autoUpdater] App version: ${app.getVersion()}`);
