@@ -54,7 +54,7 @@ export function UpdateBanner() {
         {state === 'available' && (
           <button
             onClick={handleDownload}
-            className="bg-white text-indigo-600 px-3 py-1 rounded font-medium hover:bg-indigo-50 transition-colors"
+            className="app-no-drag bg-white text-indigo-600 px-3 py-1 rounded font-medium hover:bg-indigo-50 transition-colors"
           >
             Download
           </button>
@@ -62,13 +62,16 @@ export function UpdateBanner() {
         {state === 'ready' && (
           <button
             onClick={handleInstall}
-            className="bg-white text-indigo-600 px-3 py-1 rounded font-medium hover:bg-indigo-50 transition-colors"
+            className="app-no-drag bg-white text-indigo-600 px-3 py-1 rounded font-medium hover:bg-indigo-50 transition-colors"
           >
             Restart & Install
           </button>
         )}
         {state !== 'downloading' && (
-          <button onClick={() => setDismissed(true)} className="p-1 hover:bg-indigo-500 rounded">
+          <button
+            onClick={() => setDismissed(true)}
+            className="app-no-drag p-1 hover:bg-indigo-500 rounded"
+          >
             <XMarkIcon className="w-4 h-4" />
           </button>
         )}
